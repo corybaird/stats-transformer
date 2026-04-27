@@ -2,7 +2,8 @@ import logging
 import os
 import pandas as pd
 import yaml
-from references.dictionaries.COUNTRY_MAPPING import ISO2_TO_ISO3
+from stats_transformer.utils.dict_country_converter import dict_country
+ISO2_TO_ISO3 = dict_country.get("iso2_to_iso3", {})
 
 class DataMerger:
 
