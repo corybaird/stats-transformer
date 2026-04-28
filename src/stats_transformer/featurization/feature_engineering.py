@@ -191,7 +191,12 @@ class FeatureEngineer:
         return 1
 
     def _apply_entity_transformations(self, group):
-        entity = group[self.entity_column].iloc[0]
+        if self.entity_column in group.columns:
+            entity = group[self.entity_column].iloc[0]
+        elif hasattr(group, "name"):
+            entity = group.name
+        else:
+            entity = "Unknown"
         transformed_group = group.copy()
 
         for column in self.data_columns:

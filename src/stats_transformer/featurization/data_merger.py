@@ -2,7 +2,8 @@ import logging
 import os
 import pandas as pd
 import yaml
-from references.dictionaries.COUNTRY_MAPPING import ISO2_TO_ISO3
+
+ISO2_TO_ISO3 = {}
 
 class DataMerger:
 
@@ -20,6 +21,8 @@ class DataMerger:
             self.logger.addHandler(handler)
 
     def _load_config(self):
+        if not self.params_path or not os.path.exists(self.params_path):
+            return {}
         with open(self.params_path, "r") as f:
             return yaml.safe_load(f)
 
@@ -122,3 +125,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dm = DataMerger(params_path=args.config)
     dm.run()
+
