@@ -210,6 +210,11 @@ class FeatureEngineer:
                 if "changepct" in self.transformations:
                     transformed_group[f"{column}_changepct"] = transformed_group[column].pct_change(periods=source_periods, fill_method=None)
 
+                if "changepct_yoy" in self.transformations:
+                    target_months = TARGET_TO_MONTHS.get(self.period, 1)
+                    yoy_periods = max(1, int(round(12 / target_months)))
+                    transformed_group[f"{column}_changepct_yoy"] = transformed_group[column].pct_change(periods=yoy_periods, fill_method=None)
+
                 if "changeraw" in self.transformations:
                     transformed_group[f"{column}_changeraw"] = transformed_group[column].diff(periods=source_periods)
 
@@ -241,13 +246,31 @@ class FeatureEngineer:
                         except ValueError:
                             raise ValueError(f"Invalid lag format: {transform}")
 
-                for transform in self.transformations:
-                    if transform.startswith("lead"):
+                    elif transform.startswith("lead"):
                         try:
                             lead = int(transform[4:])
                             transformed_group[f"{column}_{transform}"] = transformed_group[column].shift(-lead * source_periods)
                         except ValueError:
                             raise ValueError(f"Invalid lead format: {transform}")
+                            
+                    elif transform.startswith("fwd_logdiff_h"):
+                        try:
+                            h = int(transform[13:])
+                            y_h = transformed_group[column].shift(-h * source_periods)
+                            y_lag = transformed_group[column].shift(1 * source_periods)
+                            transformed_group[f"{column}_{transform}"] = np.log(y_h) - np.log(y_lag)
+                        except ValueError:
+                            raise ValueError(f"Invalid fwd_logdiff format: {transform}")
+                            
+                    elif transform.startswith("fwd_diff_h"):
+                        try:
+                            h = int(transform[10:])
+                            y_h = transformed_group[column].shift(-h * source_periods)
+                            y_lag = transformed_group[column].shift(1 * source_periods)
+                            transformed_group[f"{column}_{transform}"] = y_h - y_lag
+                        except ValueError:
+                            raise ValueError(f"Invalid fwd_diff format: {transform}")
+
             except Exception as e:
                 self.logger.error(f"Error calculating transformations for column '{column}' in entity '{entity}': {str(e)}")
 
@@ -261,7 +284,7 @@ class FeatureEngineer:
             self.logger.error(error_msg)
             raise ValueError(error_msg)
 
-        valid_base_transformations = ["changepct", "changeraw", "rollingmean", "log", "zscore"]
+        valid_base_transformations = ["changepct", "changepct_yoy", "changeraw", "rollingmean", "log", "zscore"]
         valid_transformations = valid_base_transformations.copy()
         for transform in self.transformations:
             if transform.startswith("lag"):
@@ -270,6 +293,14 @@ class FeatureEngineer:
                     valid_transformations.append(transform)
             elif transform.startswith("lead"):
                 suffix = transform[4:]
+                if suffix.isdigit():
+                    valid_transformations.append(transform)
+            elif transform.startswith("fwd_logdiff_h"):
+                suffix = transform[13:]
+                if suffix.isdigit():
+                    valid_transformations.append(transform)
+            elif transform.startswith("fwd_diff_h"):
+                suffix = transform[10:]
                 if suffix.isdigit():
                     valid_transformations.append(transform)
 
