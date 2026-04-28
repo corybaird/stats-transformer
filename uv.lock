@@ -1715,6 +1715,33 @@ wheels = [
 ]
 
 [[package]]
+name = "pyreadstat"
+version = "1.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "narwhals" },
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1e/b4/d7f8e3aa0e0202b05159c09d8c06ed4c2830e6e4c8b1247b95a01e956d3e/pyreadstat-1.3.4.tar.gz", hash = "sha256:b838ce4ff92df271cdefd0e003038c200815908109a42d75c26a6bf21853940b", size = 510184, upload-time = "2026-04-15T08:14:17.713Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/b7/e4b71fa82b4fe7fc633940d25b3b291beda7043462fdcccbc1fdf9289e3f/pyreadstat-1.3.4-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:771a39ff39e903d2e9f6dc09f54a66cb815fbf1544ae7a84df47b1ff3b218b85", size = 751764, upload-time = "2026-04-15T08:13:49.558Z" },
+    { url = "https://files.pythonhosted.org/packages/58/43/416913b4564101fa8ced50c0ca44e3fa628b22a11cd2969eed80e2c53a78/pyreadstat-1.3.4-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:8c965f14567c67ece1f8fcc6568f4449c7fae97681381c9f960e833915a6dfe9", size = 719214, upload-time = "2026-04-15T08:13:51.366Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/cd/40ddfd82e545aa4890bdc2e37fc19a5a5a7cb1fcc9f6f848809ca9e30e49/pyreadstat-1.3.4-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:2c0715886c018573115c9472847c87d05803de1115f89cc212b9e6162c35f85f", size = 2507263, upload-time = "2026-04-15T08:13:53.244Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/41/f33ca159113c21c6c7afb2b0f937711db31ddee48310b145fbf63aa46c39/pyreadstat-1.3.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2ba242450b2207b3b8e71eb24a5d9c436eb1a4459df5f7ca404680f73094f207", size = 2580744, upload-time = "2026-04-15T08:13:55.375Z" },
+    { url = "https://files.pythonhosted.org/packages/dc/94/cabe0d4574acb95a25def75207342d81351d85735544d59b2d4f983bcab1/pyreadstat-1.3.4-cp312-cp312-win_amd64.whl", hash = "sha256:e44b81fecaef8bc1f5e983be6045818ca378eb6dc9c31cd00e6d7032b146db7d", size = 2014998, upload-time = "2026-04-15T08:13:57.561Z" },
+    { url = "https://files.pythonhosted.org/packages/04/4d/05f9405af36f19e6f9984ccf0a6fafd5705e139e726eaad41885ad30bdd4/pyreadstat-1.3.4-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:f7b67c8ba209d821561a20c6981945423dba2da760862e66e9b6e4669d943370", size = 751072, upload-time = "2026-04-15T08:13:59.222Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/a1/20bca2a4da40321663aa2b0145ec1f14660d9afe80988919a4cfb7c75e21/pyreadstat-1.3.4-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:ed1548ac1e4bf53f47ffab6a5a7b52db0db2f2d55a10d8ed4b53df86e19a58a3", size = 717939, upload-time = "2026-04-15T08:14:00.546Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/96/4c3f8ab37d69685de1e893100c81b5330a01e96f36a724874dab89ac0f1f/pyreadstat-1.3.4-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:8f92ba935fffd0a3f78db13499292345ea2606e6743981214c580a2512ffde58", size = 2489646, upload-time = "2026-04-15T08:14:02.319Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/86/7bfb7d1ed7e6275b7e1ecb8b74ba78beee0106fd26f3f7d83e19e1693d16/pyreadstat-1.3.4-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9b5037d1d8dbbf03e1293404bfda0208510631a63cc077dbd64744cd4bb190e3", size = 2569542, upload-time = "2026-04-15T08:14:04.618Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/7b/a5041e0ee216262740e775042a98855c08908166c4bea69e071e3b02e983/pyreadstat-1.3.4-cp313-cp313-win_amd64.whl", hash = "sha256:a773fed909174a391320c098846ecb3ff4648d59fd32f02f822ff3b82a1bc5fc", size = 2015265, upload-time = "2026-04-15T08:14:06.443Z" },
+    { url = "https://files.pythonhosted.org/packages/44/dc/154829560e135b9de27108e2715b232a953c7bf5ded89adb559631201961/pyreadstat-1.3.4-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:c77bb67df6efddb9af3c3574a99c3a43aeae6279bc92732ca399c8a0a03952ec", size = 758745, upload-time = "2026-04-15T08:14:07.815Z" },
+    { url = "https://files.pythonhosted.org/packages/92/4c/c55e295a6c57abc5f46105707bef88d893c78b079a54f737851b4d80b493/pyreadstat-1.3.4-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:f24dbb8a0a405edac2067339f2f970c9da7a92e29312ed95abf9638b28560f73", size = 726298, upload-time = "2026-04-15T08:14:09.474Z" },
+    { url = "https://files.pythonhosted.org/packages/88/ca/ae2e57054ce958a92fef3ca1b7e9f32827cc2ce5ae4bbf4576d8c4e76c9e/pyreadstat-1.3.4-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a066f60bb0dc302f8fb7f9ec0daa1340e98313f4f265f737ddb4810f78069af1", size = 2484568, upload-time = "2026-04-15T08:14:12.218Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/0c/0d63998efcbde9ade132b42ccab8af5bbabbf8c06a34bae2de57f755d17e/pyreadstat-1.3.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6c2adafc3c63d344abe3c82312cae713f2d4c0701f327b5289466015b40e8565", size = 2546186, upload-time = "2026-04-15T08:14:14.079Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/a6/5ea5490ce8517b07e26cee0688b9d39299c30d211238e4ab2374906129c1/pyreadstat-1.3.4-cp314-cp314-win_amd64.whl", hash = "sha256:dc2ceb578dbec930a20ac591709a2836137bb8394831aa646a5e9b2da76800a4", size = 2038388, upload-time = "2026-04-15T08:14:16.152Z" },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -2164,6 +2191,7 @@ dependencies = [
     { name = "matplotlib" },
     { name = "pandas" },
     { name = "pyarrow" },
+    { name = "pyreadstat" },
     { name = "pyyaml" },
     { name = "scikit-learn" },
     { name = "seaborn" },
@@ -2177,6 +2205,7 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.9" },
     { name = "pandas", specifier = ">=3.0.2" },
     { name = "pyarrow", specifier = ">=24.0.0" },
+    { name = "pyreadstat", specifier = ">=1.3.4" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
