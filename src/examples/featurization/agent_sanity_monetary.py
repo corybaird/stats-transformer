@@ -42,17 +42,18 @@ class AgentSanityMonetary:
         return df[["date", series_id]]
 
     def _fetch_raw_data(self):
-        print("Fetching FRED macro controls (CPIAUCSL, INDPRO, PAYEMS)...")
+        print("Fetching FRED macro controls (CPIAUCSL, INDPRO, PAYEMS, DCOILWTICO)...")
         df_cpi = self._fetch_series("CPIAUCSL")
         df_indpro = self._fetch_series("INDPRO")
         df_payems = self._fetch_series("PAYEMS")
-        df_raw = df_cpi.merge(df_indpro, on="date", how="outer").merge(df_payems, on="date", how="outer")
+        df_oil = self._fetch_series("DCOILWTICO")
+        df_raw = df_cpi.merge(df_indpro, on="date", how="outer").merge(df_payems, on="date", how="outer").merge(df_oil, on="date", how="outer")
         df_raw = df_raw.sort_values("date").dropna()
         df_raw["country"] = "US"
         print("\n" + "="*50)
         print("1. RAW DATA (Last 5 Rows)")
         print("="*50)
-        print(df_raw[["date", "CPIAUCSL", "INDPRO", "PAYEMS"]].tail())
+        print(df_raw[["date", "CPIAUCSL", "INDPRO", "PAYEMS", "DCOILWTICO"]].tail())
         return df_raw
 
     def _compute_original_logic(self, df_raw):
@@ -62,11 +63,13 @@ class AgentSanityMonetary:
         print("Their code computes the following:")
         print(" - Inflation: df['CPIAUCSL'].pct_change(12) * 100")
         print(" - IP Growth: df['INDPRO'].pct_change(12) * 100")
+        print(" - Oil Change: df['DCOILWTICO'].pct_change(1) * 100")
         print(" - Log Emp:   np.log(df['PAYEMS']) * 100")
         print(" - Fwd Emp:   log_emp.shift(-1) - log_emp.shift(1)")
         df_py = df_raw.copy()
         df_py["inflation_py"] = df_py["CPIAUCSL"].pct_change(12) * 100
         df_py["ip_growth_py"] = df_py["INDPRO"].pct_change(12) * 100
+        df_py["oil_change_py"] = df_py["DCOILWTICO"].pct_change(1) * 100
         df_py["log_PAYEMS_py"] = np.log(df_py["PAYEMS"]) * 100
         df_py["fwd_PAYEMS_h1_py"] = df_py["log_PAYEMS_py"].shift(-1) - df_py["log_PAYEMS_py"].shift(1)
         return df_py
@@ -81,34 +84,52 @@ class AgentSanityMonetary:
             entity_column="country",
             date_column="date",
             period="monthly",
-            data_columns=["CPIAUCSL", "INDPRO", "PAYEMS"],
+            data_columns=["CPIAUCSL", "INDPRO", "PAYEMS", "DCOILWTICO"],
             verbose=False
         )
-        return engineer.fit_transform(df_raw)
+        df_features = engineer.fit_transform(df_raw)
+        
+        # Combine Stats-Transformer building blocks into final equivalents
+        df_features["inflation_st"] = (df_features["CPIAUCSL"] - df_features["CPIAUCSL_lag12"]) / df_features["CPIAUCSL_lag12"] * 100
+        df_features["ip_growth_st"] = (df_features["INDPRO"] - df_features["INDPRO_lag12"]) / df_features["INDPRO_lag12"] * 100
+        df_features["oil_change_st"] = (df_features["DCOILWTICO"] - df_features["DCOILWTICO_lag1"]) / df_features["DCOILWTICO_lag1"] * 100
+        df_features["fwd_PAYEMS_h1_st"] = (np.log(df_features["PAYEMS_lead1"]) - np.log(df_features["PAYEMS_lag1"])) * 100
+        
+        return df_features
 
     def _compare_and_report(self, df_features, df_py):
         print("\n" + "="*50)
         print("4. FINAL COMPARISON")
         print("="*50)
-        df_merged = pd.merge(df_features, df_py[["date", "inflation_py", "ip_growth_py", "fwd_PAYEMS_h1_py"]], on="date", how="inner")
-        df_merged["inflation_st"] = ((df_merged["CPIAUCSL"] - df_merged["CPIAUCSL_lag12"]) / df_merged["CPIAUCSL_lag12"]) * 100
-        df_merged["ip_growth_st"] = ((df_merged["INDPRO"] - df_merged["INDPRO_lag12"]) / df_merged["INDPRO_lag12"]) * 100
-        df_merged["fwd_PAYEMS_h1_st"] = (np.log(df_merged["PAYEMS_lead1"]) - np.log(df_merged["PAYEMS_lag1"])) * 100
-        df_merged = df_merged.dropna(subset=["inflation_py", "ip_growth_py", "fwd_PAYEMS_h1_py", "inflation_st", "ip_growth_st", "fwd_PAYEMS_h1_st"])
-        df_merged["diff_inflation"] = (df_merged["inflation_st"] - df_merged["inflation_py"]).abs()
-        df_merged["diff_ip_growth"] = (df_merged["ip_growth_st"] - df_merged["ip_growth_py"]).abs()
-        df_merged["diff_fwd_emp"] = (df_merged["fwd_PAYEMS_h1_st"] - df_merged["fwd_PAYEMS_h1_py"]).abs()
-        compare_cols = ["date", "INDPRO", "ip_growth_py", "ip_growth_st", "CPIAUCSL", "inflation_py", "inflation_st", "fwd_PAYEMS_h1_py", "fwd_PAYEMS_h1_st"]
+        py_cols = ["date", "inflation_py", "ip_growth_py", "oil_change_py", "fwd_PAYEMS_h1_py"]
+        st_cols = ["date", "inflation_st", "ip_growth_st", "oil_change_st", "fwd_PAYEMS_h1_st"]
+        
+        df_merged = pd.merge(df_features[st_cols], df_py[py_cols], on="date", how="inner")
+        
+        comparisons = [
+            ("inflation", "inflation_st", "inflation_py"),
+            ("ip_growth", "ip_growth_st", "ip_growth_py"),
+            ("oil_change", "oil_change_st", "oil_change_py"),
+            ("fwd_emp", "fwd_PAYEMS_h1_st", "fwd_PAYEMS_h1_py"),
+        ]
+        
+        df_merged = df_merged.dropna(subset=[col for t in comparisons for col in t[1:]])
+        
+        for name, st_col, py_col in comparisons:
+            df_merged[f"diff_{name}"] = (df_merged[st_col] - df_merged[py_col]).abs()
+        
+        compare_cols = ["date", "oil_change_py", "oil_change_st", "inflation_py", "inflation_st", "fwd_PAYEMS_h1_py", "fwd_PAYEMS_h1_st"]
         print("\nSide-by-Side Values (Original Code vs. Stats-Transformer):")
         print(df_merged[compare_cols].tail().to_string(index=False))
-        max_diff_inf = df_merged["diff_inflation"].max()
-        max_diff_ip = df_merged["diff_ip_growth"].max()
-        max_diff_emp = df_merged["diff_fwd_emp"].max()
+        
         print("\n--- Accuracy Report ---")
-        print(f"Max difference for Inflation: {max_diff_inf:.6e}")
-        print(f"Max difference for IP Growth: {max_diff_ip:.6e}")
-        print(f"Max difference for Fwd Emp:   {max_diff_emp:.6e}")
-        if max_diff_inf < 1e-6 and max_diff_ip < 1e-6 and max_diff_emp < 1e-6:
+        max_diffs = []
+        for name, _, _ in comparisons:
+            max_diff = df_merged[f"diff_{name}"].max()
+            max_diffs.append(max_diff)
+            print(f"Max difference for {name.replace('_', ' ').title()}: {max_diff:.6e}")
+        
+        if all(diff < 1e-6 for diff in max_diffs):
             print("\nCONCLUSION: Stats-Transformer perfectly matches their messy script logic.")
         else:
             print("\nCONCLUSION: Significant deviations detected. Their code differs from the standard implementation.")
