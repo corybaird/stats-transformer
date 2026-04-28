@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
-from stats_transformer.models.regression import RegressionModel
+from .regression import RegressionModel
 
 class RobustOLSModel(RegressionModel):
     # Robust OLS forcing explicit covariance type definitions (HC1, HC3, HAC)

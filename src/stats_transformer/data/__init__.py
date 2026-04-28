@@ -11,7 +11,7 @@ def load_sample_data():
         DataFrame with columns: country, date, inflation, gdp
     
     Example:
-        >>> from stats_transformer.data import load_sample_data
+        >>> from src.stats_transformer.data import load_sample_data
         >>> df = load_sample_data()
         >>> print(df.head())
     """

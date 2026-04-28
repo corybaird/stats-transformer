@@ -191,8 +191,17 @@ class FeatureEngineer:
         return 1
 
     def _apply_entity_transformations(self, group):
-        entity = group[self.entity_column].iloc[0]
+        if self.entity_column in group.columns:
+            entity = group[self.entity_column].iloc[0]
+        elif hasattr(group, "name"):
+            entity = group.name
+        else:
+            entity = "Unknown"
         transformed_group = group.copy()
+        
+        # Ensure the entity column is present in the transformed group
+        if self.entity_column not in transformed_group.columns and entity != "Unknown":
+            transformed_group[self.entity_column] = entity
 
         for column in self.data_columns:
             try:
@@ -271,8 +280,9 @@ class FeatureEngineer:
             raise ValueError(error_msg)
 
         try:
-            grouped = df.groupby(self.entity_column)
+            grouped = df.groupby(self.entity_column, group_keys=False)
             transformed_df = grouped.apply(self._apply_entity_transformations).reset_index(drop=True)
+            
             self.logger.info("Feature transformations completed.")
             return transformed_df
         except Exception as e:

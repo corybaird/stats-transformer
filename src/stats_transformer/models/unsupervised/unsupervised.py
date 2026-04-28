@@ -7,7 +7,7 @@ from datetime import datetime
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-from stats_transformer.models.base import ModelBase
+from src.stats_transformer.models.base import ModelBase
 
 class UnsupervisedModel(ModelBase):
     # Base class for unsupervised models bypassing some statsmodels assumptions
