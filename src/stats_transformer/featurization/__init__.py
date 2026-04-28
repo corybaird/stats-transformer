@@ -1,5 +1,6 @@
-from stats_transformer.featurization.feature_engineering import FeatureEngineer
-from stats_transformer.featurization.data_merger import DataMerger
+import logging
+from .feature_engineering import FeatureEngineer
+from .data_merger import DataMerger
 
 __all__ = ["FeatureEngineer", "DataMerger", "suppress_logging"]
 

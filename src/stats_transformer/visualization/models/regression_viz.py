@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 from sklearn.metrics import r2_score
-from stats_transformer.visualization.model_viz import ModelVisualizer
-from stats_transformer.visualization.viz_utils import configure_plot_aesthetics
-from references.dictionaries.COLUMN_LABELS import get_readable_label
+from src.stats_transformer.visualization.models.model_viz import ModelVisualizer
+from src.stats_transformer.visualization.utils.viz_utils import configure_plot_aesthetics
+def get_readable_label(x): return str(x)
 
 class RegressionVisualizer(ModelVisualizer):
 
@@ -300,7 +300,7 @@ class RegressionVisualizer(ModelVisualizer):
         fig, ax = plt.subplots(figsize=(10, 7))
         if entity_labels is not None and len(entity_labels) == len(actual):
             unique_entities = sorted(set(entity_labels))
-            from stats_transformer.visualization.viz_utils import get_color_palette
+            from src.stats_transformer.visualization.utils.viz_utils import get_color_palette
             colors = get_color_palette("colorblind", len(unique_entities))
             color_map = {e: colors[i] for i, e in enumerate(unique_entities)}
             for entity in unique_entities:
@@ -322,3 +322,4 @@ class RegressionVisualizer(ModelVisualizer):
 
     def run(self):
         pass
+

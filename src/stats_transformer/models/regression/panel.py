@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from linearmodels.panel import PanelOLS
-from stats_transformer.models.base import ModelBase
+from src.stats_transformer.models.base import ModelBase
 from datetime import datetime
 
 class PanelRegressionModel(ModelBase):
