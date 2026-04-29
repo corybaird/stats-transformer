@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 from src.stats_transformer.models.unsupervised.unsupervised import PCAModel
@@ -25,6 +26,13 @@ class NakamuraSteinssonPCASanity:
 
     def run(self):
         df = self.generate_synthetic_data()
+        
+        # Save for YAML example
+        data_dir = "data/examples/unsupervised"
+        os.makedirs(data_dir, exist_ok=True)
+        data_path = os.path.join(data_dir, "synthetic_nakamura.csv")
+        df.to_csv(data_path, index=False)
+        print(f"Synthetic data saved to {data_path}")
         
         # Instantiate the PCA model to extract 1 component
         model = PCAModel(features=self.features, n_components=1)
