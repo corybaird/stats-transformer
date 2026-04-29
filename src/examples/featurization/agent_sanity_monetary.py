@@ -78,33 +78,39 @@ class AgentSanityMonetary:
         print("\n" + "="*50)
         print("3. STATS-TRANSFORMER TRANSFORMATIONS")
         print("="*50)
-        print("Applying FeatureEngineer to raw data with building blocks...")
+        print("Applying FeatureEngineer to raw data with native macro transformations...")
         engineer = FeatureEngineer(
-            transformations=["changepct", "log", "lag1", "lag12", "lead1"],
+            transformations=["changepct_yoy", "changepct", "fwd_logdiff_h1"],
             entity_column="country",
             date_column="date",
             period="monthly",
             data_columns=["CPIAUCSL", "INDPRO", "PAYEMS", "DCOILWTICO"],
             verbose=False
         )
-        df_features = engineer.fit_transform(df_raw)
-        
-        # Combine Stats-Transformer building blocks into final equivalents
-        df_features["inflation_st"] = (df_features["CPIAUCSL"] - df_features["CPIAUCSL_lag12"]) / df_features["CPIAUCSL_lag12"] * 100
-        df_features["ip_growth_st"] = (df_features["INDPRO"] - df_features["INDPRO_lag12"]) / df_features["INDPRO_lag12"] * 100
-        df_features["oil_change_st"] = (df_features["DCOILWTICO"] - df_features["DCOILWTICO_lag1"]) / df_features["DCOILWTICO_lag1"] * 100
-        df_features["fwd_PAYEMS_h1_st"] = (np.log(df_features["PAYEMS_lead1"]) - np.log(df_features["PAYEMS_lag1"])) * 100
-        
-        return df_features
+        return engineer.fit_transform(df_raw)
 
     def _compare_and_report(self, df_features, df_py):
         print("\n" + "="*50)
         print("4. FINAL COMPARISON")
         print("="*50)
         py_cols = ["date", "inflation_py", "ip_growth_py", "oil_change_py", "fwd_PAYEMS_h1_py"]
-        st_cols = ["date", "inflation_st", "ip_growth_st", "oil_change_st", "fwd_PAYEMS_h1_st"]
+        st_cols = ["date", "CPIAUCSL_changepct_yoy", "INDPRO_changepct_yoy", "DCOILWTICO_changepct", "PAYEMS_fwd_logdiff_h1"]
         
         df_merged = pd.merge(df_features[st_cols], df_py[py_cols], on="date", how="inner")
+        
+        # Rename stats-transformer columns for easy looping
+        df_merged = df_merged.rename(columns={
+            "CPIAUCSL_changepct_yoy": "inflation_st",
+            "INDPRO_changepct_yoy": "ip_growth_st",
+            "DCOILWTICO_changepct": "oil_change_st",
+            "PAYEMS_fwd_logdiff_h1": "fwd_PAYEMS_h1_st"
+        })
+        
+        # Convert proportions to percentages to match the script's scale
+        df_merged["inflation_st"] = df_merged["inflation_st"] * 100
+        df_merged["ip_growth_st"] = df_merged["ip_growth_st"] * 100
+        df_merged["oil_change_st"] = df_merged["oil_change_st"] * 100
+        df_merged["fwd_PAYEMS_h1_st"] = df_merged["fwd_PAYEMS_h1_st"] * 100
         
         comparisons = [
             ("inflation", "inflation_st", "inflation_py"),
