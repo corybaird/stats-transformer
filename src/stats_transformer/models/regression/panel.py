@@ -20,13 +20,6 @@ class PanelRegressionModel(ModelBase):
             self.time_effects = time_effects
             self.check_rank = check_rank
 
-    def _get_required_columns(self):
-        req = [self.target] + self.independent_variables
-        if self.entity_column and self.entity_column not in req:
-            req.append(self.entity_column)
-        if self.time_column and self.time_column not in req:
-            req.append(self.time_column)
-        return req
 
     def load_data(self, data):
         self.logger.info("Loading data for PanelRegressionModel")

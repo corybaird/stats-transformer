@@ -52,11 +52,6 @@ class RegressionModel(ModelBase):
         if self.add_entity_fixed_effects and not self.entity_column:
             self.logger.warning("Entity fixed effects requested but entity_column not specified.")
 
-    def _get_required_columns(self):
-        columns = self.independent_variables + [self.target]
-        if self.add_entity_fixed_effects and self.entity_column:
-            columns.append(self.entity_column)
-        return columns
 
     def split_xy(self, drop_na=True):
         if self.df_clean is None:
