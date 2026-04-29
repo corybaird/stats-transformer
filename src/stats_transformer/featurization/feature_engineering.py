@@ -25,6 +25,7 @@ class FeatureEngineer:
             self.period = feat_cfg.get("period", "annual").lower()
             self.entity_column = feat_cfg.get("entity_column", None)
             self.date_column = feat_cfg.get("date_column", "date")
+            self.column_mapping = feat_cfg.get("column_mapping", {})
             self.country_list = feat_cfg.get("country_list", [])
             self.start_date = feat_cfg.get("start_date", None)
             self.data_columns = feat_cfg.get("transformation_data", [])
@@ -33,15 +34,16 @@ class FeatureEngineer:
             self.period = period.lower()
             self.entity_column = entity_column
             self.date_column = date_column
+            self.column_mapping = {}
             self.country_list = country_list or []
             self.start_date = start_date
             self.data_columns = data_columns or []
 
-        if not self.transformations:
+        if not self.transformations and verbose:
             self.logger.warning("No transformations specified")
-        if not self.entity_column:
+        if not self.entity_column and verbose:
             self.logger.warning("No entity column specified")
-        if not self.data_columns:
+        if not self.data_columns and verbose:
             self.logger.warning("No data columns specified for transformations")
 
     def _is_running_in_jupyter(self):
@@ -104,6 +106,25 @@ class FeatureEngineer:
             error_msg = f"Error loading data from {data_path}: {str(e)}"
             self.logger.error(error_msg)
             raise
+
+    def _apply_column_mapping(self, df):
+        if not self.column_mapping:
+            return df
+        
+        self.logger.info(f"Applying column mapping: {self.column_mapping}")
+        # Identify which columns to rename
+        mapping = {k: v for k, v in self.column_mapping.items() if k in df.columns}
+        if mapping:
+            df = df.rename(columns=mapping)
+            # Update internal references if they were mapped
+            for old_col, new_col in mapping.items():
+                if self.entity_column == old_col:
+                    self.entity_column = new_col
+                if self.date_column == old_col:
+                    self.date_column = new_col
+                if old_col in self.data_columns:
+                    self.data_columns = [new_col if c == old_col else c for c in self.data_columns]
+        return df
 
     def _validate_data_structure(self, df):
         required_columns = [self.entity_column, self.date_column] + self.data_columns
@@ -278,6 +299,7 @@ class FeatureEngineer:
 
     def transform(self, df):
         self.logger.info("Starting feature transformations.")
+        df = self._apply_column_mapping(df)
         missing_columns = [f for f in self.data_columns if f not in df.columns]
         if missing_columns:
             error_msg = f"The following features are not in the dataframe: {missing_columns}"
@@ -323,6 +345,7 @@ class FeatureEngineer:
     def fit_transform(self, df):
         try:
             self.logger.info("Starting feature engineering pipeline.")
+            df = self._apply_column_mapping(df)
             if not self.data_columns:
                 exclude_cols = [self.entity_column, self.date_column]
                 numeric_cols = df.select_dtypes(include=['number']).columns.tolist()

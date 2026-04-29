@@ -1,0 +1,15 @@
+data:
+  featurization:
+    entity_column: country
+    date_column: date
+    column_mapping:
+      year: date
+      firm: country
+  raw_data_file: data/examples/regression/grunfeld.csv
+
+model:
+  model_type: panel_ols
+  target_variable: invest
+  independent_variables:
+    - value
+    - capital

@@ -1,0 +1,8 @@
+data:
+  raw_data_file: data/examples/regression/okuns_law.csv
+
+model:
+  model_type: robust_ols
+  target_variable: unrate_diff
+  independent_variables:
+    - gdp_pct_change

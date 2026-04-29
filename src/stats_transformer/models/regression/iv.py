@@ -12,8 +12,11 @@ class IV2SLSModel(RegressionModel):
         self.cov_type = cov_type
 
     def _get_required_columns(self):
-        return self.independent_variables + self.endogenous + self.instruments + [self.target]
-
+        columns = super()._get_required_columns()
+        for col in self.endogenous + self.instruments:
+            if col not in columns:
+                columns.append(col)
+        return columns
     def build_model(self, drop_na=True):
         if self.X is None or self.y is None:
             # We skip RegressionModel's split_xy because linearmodels needs endogenous and instruments separate

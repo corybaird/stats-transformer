@@ -96,9 +96,13 @@ class ModelBase(ABC):
             raise ValueError("DataFrame is empty after dropping NaNs.")
         return self.df_clean
 
-    @abstractmethod
     def _get_required_columns(self):
-        pass
+        columns = list(self.independent_variables) + [self.target]
+        if getattr(self, "entity_column", None) and self.entity_column not in columns:
+            columns.append(self.entity_column)
+        if getattr(self, "time_column", None) and self.time_column not in columns:
+            columns.append(self.time_column)
+        return columns
 
     @abstractmethod
     def build_model(self):

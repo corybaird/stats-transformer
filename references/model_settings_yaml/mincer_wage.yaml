@@ -1,0 +1,11 @@
+data:
+  raw_data_file: data/examples/regression/mincer_wage.csv
+
+model:
+  model_type: robust_ols
+  target_variable: lwage
+  independent_variables:
+    - educ
+    - exper
+    - expersq
+    - tenure
