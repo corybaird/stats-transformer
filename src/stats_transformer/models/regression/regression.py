@@ -73,9 +73,9 @@ class RegressionModel(ModelBase):
         self.y = self.df_clean[self.target]
         self.X = self.df_clean[self.independent_variables]
         
-        if self.add_entity_fixed_effects and self.entity_column in self.X.columns:
-            entity_dummies = pd.get_dummies(self.X[self.entity_column], prefix="entity", dtype=int)
-            self.X = pd.concat([self.X.drop(self.entity_column, axis=1), entity_dummies], axis=1)
+        if self.add_entity_fixed_effects and self.entity_column in self.df_clean.columns:
+            entity_dummies = pd.get_dummies(self.df_clean[self.entity_column], prefix="entity", dtype=int)
+            self.X = pd.concat([self.X, entity_dummies], axis=1)
         else:
             self.X = sm.add_constant(self.X)
 
