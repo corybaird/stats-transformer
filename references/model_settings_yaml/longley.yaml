@@ -1,0 +1,17 @@
+data:
+  featurization:
+    date_column: date
+    column_mapping:
+      YEAR: date
+  raw_data_file: data/examples/regression/longley.csv
+
+model:
+  model_type: robust_ols
+  target_variable: TOTEMP
+  independent_variables:
+    - GNPDEFL
+    - GNP
+    - UNEMP
+    - ARMED
+    - POP
+    - date # Since YEAR is renamed to date

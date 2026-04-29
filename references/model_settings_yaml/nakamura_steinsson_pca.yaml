@@ -1,0 +1,12 @@
+data:
+  raw_data_file: data/examples/unsupervised/synthetic_nakamura.csv
+
+model:
+  model_type: pca
+  n_components: 1
+  independent_variables:
+    - mp1
+    - ff4
+    - ed2
+    - ed3
+    - ed4
