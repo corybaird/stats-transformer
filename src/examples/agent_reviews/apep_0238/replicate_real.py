@@ -70,7 +70,24 @@ class Apep0238RealReplication:
                         })
         return pd.DataFrame(all_data)
 
-    def run_comparison(self, df):
+    def calculate_original(self, sub):
+        y = sub["gr_outcome"].values
+        X = np.column_stack([np.ones(len(sub)), sub["hpi_boom"].values])
+        beta_hat = np.linalg.lstsq(X, y, rcond=None)[0]
+        resid = y - X @ beta_hat
+        n, k = X.shape
+        bread = np.linalg.inv(X.T @ X)
+        meat = (resid**2).reshape(-1, 1, 1) * (X.reshape(n, k, 1) @ X.reshape(n, 1, k))
+        V_hc1 = (n/(n-k)) * bread @ meat.sum(axis=0) @ bread
+        se_hc1 = np.sqrt(np.diag(V_hc1))[1]
+        return beta_hat[1], se_hc1
+
+    def calculate_statstransformer(self, sub):
+        model = RobustOLSModel(target="gr_outcome", independent_variables=["hpi_boom"], cov_type="HC3")
+        model.fit(sub)
+        return model.model.params["hpi_boom"], model.model.bse["hpi_boom"]
+
+    def compare_methods(self, df):
         print("\n" + "="*50)
         print("REAL DATA ESTIMATION: APEP_0238 (10 States)")
         print("="*50)
@@ -79,24 +96,11 @@ class Apep0238RealReplication:
             sub = df[df["horizon"] == h].copy()
             if len(sub) < 3: continue
             
-            # Manual HC1
-            y = sub["gr_outcome"].values
-            X = np.column_stack([np.ones(len(sub)), sub["hpi_boom"].values])
-            beta_hat = np.linalg.lstsq(X, y, rcond=None)[0]
-            resid = y - X @ beta_hat
-            n, k = X.shape
-            bread = np.linalg.inv(X.T @ X)
-            meat = (resid**2).reshape(-1, 1, 1) * (X.reshape(n, k, 1) @ X.reshape(n, 1, k))
-            V_hc1 = (n/(n-k)) * bread @ meat.sum(axis=0) @ bread
-            se_hc1 = np.sqrt(np.diag(V_hc1))[1]
-            
-            # Stats-Transformer HC3
-            model = RobustOLSModel(target="gr_outcome", independent_variables=["hpi_boom"], cov_type="HC3")
-            model.fit(sub)
-            se_hc3 = model.model.bse["hpi_boom"]
+            beta_orig, se_hc1 = self.calculate_original(sub)
+            beta_st, se_hc3 = self.calculate_statstransformer(sub)
             
             diff = (se_hc3 - se_hc1) / se_hc1 * 100
-            print(f"Horizon {h:2d} | Beta: {beta_hat[1]:.4f} | HC1 SE: {se_hc1:.4f} | HC3 SE: {se_hc3:.4f} | Diff: {diff:+.2f}%")
+            print(f"Horizon {h:2d} | Beta: {beta_orig:.4f} | HC1 SE: {se_hc1:.4f} | HC3 SE: {se_hc3:.4f} | Diff: {diff:+.2f}%")
 
     def run(self):
         if not FRED_KEY:
@@ -108,7 +112,7 @@ class Apep0238RealReplication:
             print("Error: No data fetched.")
             return
             
-        self.run_comparison(df)
+        self.compare_methods(df)
 
 if __name__ == "__main__":
     rep = Apep0238RealReplication()
