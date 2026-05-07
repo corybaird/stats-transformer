@@ -20,6 +20,7 @@ To use it locally in your project:
 uv add stats-transformer
 ```
 
+YES
 ### 2. Configuration (`params.yaml`)
 
 Define your data sources, pipeline parameters, and model specifications in a `params.yaml` file:
@@ -70,4 +71,9 @@ model_results = pipeline.run(stage="regression")
 pipeline.run(stage="visualization")
 ```
 
-For more details on the release process, please refer to `docs/publish_plan.md`.
+For more details on the system design, see [docs/architecture.md](docs/architecture.md).
+For the standardized research folder structure, see [docs/file_structure.md](docs/file_structure.md).
+For standards on how to write research documentation, see [docs/documentation.md](docs/documentation.md).
+
+
+For more details on the release process, please refer to [docs/publish_plan.md](docs/publish_plan.md).
