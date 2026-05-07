@@ -2,15 +2,15 @@ import logging
 import os
 import yaml
 import pandas as pd
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
-from src.stats_transformer.featurization.data_merger import DataMerger
-from src.stats_transformer.models.regression.regression import RegressionModel
-from src.stats_transformer.models.regression.robust_ols import RobustOLSModel
-from src.stats_transformer.models.regression.panel import PanelRegressionModel
-from src.stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
-from src.stats_transformer.visualization.models.regression_viz import RegressionVisualizer
-from src.stats_transformer.visualization.eda.data_viz import DataVisualizer
-from src.stats_transformer.visualization.eda.eda import EDAVisualizer
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.data_merger import DataMerger
+from stats_transformer.models.regression.regression import RegressionModel
+from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from stats_transformer.models.regression.panel import PanelRegressionModel
+from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
+from stats_transformer.visualization.models.regression_viz import RegressionVisualizer
+from stats_transformer.visualization.eda.data_viz import DataVisualizer
+from stats_transformer.visualization.eda.eda import EDAVisualizer
 
 class Pipeline:
 
