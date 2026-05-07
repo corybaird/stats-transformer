@@ -1,75 +1,63 @@
-# Standardized Research File Structure
+# stats-transformer Repository Structure
 
-In the "Agentic AI Age," a standardized folder structure is critical. It enables AI agents to navigate the project autonomously, maintains clear boundaries between code and data, and ensures reproducibility. This standard is based on the **Cookie Cutter Data Science** pattern, refined for macroeconomic research.
+This document outlines the file structure of the `stats-transformer` repository. As a general-purpose library, this repository is organized primarily by **capabilities** rather than paper-specific workflows.
 
-## 1. The Academic Anti-Pattern
-
-Traditional academic research folders (like those from Nakamura & Steinsson or Jarociński & Karadi) often suffer from:
-*   **Monolithic Folders**: Mixing data, scripts, and results in a single `Stata/` or `Programs/` directory.
-*   **Hardcoded Paths**: Relative or absolute paths that break on other machines.
-*   **Manual Steps**: "Run X then copy Y to Z" workflows that are impossible for agents to automate reliably.
-*   **Flat Data Structures**: Generic folders like `Data_Orig/` or `external/` that provide no semantic context.
-
-## 2. Modern Reproducible Project Structure
-
-This structure separates **Configuration** (the "brain"), **Source Code** (the "muscles"), and **Data** (the "memory").
+## 1. Directory Tree
 
 ```text
 .
-├── data/              # Immutable and derived data (DVC Managed)
-│   ├── raw/           # Original, untouched source files
-│   ├── text/          # Central bank statements, narratives, scraped text
-│   ├── shocks/        # Monetary policy surprises, uncertainty indices
-│   ├── indicators/    # Macro fundamentals (CPI, GDP, Interest Rates)
-│   ├── financial/     # Market data (Equities, CDS, Yield Curves)
-│   ├── intermediate/  # Intermediate artifacts (merged panels, resampled data)
-│   └── final/         # Final feature-engineered datasets for modeling
-├── docs/              # Architecture, file structures, and methodology
-├── models/            # Serialized model artifacts (.pkl, .joblib, .pt)
-├── notebooks/         # Exploratory analysis and paper-specific pipelines
-├── references/        # CONFIGURATION CENTER
-│   ├── configs/       # YAML files (the Single Source of Truth)
-│   ├── dictionaries/  # Mapping files (country converters, regional groups)
-│   └── prompts/       # LLM templates and DSPy signatures
-├── reports/           # AUTOMATED OUTPUTS
-│   ├── figures/       # Charts and plots (routed to Overleaf)
-│   ├── tables/        # Regression results and summary stats
-│   └── visualizations/ # EDA and interactive dashboards
-└── src/               # REUSABLE MODULES
-    ├── data/          # Ingestion and ETL logic
-    ├── featurization/ # Transformation and engineering
-    ├── models/        # Econometric and ML implementations
-    └── viz/           # Plotting and reporting logic
+├── data/                          # Immutable and derived data (gitignored)
+│   ├── raw/                       # Original, untouched source files
+│   │   └── examples/              # Data for sanity checks and unit tests
+│   ├── final/                     # Feature-engineered datasets for modeling
+│   ├── pipeline/                  # Intermediate merged artifacts
+│   └── temp/                      # Temporary scratch space
+├── docs/                          # Architectural and user documentation
+├── models/                        # Serialized model artifacts (.pkl, .joblib)
+├── notebooks/                     # Exploratory analysis and demonstrations
+├── references/                    # CONFIGURATION CENTER
+│   ├── configs/                   # YAML configuration files
+│   │   └── examples/              # YAML configs for validation tests
+│   ├── dictionaries/              # Mapping files (e.g., country codes)
+│   └── prompts/                   # LLM templates and DSPy signatures
+├── reports/                       # AUTOMATED OUTPUTS
+│   ├── figures/                   # Charts and plots
+│   ├── tables/                    # Regression results and summary stats
+│   └── visualizations/            # EDA and tracking visualizations
+├── src/                           # SOURCE CODE
+│   ├── examples/                  # Validation scripts and sanity checks
+│   ├── stats_transformer/         # The core Python library package
+│   │   ├── data/                  # Data ingestion utilities
+│   │   ├── featurization/         # Feature engineering and merging
+│   │   ├── models/                # Econometric and ML implementations
+│   │   ├── utils/                 # Shared helpers
+│   │   ├── visualization/         # Plotting logic
+│   │   └── pipeline.py            # Main YAML-driven orchestrator
+│   └── temp/                      # Scratch/debug scripts
+└── tests/                         # Unit and integration tests
 ```
 
-## 3. Core Directory Principles
+## 2. Core Directory Principles
 
-### `data/` (Macro-Specific Segregation)
-Avoid generic names like `external`. Use descriptive subfolders to define the data domain:
-*   **`data/text/`**: Stores the unstructured "narrative" data.
-*   **`data/shocks/`**: Stores the high-frequency "exogenous" surprises.
-*   **`data/indicators/`**: Stores the low-frequency "fundamentals."
-*   **`data/financial/`**: Stores the high-frequency "market reactions."
+### `src/stats_transformer/` (The Library)
+This is the core Python package. It is organized by *capability* (e.g., `models/`, `featurization/`, `visualization/`). Code here should be stateless, modular, and unaware of specific papers or datasets. It is driven purely by configuration.
 
-### `references/` (The Configuration Center)
-Never hardcode parameters. The `references/configs/params.yaml` file acts as the single source of truth. If you want to change a transformation lag or a country list, you edit the YAML, not the Python.
+### `data/` (The Data Warehouse)
+The `data/` directory is excluded from Git (`.gitignore`). It follows a strict data lifecycle:
+*   **`raw/`**: Where immutable data lives.
+*   **`pipeline/`**: For intermediate, merged, or resampled data before final featurization.
+*   **`final/`**: The ultimate analytical datasets fed into models.
+*   **`temp/`**: For temporary scratch files.
 
-### `src/` (The Engine)
-Code in `src/` should be stateless and modular. It doesn't "know" about specific papers; it only knows how to process data given a configuration.
+### `references/configs/` (The Control Center)
+The `stats-transformer` pipeline relies heavily on YAML configuration. `references/configs/` stores these YAML files, enabling you to change datasets, transformation lags, or model specifications without touching Python code. The `examples/` subdirectory contains configurations used to validate the library against academic benchmarks.
 
-### `reports/` (The Overleaf Bridge)
-Output logic should route directly into `reports/`. This allows for seamless integration with LaTeX documents via `git submodules` or `rclone` syncs to Overleaf.
+### `reports/` (Automated Outputs)
+Running models or the main `pipeline.py` will automatically dump artifacts (JSON summaries, PNG coefficient plots) into the `reports/` directory.
 
-## 4. DVC Integration
+## 3. Creating a New Research Project
 
-Large datasets and LLM output caches should never be in Git. Use **DVC (Data Version Control)** to track files in `data/` and `models/`.
-*   **Git**: Tracks `.py`, `.yaml`, `.md`, and `.dvc` pointers.
-*   **DVC**: Tracks `.parquet`, `.csv`, and `.jsonl` data files.
-
-## 5. Workflow Summary
-
-1.  **Initialize**: Define data sources and transformations in `references/configs/params.yaml`.
-2.  **Ingest**: Use `src/data/` to pull and clean data into `data/intermediate/`.
-3.  **Featurize**: Apply transformations using `src/featurization/` into `data/final/`.
-4.  **Model**: Run regressions in `notebooks/` using `src/models/`.
-5.  **Report**: Automatically generate outputs into `reports/` for publication.
+> [!NOTE]
+> The structure above describes the `stats-transformer` *library repository*. It is not necessarily the structure you should use for an individual research paper.
+> 
+> To create a new, reproducible economic research project that *uses* `stats-transformer`, see the roadmap in [docs/cookie_cutter_refactor.md](cookie_cutter_refactor.md).
