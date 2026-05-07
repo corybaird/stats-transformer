@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.vector_ar.svar_model import SVAR
-from src.stats_transformer.models.base import ModelBase
+from stats_transformer.models.base import ModelBase
 
 class SVARModel(ModelBase):
     def __init__(self, target_variables=None, date_column=None, svar_type='A', A=None, B=None, maxlags=None, **kwargs):

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from linearmodels.iv import IV2SLS
-from src.stats_transformer.models.regression.regression import RegressionModel
+from stats_transformer.models.regression.regression import RegressionModel
 
 class IV2SLSModel(RegressionModel):
     def __init__(self, target=None, independent_variables=None, instruments=None, endogenous=None, cov_type="robust", **kwargs):

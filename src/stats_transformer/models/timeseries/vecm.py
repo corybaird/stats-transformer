@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.vector_ar.vecm import VECM
-from src.stats_transformer.models.base import ModelBase
+from stats_transformer.models.base import ModelBase
 
 class VECMModel(ModelBase):
     def __init__(self, target_variables=None, date_column=None, k_ar_diff=1, deterministic='n', **kwargs):
