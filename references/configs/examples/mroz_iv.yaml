@@ -1,5 +1,5 @@
 data:
-  raw_data_file: data/examples/regression/mroz.csv
+  raw_data_file: data/raw/examples/regression/mroz.csv
 
 model:
   model_type: iv_2sls

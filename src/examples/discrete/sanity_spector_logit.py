@@ -6,7 +6,7 @@ from src.stats_transformer.models.discrete.logit import LogitModel
 
 class AgentSanitySpectorLogit:
     def __init__(self):
-        self.data_dir = "data/examples/discrete"
+        self.data_dir = "data/raw/examples/discrete"
         self.data_path = f"{self.data_dir}/spector.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 

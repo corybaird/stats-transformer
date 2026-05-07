@@ -5,7 +5,7 @@ from src.stats_transformer.models.regression.diagnostics import RegressionDiagno
 
 class GhyselsChap2Sanity:
     def __init__(self):
-        self.data_path = Path("data/examples/Ghysels /Ch_2/simulated_datac2.csv")
+        self.data_path = Path("data/raw/examples/Ghysels /Ch_2/simulated_datac2.csv")
 
     def run(self):
         sim_data_full = pd.read_csv(self.data_path)

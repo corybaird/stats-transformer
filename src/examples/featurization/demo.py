@@ -16,8 +16,8 @@ class DemoFeaturization:
         print("====== 1. Merging Data files ======")
         merger = DataMerger(params_path="params.yaml")
 
-        df_hicp = merger.load_dataset("data/panel/monthly/eurostat_hicp_panel.parquet")
-        df_cpi = merger.load_dataset("data/panel/monthly/oecd_cpi_panel.parquet")
+        df_hicp = merger.load_dataset("data/final/monthly/eurostat_hicp_panel.parquet")
+        df_cpi = merger.load_dataset("data/final/monthly/oecd_cpi_panel.parquet")
 
         df_hicp = merger.standardize_entity(df_hicp, "country")
         df_cpi = merger.standardize_entity(df_cpi, "country")

@@ -3,7 +3,7 @@ data:
     date_column: date
     column_mapping:
       YEAR: date
-  raw_data_file: data/examples/regression/longley.csv
+  raw_data_file: data/raw/examples/regression/longley.csv
 
 model:
   model_type: robust_ols

@@ -9,7 +9,7 @@ class AgentSanityOkunsLaw:
     def __init__(self):
         self.api_key = self._load_api_key()
         self.base_url = "https://api.stlouisfed.org/fred/series/observations"
-        self.data_dir = "data/examples/regression"
+        self.data_dir = "data/raw/examples/regression"
         self.data_path = f"{self.data_dir}/okuns_law.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 

@@ -14,10 +14,10 @@ graph TD
     D --> E[data/pipeline/resampled_merged.parquet]
     E --> F[Stage: Features]
     F --> G[FeatureEngineer: Transformations]
-    G --> H[data/processed/final_features.csv]
+    G --> H[data/final/final_features.csv]
     H --> I[Stage: Regression / Model]
     I --> J[Model Suite: OLS, Robust, Panel, PCA]
-    J --> K[reports/model_summary.json]
+    J --> K[reports/tables/model_summary.json]
     K --> L[Stage: Visualization]
     L --> M[Visualizer Suite: Automated Plots]
     M --> N[reports/visualizations/]
@@ -73,27 +73,31 @@ Automated reporting tools that consume model metadata and processed data to prod
 
 ## 4. Project Directory Tree
 
-The project follows the Cookie Cutter Data Science convention to maintain a clean separation between code, data, and outputs.
+The repository uses the following directory structure to maintain a clear boundary between the core library, validation examples, and data storage.
 
 ```text
 .
 ├── data/
 │   ├── raw/           # Immutable original data
-│   ├── pipeline/      # Intermediate merged artifacts (DVC tracked)
-│   ├── processed/     # Final feature-engineered datasets
+│   │   └── examples/  # Raw data for validation scripts
+│   ├── pipeline/      # Intermediate merged artifacts
+│   ├── final/         # Feature-engineered analytical panels
 │   └── temp/          # Temporary scratch space
 ├── docs/              # Architectural and user documentation
 ├── models/            # Serialized model artifacts
 ├── references/        # Configuration and dictionaries
+│   └── configs/       # YAML configurations
 ├── reports/           # Generated plots and JSON summaries
 └── src/
-    └── stats_transformer/
-        ├── data/          # Built-in datasets
-        ├── featurization/ # Transformation logic
-        ├── models/        # Econometric and ML models
-        ├── utils/         # Shared helpers
-        ├── visualization/ # Plotting utilities
-        └── pipeline.py    # Main orchestrator
+    ├── examples/      # Academic validation and sanity checks
+    ├── stats_transformer/ # Core Library Package
+    │   ├── data/          # Built-in datasets
+    │   ├── featurization/ # Transformation logic
+    │   ├── models/        # Econometric and ML models
+    │   ├── utils/         # Shared helpers
+    │   ├── visualization/ # Plotting utilities
+    │   └── pipeline.py    # Main orchestrator
+    └── temp/          # Scratch scripts
 ```
 
 ## 5. Configuration-Driven Design
