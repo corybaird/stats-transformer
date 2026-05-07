@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from src.stats_transformer.models.unsupervised.unsupervised import PCAModel
+from stats_transformer.models.unsupervised.unsupervised import PCAModel
 
 class NakamuraSteinssonPCASanity:
     def __init__(self):

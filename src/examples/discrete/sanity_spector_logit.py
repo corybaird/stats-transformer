@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
-from src.stats_transformer.models.discrete.logit import LogitModel
+from stats_transformer.models.discrete.logit import LogitModel
 
 class AgentSanitySpectorLogit:
     def __init__(self):

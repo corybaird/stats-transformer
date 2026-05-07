@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from scipy import stats
-from src.stats_transformer.models.regression.robust_ols import RobustOLSModel
-from src.stats_transformer.models.regression.iv import IV2SLSModel
+from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from stats_transformer.models.regression.iv import IV2SLSModel
 
 class Apep0238Replication:
 
