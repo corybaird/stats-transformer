@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from src.stats_transformer.visualization.base import BaseVisualizer
+from stats_transformer.visualization.base import BaseVisualizer
 
 class EDAVisualizer(BaseVisualizer):
     # Automates initial data inspection sequence (missingness, distributions)

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from src.stats_transformer.visualization.base import BaseVisualizer
+from stats_transformer.visualization.base import BaseVisualizer
 def get_readable_label(x): return str(x)
 
 class ModelVisualizer(BaseVisualizer):

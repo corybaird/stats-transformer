@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 from scipy import stats
-from src.stats_transformer.visualization.base import BaseVisualizer
-from src.stats_transformer.visualization.utils.viz_utils import configure_plot_aesthetics, get_color_palette
+from stats_transformer.visualization.base import BaseVisualizer
+from stats_transformer.visualization.utils.viz_utils import configure_plot_aesthetics, get_color_palette
 def get_readable_label(x): return str(x)
 
 class DataVisualizer(BaseVisualizer):
