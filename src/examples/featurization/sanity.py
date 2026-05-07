@@ -2,7 +2,7 @@ import os
 import requests
 import pandas as pd
 import numpy as np
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
 class AgentFeaturizationSanity:
     """

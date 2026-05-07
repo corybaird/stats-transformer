@@ -5,8 +5,8 @@ import os
 if "src" not in sys.path:
     sys.path.append("src")
 
-from src.stats_transformer.featurization.data_merger import DataMerger
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.data_merger import DataMerger
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
 class DemoFeaturization:
     def __init__(self):

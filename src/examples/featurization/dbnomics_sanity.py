@@ -1,6 +1,6 @@
 import requests
 import pandas as pd
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
 class DbnomicsFeaturizationSanity:
     def __init__(self):
