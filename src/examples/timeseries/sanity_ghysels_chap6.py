@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from src.stats_transformer.models.timeseries.var import VARModel
+from stats_transformer.models.timeseries.var import VARModel
 
 class GhyselsChap6VARSanity:
     def __init__(self):

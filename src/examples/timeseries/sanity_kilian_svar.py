@@ -1,7 +1,7 @@
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-from src.stats_transformer.models.timeseries.svar import SVARModel
+from stats_transformer.models.timeseries.svar import SVARModel
 
 class SVARSanityCheck:
     def __init__(self):

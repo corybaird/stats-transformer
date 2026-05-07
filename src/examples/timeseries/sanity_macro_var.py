@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from statsmodels.tsa.api import VAR
-from src.stats_transformer.models.timeseries.var import VARModel
+from stats_transformer.models.timeseries.var import VARModel
 
 class AgentSanityMacroVAR:
     def __init__(self):
