@@ -28,7 +28,7 @@ class NakamuraSteinssonPCASanity:
         df = self.generate_synthetic_data()
         
         # Save for YAML example
-        data_dir = "data/examples/unsupervised"
+        data_dir = "data/raw/examples/unsupervised"
         os.makedirs(data_dir, exist_ok=True)
         data_path = os.path.join(data_dir, "synthetic_nakamura.csv")
         df.to_csv(data_path, index=False)

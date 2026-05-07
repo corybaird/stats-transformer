@@ -8,7 +8,7 @@ from src.stats_transformer.models.regression.iv import IV2SLSModel
 class AgentSanityMrozIV:
     def __init__(self):
         self.data_url = "https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/wooldridge/mroz.csv"
-        self.data_dir = "data/examples/regression"
+        self.data_dir = "data/raw/examples/regression"
         self.data_path = f"{self.data_dir}/mroz.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 

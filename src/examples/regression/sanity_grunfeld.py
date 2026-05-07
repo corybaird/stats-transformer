@@ -6,7 +6,7 @@ from src.stats_transformer.models.regression.regression import RegressionModel
 
 class AgentSanityGrunfeldPanel:
     def __init__(self):
-        self.data_dir = "data/examples/regression"
+        self.data_dir = "data/raw/examples/regression"
         self.data_path = f"{self.data_dir}/grunfeld.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 

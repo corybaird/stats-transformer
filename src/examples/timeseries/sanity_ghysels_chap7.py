@@ -4,7 +4,7 @@ from src.stats_transformer.models.timeseries.vecm import VECMModel
 
 class GhyselsChap7VECMSanity:
     def __init__(self):
-        self.data_path = Path("data/examples/Ghysels /Ch_7/simulated_cointegration.csv")
+        self.data_path = Path("data/raw/examples/Ghysels /Ch_7/simulated_cointegration.csv")
 
     def run(self):
         sim_data = pd.read_csv(self.data_path)

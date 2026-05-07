@@ -6,7 +6,7 @@ from src.stats_transformer.models.regression.robust_ols import RobustOLSModel
 
 class AgentSanityLongley:
     def __init__(self):
-        self.data_dir = "data/examples/regression"
+        self.data_dir = "data/raw/examples/regression"
         self.data_path = f"{self.data_dir}/longley.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 
