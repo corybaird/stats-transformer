@@ -1,5 +1,5 @@
 data:
-  raw_data_file: data/examples/regression/okuns_law.csv
+  raw_data_file: data/raw/examples/regression/okuns_law.csv
 
 model:
   model_type: robust_ols

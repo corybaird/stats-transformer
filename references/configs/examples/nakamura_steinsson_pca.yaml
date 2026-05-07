@@ -1,5 +1,5 @@
 data:
-  raw_data_file: data/examples/unsupervised/synthetic_nakamura.csv
+  raw_data_file: data/raw/examples/unsupervised/synthetic_nakamura.csv
 
 model:
   model_type: pca
