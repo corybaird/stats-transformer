@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from linearmodels.iv import IV2SLS
 import statsmodels.api as sm
-from src.stats_transformer.models.regression.iv import IV2SLSModel
+from stats_transformer.models.regression.iv import IV2SLSModel
 
 class AgentSanityMrozIV:
     def __init__(self):

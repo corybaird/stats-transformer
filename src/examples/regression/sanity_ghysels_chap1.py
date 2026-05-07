@@ -1,7 +1,7 @@
 import pandas as pd
 import statsmodels.api as sm
 from pathlib import Path
-from src.stats_transformer.models.regression.regression import RegressionModel
+from stats_transformer.models.regression.regression import RegressionModel
 
 class GhyselsChap1Sanity:
     def __init__(self):

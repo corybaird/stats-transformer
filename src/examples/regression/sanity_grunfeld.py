@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
-from src.stats_transformer.models.regression.regression import RegressionModel
+from stats_transformer.models.regression.regression import RegressionModel
 
 class AgentSanityGrunfeldPanel:
     def __init__(self):
