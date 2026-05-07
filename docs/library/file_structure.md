@@ -60,4 +60,4 @@ Running models or the main `pipeline.py` will automatically dump artifacts (JSON
 > [!NOTE]
 > The structure above describes the `stats-transformer` *library repository*. It is not necessarily the structure you should use for an individual research paper.
 > 
-> To create a new, reproducible economic research project that *uses* `stats-transformer`, see the roadmap in [docs/cookie_cutter_refactor.md](cookie_cutter_refactor.md).
+> To create a new, reproducible economic research project that *uses* `stats-transformer`, see the roadmap in [docs/research_standards/cookie_cutter_refactor.md](../research_standards/cookie_cutter_refactor.md).

@@ -71,9 +71,9 @@ model_results = pipeline.run(stage="regression")
 pipeline.run(stage="visualization")
 ```
 
-For more details on the system design, see [docs/architecture.md](docs/architecture.md).
-For the standardized research folder structure, see [docs/file_structure.md](docs/file_structure.md).
-For standards on how to write research documentation, see [docs/documentation.md](docs/documentation.md).
+For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
+For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
+For standards on how to write research documentation, see [docs/research_standards/documentation.md](docs/research_standards/documentation.md).
 
 
-For more details on the release process, please refer to [docs/publish_plan.md](docs/publish_plan.md).
+For more details on the release process, please refer to [docs/library/publish_plan.md](docs/library/publish_plan.md).
