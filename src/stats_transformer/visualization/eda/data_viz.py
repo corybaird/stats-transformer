@@ -78,7 +78,7 @@ class DataVisualizer(BaseVisualizer):
                 saved_files.append(filepath)
         return None if display_only else saved_files
     
-    def create_scatter_plots(self, data, feature_list, target=None, hue=None, subdir="scatter_plots"):
+    def create_scatter_plots(self, data, feature_list, target=None, hue=None, subdir="scatter_plots", display_only=False):
         saved_files = []
         if target is not None:
             for feature in feature_list:
@@ -94,10 +94,12 @@ class DataVisualizer(BaseVisualizer):
                 feature_label = get_readable_label(feature)
                 target_label = get_readable_label(target)
                 configure_plot_aesthetics(ax, title=f"{feature_label} vs {target_label}", xlabel=feature_label, ylabel=target_label, grid=True)
-                saved_files.append(self.save_figure(fig, f"scatter_{feature}_vs_{target}", subdir))
-        return saved_files
+                filepath = self.save_figure(fig, f"scatter_{feature}_vs_{target}", subdir, display_only=display_only)
+                if not display_only:
+                    saved_files.append(filepath)
+        return None if display_only else saved_files
     
-    def create_distribution_plots(self, data, feature_list, by_group=None, subdir="distributions"):
+    def create_distribution_plots(self, data, feature_list, by_group=None, subdir="distributions", display_only=False):
         saved_files = []
         for feature in feature_list:
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -112,8 +114,10 @@ class DataVisualizer(BaseVisualizer):
             else:
                 sns.histplot(data[feature].dropna(), kde=True, ax=ax)
             configure_plot_aesthetics(ax, title=f"Dist of {get_readable_label(feature)}", xlabel=get_readable_label(feature), ylabel="Density", legend=by_group is not None, grid=True)
-            saved_files.append(self.save_figure(fig, f"distribution_{feature}", subdir))
-        return saved_files
+            filepath = self.save_figure(fig, f"distribution_{feature}", subdir, display_only=display_only)
+            if not display_only:
+                saved_files.append(filepath)
+        return None if display_only else saved_files
     
     def create_correlation_matrix(self, data, feature_list, method="pearson", subdir="correlations", display_only=False):
         corr_matrix = data[feature_list].corr(method=method)
@@ -124,7 +128,7 @@ class DataVisualizer(BaseVisualizer):
         plt.tight_layout()
         return self.save_figure(fig, f"correlation_matrix_{method}", subdir, display_only=display_only)
     
-    def create_box_plots(self, data, feature_list, by_group=None, subdir="boxplots"):
+    def create_box_plots(self, data, feature_list, by_group=None, subdir="boxplots", display_only=False):
         saved_files = []
         for feature in feature_list:
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -136,10 +140,12 @@ class DataVisualizer(BaseVisualizer):
             plt.title(f"Box Plot of {get_readable_label(feature)}", fontsize=12, fontweight='bold')
             plt.grid(True, linestyle='--', alpha=0.7)
             plt.tight_layout()
-            saved_files.append(self.save_figure(fig, f"boxplot_{feature}", subdir))
-        return saved_files
+            filepath = self.save_figure(fig, f"boxplot_{feature}", subdir, display_only=display_only)
+            if not display_only:
+                saved_files.append(filepath)
+        return None if display_only else saved_files
     
-    def test_normality(self, data, feature_list, test_type="shapiro", subdir="normality_tests"):
+    def test_normality(self, data, feature_list, test_type="shapiro", subdir="normality_tests", display_only=False):
         results = {}
         for feature in feature_list:
             feature_data = data[feature].dropna()
@@ -158,7 +164,7 @@ class DataVisualizer(BaseVisualizer):
             sm.qqplot(feature_data, line='45', ax=ax)
             ax.set_title(f"Q-Q Plot for {get_readable_label(feature)}\np={p_value:.4f}", fontsize=12, fontweight='bold')
             ax.grid(True, linestyle='--', alpha=0.7)
-            results[feature]["qq_plot"] = self.save_figure(fig, f"qqplot_{feature}_{test_type}", subdir)
+            results[feature]["qq_plot"] = self.save_figure(fig, f"qqplot_{feature}_{test_type}", subdir, display_only=display_only)
         return results
 
     def run(self):
