@@ -57,14 +57,14 @@ class DemoFeaturization:
 
         df_features = engineer.fit_transform(df_merged)
 
-        print("\n====== 3. Sanity Checks for Country:", COUNTRY_SLICED, "======")
+        print("\n====== 3. Example Checks for Country:", COUNTRY_SLICED, "======")
         # Select the base column and all its transformed versions
         eval_cols = ["date", "hicp"] + [f"hicp_{t}" for t in all_transforms]
         df_eval = df_features[eval_cols].head(10)
         
         print(df_eval.to_string(index=False))
         
-        print("\nSanity Check Analysis:")
+        print("\nExample Check Analysis:")
         print("- 'hicp_lead1' should match the 'hicp' of the NEXT row.")
         print("- 'hicp_lag1' should match the 'hicp' of the PREVIOUS row.")
         print("- 'hicp_changeraw' should be (hicp - hicp_lag1).")

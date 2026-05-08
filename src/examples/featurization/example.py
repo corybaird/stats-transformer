@@ -4,9 +4,9 @@ import pandas as pd
 import numpy as np
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
-class AgentFeaturizationSanity:
+class FeaturizationExample:
     """
-    Sanity check to compare stats-transformer's feature engineering
+    Example check to compare stats-transformer's feature engineering
     with the explicit R-code transformations from the ape-papers repository.
     
     R-code (02_clean_data.R) computes:
@@ -103,11 +103,11 @@ class AgentFeaturizationSanity:
         print("stats-transformer natively uses 'simple returns' (pct_change).")
         print("For small percentage changes (like employment), they are mathematically very close.")
         if max_diff < 2.0:
-            print("\nSanity check PASSED! The stats-transformer simple returns closely approximate the R-script log returns.")
+            print("\nExample check PASSED! The stats-transformer simple returns closely approximate the R-script log returns.")
             print("Note: The max difference usually occurs during large shocks (e.g., COVID-19) where log returns and simple returns diverge slightly.")
         else:
-            print("\nSanity check FAILED - significant differences found between simple and log returns.")
+            print("\nExample check FAILED - significant differences found between simple and log returns.")
 
 if __name__ == "__main__":
-    sanity = AgentFeaturizationSanity()
+    sanity = FeaturizationExample()
     sanity.run()
