@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.api import VAR
-from src.stats_transformer.models.base import ModelBase
+from stats_transformer.models.base import ModelBase
 
 class VARModel(ModelBase):
     def __init__(self, target_variables=None, date_column=None, maxlags=None, ic=None, **kwargs):

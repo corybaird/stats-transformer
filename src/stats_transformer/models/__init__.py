@@ -1,4 +1,4 @@
-from src.stats_transformer.models.base import ModelBase
+from stats_transformer.models.base import ModelBase
 from .regression.regression import RegressionModel
 from .regression.robust_ols import RobustOLSModel
 from .regression.panel import PanelRegressionModel

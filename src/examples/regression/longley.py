@@ -2,9 +2,10 @@ import os
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
-from src.stats_transformer.models.regression.robust_ols import RobustOLSModel
+from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from src.examples.base import BaseExample
 
-class AgentSanityLongley:
+class LongleyExample(BaseExample):
     def __init__(self):
         self.data_dir = "data/raw/examples/regression"
         self.data_path = f"{self.data_dir}/longley.csv"
@@ -17,7 +18,7 @@ class AgentSanityLongley:
         print(f"Data saved to {self.data_path}")
         return df_raw
 
-    def _compute_statsmodels_ols(self, df):
+    def _compute_baseline(self, df):
         print("\n" + "="*50)
         print("2. ORIGINAL STATSMODELS OLS (Longley Collinearity Test)")
         print("="*50)
@@ -65,12 +66,6 @@ class AgentSanityLongley:
         else:
             print("\nCONCLUSION: Significant deviations detected.")
 
-    def run(self):
-        df_clean = self._fetch_and_prepare_data()
-        orig_model = self._compute_statsmodels_ols(df_clean)
-        st_model = self._compute_stats_transformer(df_clean)
-        self._compare_and_report(orig_model, st_model)
-
 if __name__ == "__main__":
-    sanity = AgentSanityLongley()
-    sanity.run()
+    example = LongleyExample()
+    example.run()

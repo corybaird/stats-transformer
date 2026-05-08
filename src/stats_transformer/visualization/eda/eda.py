@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from src.stats_transformer.visualization.base import BaseVisualizer
+from stats_transformer.visualization.base import BaseVisualizer
 
 class EDAVisualizer(BaseVisualizer):
     # Automates initial data inspection sequence (missingness, distributions)
@@ -45,7 +45,10 @@ class EDAVisualizer(BaseVisualizer):
         n_cols = 3
         n_rows = int(np.ceil(len(numeric_cols) / n_cols))
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 4 * n_rows))
-        axes = axes.flatten() if n_rows > 1 else [axes]
+        if n_rows * n_cols > 1:
+            axes = axes.flatten()
+        else:
+            axes = [axes]
         
         for i, col in enumerate(numeric_cols):
             if i < len(axes):

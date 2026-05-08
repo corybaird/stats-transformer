@@ -1,9 +1,9 @@
 import os
 import requests
 import pandas as pd
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
-class FredFeaturizationSanity:
+class FredFeaturizationExample:
     def __init__(self):
         self.api_key = self._load_api_key()
         self.base_url = "https://api.stlouisfed.org/fred/series/observations"
@@ -73,10 +73,10 @@ class FredFeaturizationSanity:
         print(df_merged[["date", "gdp", "gdp_changepct_100", "fred_gdp_pc", "diff"]].tail())
         
         if max_diff < 1e-4:
-            print("\nSanity check PASSED!")
+            print("\nExample check PASSED!")
         else:
-            print("\nSanity check FAILED - significant differences found.")
+            print("\nExample check FAILED - significant differences found.")
 
 if __name__ == "__main__":
-    sanity = FredFeaturizationSanity()
+    sanity = FredFeaturizationExample()
     sanity.run()

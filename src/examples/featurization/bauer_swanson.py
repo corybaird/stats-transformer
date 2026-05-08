@@ -6,9 +6,9 @@ from pathlib import Path
 if "src" not in sys.path:
     sys.path.append("src")
 
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
-class BauerSwansonSanity:
+class BauerSwansonExample:
     def __init__(self):
         self.data_dir = Path("data") / "examples" / "Bauer_Swanson_2023"
         self.nfp_path = self.data_dir / "NonfarmPayrolls.txt"
@@ -112,5 +112,5 @@ class BauerSwansonSanity:
         self.compare(df_unemp_lib, df_unemp_gt, "Unemployment (Lag)")
 
 if __name__ == "__main__":
-    demo = BauerSwansonSanity()
+    demo = BauerSwansonExample()
     demo.run()

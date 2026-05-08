@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from statsmodels.tsa.api import VAR
-from src.stats_transformer.models.timeseries.var import VARModel
+from stats_transformer.models.timeseries.var import VARModel
+from src.examples.base import BaseExample
 
-class AgentSanityMacroVAR:
+class MacroVARExample(BaseExample):
     def __init__(self):
         self.data_dir = "data/raw/examples/timeseries"
         self.data_path = f"{self.data_dir}/macrodata.csv"
@@ -26,7 +27,7 @@ class AgentSanityMacroVAR:
         print(f"Data saved to {self.data_path}")
         return data
 
-    def _compute_statsmodels_var(self, df):
+    def _compute_baseline(self, df):
         print("\n" + "="*50)
         print("2. ORIGINAL STATSMODELS VAR")
         print("="*50)
@@ -37,7 +38,7 @@ class AgentSanityMacroVAR:
         print(model.summary())
         return model
 
-    def _compute_stats_transformer_var(self, df):
+    def _compute_stats_transformer(self, df):
         print("\n" + "="*50)
         print("3. STATS-TRANSFORMER VAR MODEL")
         print("="*50)
@@ -72,12 +73,6 @@ class AgentSanityMacroVAR:
         else:
             print("\nCONCLUSION: Significant deviations detected.")
 
-    def run(self):
-        df_clean = self._fetch_and_prepare_data()
-        orig_model = self._compute_statsmodels_var(df_clean)
-        st_model = self._compute_stats_transformer_var(df_clean)
-        self._compare_and_report(orig_model, st_model)
-
 if __name__ == "__main__":
-    sanity = AgentSanityMacroVAR()
-    sanity.run()
+    example = MacroVARExample()
+    example.run()

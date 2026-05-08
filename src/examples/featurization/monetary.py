@@ -1,12 +1,12 @@
-# Sanity Check for Monetary Policy Transformations (apep_0235)
+# Example Check for Monetary Policy Transformations (apep_0235)
 # Source Repo: https://github.com/SocialCatalystLab/ape-papers/tree/70c660ea5a7de722e9a12ad965e1c665890208d8/apep_0235/v1/code
 import os
 import requests
 import pandas as pd
 import numpy as np
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
-class AgentSanityMonetary:
+class AgentExampleMonetary:
     def __init__(self):
         self.api_key = self._load_api_key()
         self.base_url = "https://api.stlouisfed.org/fred/series/observations"
@@ -147,5 +147,5 @@ class AgentSanityMonetary:
         self._compare_and_report(df_features, df_py)
 
 if __name__ == "__main__":
-    sanity = AgentSanityMonetary()
+    sanity = AgentExampleMonetary()
     sanity.run()

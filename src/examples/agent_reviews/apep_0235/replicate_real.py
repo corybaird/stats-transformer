@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 
-from src.stats_transformer.models.regression.robust_ols import RobustOLSModel
+from stats_transformer.models.regression.robust_ols import RobustOLSModel
 
 class Apep0235RealReplication:
     def __init__(self):

@@ -1,9 +1,9 @@
 import pandas as pd
 import statsmodels.formula.api as smf
 from pathlib import Path
-from src.stats_transformer.models.regression.diagnostics import RegressionDiagnostics
+from stats_transformer.models.regression.diagnostics import RegressionDiagnostics
 
-class GhyselsChap2Sanity:
+class GhyselsChap2Example:
     def __init__(self):
         self.data_path = Path("data/raw/examples/Ghysels /Ch_2/simulated_datac2.csv")
 
@@ -34,5 +34,5 @@ class GhyselsChap2Sanity:
         print(f"Chow Test (50% split): Stat={chow['statistic']:.4f}, p={chow['p_value']:.4f}")
 
 if __name__ == "__main__":
-    runner = GhyselsChap2Sanity()
+    runner = GhyselsChap2Example()
     runner.run()

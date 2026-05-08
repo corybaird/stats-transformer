@@ -6,9 +6,9 @@ from pathlib import Path
 if "src" not in sys.path:
     sys.path.append("src")
 
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
-class NakamuraSteinssonSanity:
+class NakamuraSteinssonExample:
     def __init__(self):
         self.data_dir = Path("data") / "examples" / "Nakamura_Steinsson_2018"
         self.raw_path = self.data_dir / "NominalYields.csv"
@@ -97,5 +97,5 @@ class NakamuraSteinssonSanity:
         self.compare_transformed(df_my, df_gt)
 
 if __name__ == "__main__":
-    demo = NakamuraSteinssonSanity()
+    demo = NakamuraSteinssonExample()
     demo.run()

@@ -1,9 +1,9 @@
 import os
 import numpy as np
 import pandas as pd
-from src.stats_transformer.models.unsupervised.unsupervised import PCAModel
+from stats_transformer.models.unsupervised.unsupervised import PCAModel
 
-class NakamuraSteinssonPCASanity:
+class NakamuraSteinssonPCAExample:
     def __init__(self):
         self.n_samples = 150
         self.features = ['mp1', 'ff4', 'ed2', 'ed3', 'ed4']
@@ -57,5 +57,5 @@ class NakamuraSteinssonPCASanity:
         print(transformed_df[['pca_1']].head())
 
 if __name__ == "__main__":
-    runner = NakamuraSteinssonPCASanity()
+    runner = NakamuraSteinssonPCAExample()
     runner.run()

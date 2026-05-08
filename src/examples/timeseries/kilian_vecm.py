@@ -1,9 +1,9 @@
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-from src.stats_transformer.models.timeseries.vecm import VECMModel
+from stats_transformer.models.timeseries.vecm import VECMModel
 
-class VECMSanityCheck:
+class KilianVECMExample:
     def __init__(self):
         self.data = sm.datasets.macrodata.load_pandas().data
         self.target_vars = ['realgdp', 'realcons', 'realinv']
@@ -21,4 +21,4 @@ class VECMSanityCheck:
         print(vecm.get_summary())
 
 if __name__ == "__main__":
-    VECMSanityCheck().run()
+    KilianVECMExample().run()

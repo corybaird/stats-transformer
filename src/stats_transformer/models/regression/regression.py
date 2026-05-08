@@ -9,7 +9,7 @@ import statsmodels.api as sm
 import sys
 import yaml
 from datetime import datetime
-from src.stats_transformer.models.base import ModelBase
+from stats_transformer.models.base import ModelBase
 
 class RegressionResults:
 

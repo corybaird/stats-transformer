@@ -6,9 +6,9 @@ from pathlib import Path
 if "src" not in sys.path:
     sys.path.append("src")
 
-from src.stats_transformer.featurization.feature_engineering import FeatureEngineer
+from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
-class BBMSanity:
+class BBMExample:
     def __init__(self):
         self.data_dir = Path("data") / "examples" / "BBM_2023"
         self.raw_path = self.data_dir / "feds_subset.csv"
@@ -78,5 +78,5 @@ class BBMSanity:
         self.compare(df_my, df_gt)
 
 if __name__ == "__main__":
-    demo = BBMSanity()
+    demo = BBMExample()
     demo.run()

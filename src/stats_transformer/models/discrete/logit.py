@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from src.stats_transformer.models.base import ModelBase
+from stats_transformer.models.base import ModelBase
 
 class LogitModel(ModelBase):
     def __init__(self, target=None, independent_variables=None, **kwargs):

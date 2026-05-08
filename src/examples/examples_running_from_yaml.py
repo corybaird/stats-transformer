@@ -1,7 +1,7 @@
 import os
 import yaml
 from pathlib import Path
-from src.stats_transformer.pipeline import Pipeline
+from stats_transformer.pipeline import Pipeline
 
 class RunExamplesFromYaml:
     def __init__(self):

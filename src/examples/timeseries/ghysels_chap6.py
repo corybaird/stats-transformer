@@ -1,8 +1,8 @@
 import pandas as pd
 from pathlib import Path
-from src.stats_transformer.models.timeseries.var import VARModel
+from stats_transformer.models.timeseries.var import VARModel
 
-class GhyselsChap6VARSanity:
+class GhyselsChap6VARExample:
     def __init__(self):
         self.data_path = Path("data/raw/examples/Ghysels /Ch_6/var_simulated_ch6_sec9.csv")
 
@@ -17,5 +17,5 @@ class GhyselsChap6VARSanity:
         print(model.get_summary())
 
 if __name__ == "__main__":
-    runner = GhyselsChap6VARSanity()
+    runner = GhyselsChap6VARExample()
     runner.run()

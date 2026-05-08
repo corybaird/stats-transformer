@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from src.stats_transformer.models.regression.robust_ols import RobustOLSModel
-from src.stats_transformer.models.regression.iv import IV2SLSModel
+from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from stats_transformer.models.regression.iv import IV2SLSModel
 
 def load_manual_env(path=".env"):
     env_vars = {}

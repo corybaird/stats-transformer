@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 from linearmodels.iv import IV2SLS
 import statsmodels.api as sm
-from src.stats_transformer.models.regression.iv import IV2SLSModel
+from stats_transformer.models.regression.iv import IV2SLSModel
+from src.examples.base import BaseExample
 
-class AgentSanityMrozIV:
+class MrozIVExample(BaseExample):
     def __init__(self):
         self.data_url = "https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/wooldridge/mroz.csv"
         self.data_dir = "data/raw/examples/regression"
@@ -27,7 +28,7 @@ class AgentSanityMrozIV:
         print(f"Data saved to {self.data_path}")
         return df_clean
 
-    def _compute_linearmodels_iv(self, df):
+    def _compute_baseline(self, df):
         print("\n" + "="*50)
         print("2. ORIGINAL LINEARMODELS IV/2SLS")
         print("="*50)
@@ -41,7 +42,7 @@ class AgentSanityMrozIV:
         print(model.summary)
         return model
 
-    def _compute_stats_transformer_iv(self, df):
+    def _compute_stats_transformer(self, df):
         print("\n" + "="*50)
         print("3. STATS-TRANSFORMER IV/2SLS MODEL")
         print("="*50)
@@ -79,12 +80,6 @@ class AgentSanityMrozIV:
         else:
             print("\nCONCLUSION: Significant deviations detected.")
 
-    def run(self):
-        df_clean = self._fetch_and_prepare_data()
-        orig_model = self._compute_linearmodels_iv(df_clean)
-        st_model = self._compute_stats_transformer_iv(df_clean)
-        self._compare_and_report(orig_model, st_model)
-
 if __name__ == "__main__":
-    sanity = AgentSanityMrozIV()
-    sanity.run()
+    example = MrozIVExample()
+    example.run()

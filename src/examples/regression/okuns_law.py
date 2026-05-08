@@ -3,9 +3,10 @@ import requests
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
-from src.stats_transformer.models.regression.robust_ols import RobustOLSModel
+from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from src.examples.base import BaseExample
 
-class AgentSanityOkunsLaw:
+class OkunsLawExample(BaseExample):
     def __init__(self):
         self.api_key = self._load_api_key()
         self.base_url = "https://api.stlouisfed.org/fred/series/observations"
@@ -70,7 +71,7 @@ class AgentSanityOkunsLaw:
         
         return df_clean
 
-    def _compute_statsmodels_ols(self, df):
+    def _compute_baseline(self, df):
         print("\n" + "="*50)
         print("2. ORIGINAL STATSMODELS OLS (HC3 Robust SE)")
         print("="*50)
@@ -121,12 +122,6 @@ class AgentSanityOkunsLaw:
         else:
             print("\nCONCLUSION: Significant deviations detected.")
 
-    def run(self):
-        df_clean = self._fetch_and_prepare_data()
-        sm_model = self._compute_statsmodels_ols(df_clean)
-        st_model = self._compute_stats_transformer(df_clean)
-        self._compare_and_report(sm_model, st_model)
-
 if __name__ == "__main__":
-    sanity = AgentSanityOkunsLaw()
-    sanity.run()
+    example = OkunsLawExample()
+    example.run()

@@ -1,9 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "stats-transformer"
 version = "0.1.0"
-description = "Add your description here"
+description = "A comprehensive Python library for robust macroeconomic data transformation, analysis, and visualization."
 readme = "README.md"
 requires-python = ">=3.12"
+authors = [
+  { name="Cory Baird", email="cory@example.com" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "jupyter>=1.1.1",
     "linearmodels>=7.0",
@@ -15,4 +28,16 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "seaborn>=0.13.2",
     "statsmodels>=0.14.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/corybaird/stats-transformer"
+Repository = "https://github.com/corybaird/stats-transformer"
+Changelog = "https://github.com/corybaird/stats-transformer/blob/main/CHANGELOG.md"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
 ]
