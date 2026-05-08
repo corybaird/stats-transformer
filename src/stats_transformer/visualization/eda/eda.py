@@ -45,7 +45,10 @@ class EDAVisualizer(BaseVisualizer):
         n_cols = 3
         n_rows = int(np.ceil(len(numeric_cols) / n_cols))
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 4 * n_rows))
-        axes = axes.flatten() if n_rows > 1 else [axes]
+        if n_rows * n_cols > 1:
+            axes = axes.flatten()
+        else:
+            axes = [axes]
         
         for i, col in enumerate(numeric_cols):
             if i < len(axes):

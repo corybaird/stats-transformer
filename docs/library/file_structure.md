@@ -39,7 +39,7 @@ This document outlines the file structure of the `stats-transformer` repository.
 
 ## 2. Core Directory Principles
 
-### `src/stats_transformer/` (The Library)
+### `src/stats_transformer/` (The Tool/Library)
 This is the core Python package. It is organized by *capability* (e.g., `models/`, `featurization/`, `visualization/`). Code here should be stateless, modular, and unaware of specific papers or datasets. It is driven purely by configuration.
 
 ### `data/` (The Data Warehouse)
