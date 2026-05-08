@@ -38,8 +38,8 @@ We will execute this work across distinct execution phases, enforcing the rule t
 
 1. **Branching:** Create `release/v<TARGET_VERSION>` off `main`.
 2. **Audit & Fixes (via pypi-publisher rules):**
-   - `pyproject.toml`: Audit metadata (authors, description, urls, dependencies). Assure `[build-system]` is configured.
-   - `README.md`: Ensure a quick-start example uses the newly added datasets.
+   - `pyproject.toml`: Audit metadata (authors, description, urls, dependencies). Assure `[build-system]` is configured and exclusions are set for tests/agentic examples.
+   - `README.md`: Ensure a quick-start example uses the newly added datasets and points users to the `notebooks/` directory for detailed tutorials.
    - `CHANGELOG.md`: Generate notes for this release.
    - `src/`: verify `__version__` and `__all__` imports are clean. Marker files like `py.typed`.
 3. **Publish CI/CD Setup:**
