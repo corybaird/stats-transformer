@@ -1,0 +1,16 @@
+data:
+  featurization:
+    entity_column: country
+    date_column: date
+  raw_data_file: tests/data/test_data.csv
+
+model:
+  model_type: robust_ols
+  target_variable: y
+  independent_variables:
+    - x1
+    - x2
+  summary_output_path: data/temp/test_summary.json
+
+visualization:
+  output_dir: data/temp/visualizations
