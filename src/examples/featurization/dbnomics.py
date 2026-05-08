@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
-class DbnomicsFeaturizationSanity:
+class DbnomicsFeaturizationExample:
     def __init__(self):
         self.base_url = "https://api.db.nomics.world/v22/series/Eurostat"
     
@@ -75,12 +75,12 @@ class DbnomicsFeaturizationSanity:
         
         # We allow a slightly higher tolerance for DBnomics due to rounding in published index values vs published rates
         if max_diff < 1e-1:
-            print("\nSanity check PASSED!")
+            print("\nExample check PASSED!")
             if max_diff > 1e-4:
                 print("(Note: Small differences are due to Eurostat rounding the raw index to 1 or 2 decimal places before publishing, while calculating the official rate from unrounded data).")
         else:
-            print("\nSanity check FAILED - significant differences found.")
+            print("\nExample check FAILED - significant differences found.")
 
 if __name__ == "__main__":
-    sanity = DbnomicsFeaturizationSanity()
+    sanity = DbnomicsFeaturizationExample()
     sanity.run()
