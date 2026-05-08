@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from src.examples.base import BaseExample
 
-class AgentSanityMincerWage:
+class MincerWageExample(BaseExample):
     def __init__(self):
         self.data_url = "https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/wooldridge/wage1.csv"
         self.data_dir = "data/raw/examples/regression"
@@ -30,7 +31,7 @@ class AgentSanityMincerWage:
         
         return df_raw
 
-    def _compute_statsmodels_ols(self, df):
+    def _compute_baseline(self, df):
         print("\n" + "="*50)
         print("2. ORIGINAL STATSMODELS OLS (HC3 Robust SE)")
         print("="*50)
@@ -80,12 +81,6 @@ class AgentSanityMincerWage:
         else:
             print("\nCONCLUSION: Significant deviations detected.")
 
-    def run(self):
-        df_clean = self._fetch_and_prepare_data()
-        sm_model = self._compute_statsmodels_ols(df_clean)
-        st_model = self._compute_stats_transformer(df_clean)
-        self._compare_and_report(sm_model, st_model)
-
 if __name__ == "__main__":
-    sanity = AgentSanityMincerWage()
-    sanity.run()
+    example = MincerWageExample()
+    example.run()
