@@ -20,7 +20,6 @@ To use it locally in your project:
 uv add stats-transformer
 ```
 
-YES
 ### 2. Configuration (`params.yaml`)
 
 Define your data sources, pipeline parameters, and model specifications in a `params.yaml` file:
@@ -71,10 +70,21 @@ model_results = pipeline.run(stage="regression")
 pipeline.run(stage="visualization")
 ```
 
+### 4. Testing
+
+Verify the installation and library integrity by running the test suite:
+
+```bash
+uv run pytest tests
+```
+
+For more details on test coverage, see the [Testing Suite](docs/validation/testing_suite.md).
+
 ## Documentation
 
 - **Examples:** For examples of running the models, see [docs/validation/academic_examples.md](docs/validation/academic_examples.md).
 - **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
 - **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
 - **Documentation Standards:** For standards on how to write research documentation, see [docs/research_standards/documentation.md](docs/research_standards/documentation.md).
+- **Validation & Testing:** For details on the testing suite, see [docs/validation/testing_suite.md](docs/validation/testing_suite.md).
 - **Publishing Plan:** For more details on the release process, please refer to [docs/library/publish_plan.md](docs/library/publish_plan.md).
