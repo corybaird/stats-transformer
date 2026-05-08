@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 from stats_transformer.models.timeseries.vecm import VECMModel
 
-class GhyselsChap7VECMSanity:
+class GhyselsChap7VECMExample:
     def __init__(self):
         self.data_path = Path("data/raw/examples/Ghysels /Ch_7/simulated_cointegration.csv")
 
@@ -17,5 +17,5 @@ class GhyselsChap7VECMSanity:
         print(model.get_summary())
 
 if __name__ == "__main__":
-    runner = GhyselsChap7VECMSanity()
+    runner = GhyselsChap7VECMExample()
     runner.run()
