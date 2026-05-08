@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from stats_transformer.models.regression.regression import RegressionModel
+from src.examples.base import BaseExample
 
-class AgentSanityGrunfeldPanel:
+class GrunfeldPanelExample(BaseExample):
     def __init__(self):
         self.data_dir = "data/raw/examples/regression"
         self.data_path = f"{self.data_dir}/grunfeld.csv"
@@ -25,7 +26,7 @@ class AgentSanityGrunfeldPanel:
         
         return df_raw
 
-    def _compute_statsmodels_ols(self, df):
+    def _compute_baseline(self, df):
         print("\n" + "="*50)
         print("2. ORIGINAL STATSMODELS OLS (LSDV - Least Squares Dummy Variable)")
         print("="*50)
@@ -80,12 +81,6 @@ class AgentSanityGrunfeldPanel:
         else:
             print("\nCONCLUSION: Significant deviations detected.")
 
-    def run(self):
-        df_clean = self._fetch_and_prepare_data()
-        sm_model = self._compute_statsmodels_ols(df_clean)
-        st_model = self._compute_stats_transformer(df_clean)
-        self._compare_and_report(sm_model, st_model)
-
 if __name__ == "__main__":
-    sanity = AgentSanityGrunfeldPanel()
-    sanity.run()
+    example = GrunfeldPanelExample()
+    example.run()
