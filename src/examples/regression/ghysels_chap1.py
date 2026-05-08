@@ -3,7 +3,7 @@ import statsmodels.api as sm
 from pathlib import Path
 from stats_transformer.models.regression.regression import RegressionModel
 
-class GhyselsChap1Sanity:
+class GhyselsChap1Example:
     def __init__(self):
         self.data_path = Path("data/raw/examples/Ghysels /Ch_1/simulated_data.csv")
 
@@ -29,5 +29,5 @@ class GhyselsChap1Sanity:
              print(preds.head())
 
 if __name__ == "__main__":
-    runner = GhyselsChap1Sanity()
+    runner = GhyselsChap1Example()
     runner.run()
