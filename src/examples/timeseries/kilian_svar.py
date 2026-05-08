@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from stats_transformer.models.timeseries.svar import SVARModel
 
-class SVARSanityCheck:
+class KilianSVARExample:
     def __init__(self):
         self.data = sm.datasets.macrodata.load_pandas().data
         self.target_vars = ['realgdp', 'realcons', 'realinv']
@@ -26,4 +26,4 @@ class SVARSanityCheck:
         print(svar.get_summary())
 
 if __name__ == "__main__":
-    SVARSanityCheck().run()
+    KilianSVARExample().run()
