@@ -1,5 +1,10 @@
 # Byte-compiled / optimized / DLL files
-/data/
+archive/
+/data/notebook_exports/
+/data/pipeline/
+/data/final/
+/data/temp/
+/data/raw/
 /.agents/
 reports/
 __pycache__/
