@@ -5,7 +5,7 @@ from stats_transformer.models.regression.regression import RegressionModel
 
 class GhyselsChap1Example:
     def __init__(self):
-        self.data_path = Path("data/raw/examples/Ghysels /Ch_1/simulated_data.csv")
+        self.data_path = Path("data/examples/regression/ghysels_ch1/simulated_data.csv")
 
     def run(self):
         sim_data = pd.read_csv(self.data_path)

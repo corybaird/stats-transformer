@@ -7,7 +7,7 @@ from src.examples.base import BaseExample
 
 class SpectorLogitExample(BaseExample):
     def __init__(self):
-        self.data_dir = "data/raw/examples/discrete"
+        self.data_dir = "data/examples/discrete"
         self.data_path = f"{self.data_dir}/spector.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 

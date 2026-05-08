@@ -8,7 +8,7 @@ from src.examples.base import BaseExample
 
 class MacroVARExample(BaseExample):
     def __init__(self):
-        self.data_dir = "data/raw/examples/timeseries"
+        self.data_dir = "data/examples/timeseries"
         self.data_path = f"{self.data_dir}/macrodata.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 

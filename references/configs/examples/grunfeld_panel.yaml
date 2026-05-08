@@ -5,7 +5,7 @@ data:
     column_mapping:
       year: date
       firm: country
-  raw_data_file: data/raw/examples/regression/grunfeld.csv
+  raw_data_file: data/examples/regression/grunfeld.csv
 
 model:
   model_type: panel_ols

@@ -7,7 +7,7 @@ from src.examples.base import BaseExample
 
 class GrunfeldPanelExample(BaseExample):
     def __init__(self):
-        self.data_dir = "data/raw/examples/regression"
+        self.data_dir = "data/examples/regression"
         self.data_path = f"{self.data_dir}/grunfeld.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 
