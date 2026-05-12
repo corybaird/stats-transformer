@@ -8,7 +8,6 @@ archive/
 /data/final/
 /data/temp/
 /data/raw/
-/.agents/
 reports/
 __pycache__/
 *.py[codz]
