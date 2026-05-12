@@ -14,6 +14,7 @@ from .visualization import (
     TimeSeriesPlot, IRFPlot, FacetedTimeSeries,
     BinnedScatterPlot, ScatterWithRegression, CorrelationHeatmap
 )
+from .visualization.tables import TableGenerator
 
 __all__ = [
     "FeatureEngineer",
@@ -32,4 +33,5 @@ __all__ = [
     "BinnedScatterPlot",
     "ScatterWithRegression",
     "CorrelationHeatmap",
+    "TableGenerator",
 ]

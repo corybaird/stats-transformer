@@ -42,8 +42,11 @@ class CorrelationHeatmap:
             xticklabels=display_labels, 
             yticklabels=display_labels,
             mask=mask,
-            cbar_kws={"shrink": .8}
+            cbar_kws={"shrink": .8},
+            annot_kws={"fontsize": 14, "fontweight": "bold"}
         )
+        
+        ax.grid(False)
         
         if title is None:
             title = f"{method.capitalize()} Correlation Matrix"
