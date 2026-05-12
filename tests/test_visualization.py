@@ -2,8 +2,11 @@ import pytest
 import pandas as pd
 import numpy as np
 import os
+import shutil
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.visualization.models.regression_viz import RegressionVisualizer
+from stats_transformer.visualization.eda.data_viz import DataVisualizer
+from stats_transformer.visualization.models.model_viz import ModelVisualizer
 
 def test_regression_visualizer():
     # 1. Create a model and fit it to get metadata
@@ -36,7 +39,6 @@ def test_regression_visualizer():
 
     # Clean up
     if os.path.exists(viz_dir):
-        import shutil
         shutil.rmtree(viz_dir)
 
 def test_eda_visualizer():
@@ -61,5 +63,53 @@ def test_eda_visualizer():
     
     # Clean up
     if os.path.exists(viz_dir):
-        import shutil
+        shutil.rmtree(viz_dir)
+
+def test_data_visualizer():
+    df = pd.DataFrame({
+        "x": np.random.randn(100),
+        "y": np.random.randn(100),
+        "cat": np.random.choice(["A", "B"], 100),
+        "date": pd.date_range("2020-01-01", periods=100)
+    })
+    
+    viz_dir = "data/temp/data_viz"
+    os.makedirs(viz_dir, exist_ok=True)
+    viz = DataVisualizer(output_dir=viz_dir)
+    
+    # Test histogram
+    hist_files = viz.create_visualization(df, feature_list=["x"], viz_type="histogram", display_only=False)
+    assert len(hist_files) == 1
+    assert os.path.exists(hist_files[0])
+    
+    # Test correlation
+    corr_file = viz.create_visualization(df, feature_list=["x", "y"], viz_type="correlation", display_only=False)
+    assert os.path.exists(corr_file)
+    
+    # Test time series
+    ts_file = viz.create_time_series_plot(df, date_column="date", display_only=False)
+    assert os.path.exists(ts_file)
+    
+    # Clean up
+    if os.path.exists(viz_dir):
+        shutil.rmtree(viz_dir)
+
+def test_model_visualizer():
+    model_summary = {
+        "coefficients": {
+            "const": {"value": 1.0, "std_err": 0.1},
+            "var1": {"value": 2.5, "std_err": 0.5},
+            "var2": {"value": -1.2, "std_err": 0.3}
+        }
+    }
+    
+    viz_dir = "data/temp/model_viz"
+    os.makedirs(viz_dir, exist_ok=True)
+    viz = ModelVisualizer(output_dir=viz_dir)
+    
+    coef_plot = viz.create_visualization(model_summary, visualization_type="coefficient", display_only=False)
+    assert os.path.exists(coef_plot)
+    
+    # Clean up
+    if os.path.exists(viz_dir):
         shutil.rmtree(viz_dir)

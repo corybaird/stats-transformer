@@ -204,7 +204,8 @@ class RegressionVisualizer(ModelVisualizer):
             X = pd.DataFrame(X, columns=[f"X{i+1}" for i in range(X.shape[1])])
         for i, col in enumerate(X.columns):
             fig, ax = plt.subplots(figsize=(8, 6))
-            sm.graphics.plot_partregress(endog=y, exog=X, exog_idx=i, ax=ax)
+            exog_others = X.drop(columns=[col])
+            sm.graphics.plot_partregress(endog=y, exog_i=X[col], exog_others=exog_others, ax=ax)
             readable_col = get_readable_label(col)
             ax.set_xlabel(readable_col)
             ax.set_title(f"Partial Regression Plot: {readable_col}", fontsize=12, fontweight='bold')
