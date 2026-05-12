@@ -1,11 +1,13 @@
 # Byte-compiled / optimized / DLL files
+src/stats_transformer/visualization/expansion/
+references/dictionaries/
+references/viz/
 archive/
 /data/notebook_exports/
 /data/pipeline/
 /data/final/
 /data/temp/
 /data/raw/
-/.agents/
 reports/
 __pycache__/
 *.py[codz]

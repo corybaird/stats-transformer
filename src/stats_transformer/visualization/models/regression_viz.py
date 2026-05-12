@@ -5,8 +5,8 @@ import seaborn as sns
 import statsmodels.api as sm
 from sklearn.metrics import r2_score
 from stats_transformer.visualization.models.model_viz import ModelVisualizer
-from stats_transformer.visualization.utils.viz_utils import configure_plot_aesthetics
-def get_readable_label(x): return str(x)
+from stats_transformer.visualization.formatters.style import apply_style
+from stats_transformer.visualization.defaults.labels import get_readable_label
 
 class RegressionVisualizer(ModelVisualizer):
 
@@ -190,7 +190,10 @@ class RegressionVisualizer(ModelVisualizer):
             bars = ax.bar(var_df['Variable'], var_df['Explained Variance'])
             for bar in bars:
                 ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01, f'{bar.get_height():.3f}', ha='center', va='bottom', fontsize=9)
-            configure_plot_aesthetics(ax, title="Variance Decomposition", xlabel="Variable", ylabel="Proportion of Variance Explained", grid=True)
+            ax.set_title("Variance Decomposition", fontsize=12, fontweight='bold')
+            ax.set_xlabel("Variable")
+            ax.set_ylabel("Proportion of Variance Explained")
+            ax.grid(True, linestyle='--', alpha=0.7)
             plt.xticks(rotation=45, ha='right')
             plt.ylim(0, min(1, max(var_df['Explained Variance']) * 1.2))
             plt.tight_layout()
@@ -250,7 +253,11 @@ class RegressionVisualizer(ModelVisualizer):
             ax.fill_between(x_values, pi_lower[sort_idx], pi_upper[sort_idx], color='g', alpha=0.1, label=f'{int((1-alpha)*100)}% PI')
             r2 = r2_score(y_values, mean_pred_values)
             ax.text(0.05, 0.95, f"R² = {r2:.3f}\nN = {n_obs}", transform=ax.transAxes, fontsize=10, verticalalignment="top", bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
-            configure_plot_aesthetics(ax, title="Predictions with Intervals", xlabel="Obs Index", ylabel="Value", legend=True, grid=True)
+            ax.set_title("Predictions with Intervals", fontsize=12, fontweight='bold')
+            ax.set_xlabel("Obs Index")
+            ax.set_ylabel("Value")
+            ax.legend(loc='best')
+            ax.grid(True, linestyle='--', alpha=0.7)
             plt.tight_layout()
             return self.save_figure(fig, "prediction_intervals", subdir)
         except Exception as e:
@@ -285,7 +292,10 @@ class RegressionVisualizer(ModelVisualizer):
             ax.legend(loc='best', fontsize=9)
         except Exception as e:
             self.logger.warning(f"Could not calculate LOWESS: {e}")
-        configure_plot_aesthetics(ax, title="Residuals vs Fitted Values", xlabel="Fitted Values", ylabel="Residuals", grid=True)
+        ax.set_title("Residuals vs Fitted Values", fontsize=12, fontweight='bold')
+        ax.set_xlabel("Fitted Values")
+        ax.set_ylabel("Residuals")
+        ax.grid(True, linestyle='--', alpha=0.7)
         stats_text = f"Mean resid: {residuals.mean():.4f}\nStd resid: {residuals.std():.4f}"
         ax.text(0.02, 0.97, stats_text, transform=ax.transAxes, fontsize=9, verticalalignment="top", bbox=dict(boxstyle="round", facecolor="white", alpha=0.85))
         plt.tight_layout()
@@ -301,7 +311,7 @@ class RegressionVisualizer(ModelVisualizer):
         fig, ax = plt.subplots(figsize=(10, 7))
         if entity_labels is not None and len(entity_labels) == len(actual):
             unique_entities = sorted(set(entity_labels))
-            from stats_transformer.visualization.utils.viz_utils import get_color_palette
+            from stats_transformer.visualization.defaults.colors import get_color_palette
             colors = get_color_palette("colorblind", len(unique_entities))
             color_map = {e: colors[i] for i, e in enumerate(unique_entities)}
             for entity in unique_entities:
@@ -317,7 +327,11 @@ class RegressionVisualizer(ModelVisualizer):
         r2 = 1 - np.sum((actual - predicted) ** 2) / np.sum((actual - np.mean(actual)) ** 2)
         n = len(actual)
         ax.text(0.02, 0.97, f"R² = {r2:.4f}\nN = {n}", transform=ax.transAxes, fontsize=10, verticalalignment="top", bbox=dict(boxstyle="round", facecolor="white", alpha=0.85))
-        configure_plot_aesthetics(ax, title="Actual vs Predicted", xlabel="Actual", ylabel="Predicted", legend=True, grid=True)
+        ax.set_title("Actual vs Predicted", fontsize=12, fontweight='bold')
+        ax.set_xlabel("Actual")
+        ax.set_ylabel("Predicted")
+        ax.legend(loc='best')
+        ax.grid(True, linestyle='--', alpha=0.7)
         plt.tight_layout()
         return self.save_figure(fig, "actual_vs_predicted", subdir, display_only=display_only)
 

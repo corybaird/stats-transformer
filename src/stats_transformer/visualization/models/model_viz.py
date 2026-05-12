@@ -2,9 +2,9 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from stats_transformer.visualization.base import BaseVisualizer
-def get_readable_label(x): return str(x)
+from stats_transformer.visualization.defaults.labels import get_readable_label
+from stats_transformer.visualization.charts.bar import CoefficientBarChart
 
 class ModelVisualizer(BaseVisualizer):
 
@@ -44,9 +44,10 @@ class ModelVisualizer(BaseVisualizer):
         for var, coef_info in coefficients.items():
             value = coef_info.get('value', 0)
             std_err = coef_info.get('std_err', None)
+            p_val = coef_info.get('p_value', np.nan)
             if var.lower() in ['const', 'intercept']:
                 continue
-            plot_data.append({'variable': var, 'coefficient': value, 'std_error': std_err if std_err else 0})
+            plot_data.append({'variable': var, 'coefficient': value, 'std_error': std_err if std_err else 0, 'p_value': p_val})
         
         if not plot_data:
             self.logger.warning("No non-intercept coefficients to plot")
@@ -55,29 +56,17 @@ class ModelVisualizer(BaseVisualizer):
         df = pd.DataFrame(plot_data)
         df['abs_coef'] = df['coefficient'].abs()
         df = df.sort_values('abs_coef', ascending=True)
-        fig, ax = plt.subplots(figsize=(10, max(6, len(df) * 0.4)))
-        y_pos = np.arange(len(df))
-        bars = ax.barh(y_pos, df['coefficient'])
         
-        if not df['std_error'].isnull().all():
-            ax.errorbar(df['coefficient'], y_pos, xerr=df['std_error'], fmt='none', color='black', capsize=3)
+        chart = CoefficientBarChart(style_path=self.viz_params.get("style", "barchart"))
+        fig, ax = chart.plot(
+            labels=df['variable'].tolist(),
+            coefficients=df['coefficient'].tolist(),
+            std_errors=df['std_error'].tolist(),
+            p_values=df['p_value'].tolist(),
+            title='Regression Coefficients with Standard Errors',
+            ylabel='Coefficient Value'
+        )
         
-        max_abs = max(df['coefficient'].abs())
-        for i, (bar, row) in enumerate(zip(bars, df.itertuples())):
-            width = bar.get_width()
-            text_x = width + (0.02 * max_abs) if width >= 0 else width - (0.02 * max_abs)
-            ha = 'left' if width >= 0 else 'right'
-            coef_text = f"{row.coefficient:.3f}"
-            if not pd.isna(row.std_error) and row.std_error > 0:
-                coef_text += f" ± {row.std_error:.3f}"
-            ax.text(text_x, bar.get_y() + bar.get_height()/2, coef_text, ha=ha, va='center', fontsize=9)
-        
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels([get_readable_label(v) for v in df['variable']])
-        ax.axvline(x=0, color='gray', linestyle='--', alpha=0.7)
-        ax.set_xlabel('Coefficient Value')
-        ax.set_title('Regression Coefficients with Standard Errors', fontsize=12, fontweight='bold')
-        ax.grid(True, axis='x', linestyle='--', alpha=0.3)
         plt.tight_layout()
         return self.save_figure(fig, "coefficient_plot", subdir, display_only=display_only)
     
@@ -90,4 +79,3 @@ class ModelVisualizer(BaseVisualizer):
 
     def run(self):
         pass
-

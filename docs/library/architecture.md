@@ -49,6 +49,14 @@ graph TD
     VizLayer --> RegressionVisualizer
     VizLayer --> DataVisualizer
     VizLayer --> EDAVisualizer
+
+    RegressionVisualizer --> ChartComponents[Abstract Chart Components]
+    DataVisualizer --> ChartComponents
+
+    ChartComponents --> BarCharts[Coefficient, Grouped, Stacked Bar]
+    ChartComponents --> TimeSeriesPlots[Standard, IRF, Faceted Time Series]
+    ChartComponents --> ScatterPlots[Binned, Regression Scatter]
+    ChartComponents --> Heatmaps[Correlation Matrices]
 ```
 
 ## 3. Core Components
@@ -69,7 +77,10 @@ Specialized for panel data. It ensures that disparate datasets with different fr
 A standardized interface for all statistical models. Whether running a simple OLS or a complex Panel Regression with Fixed Effects, the interface remains consistent (`fit`, `predict`, `get_model_metadata`).
 
 ### Visualization Suite (`src/stats_transformer/visualization/`)
-Automated reporting tools that consume model metadata and processed data to produce publication-quality plots (Coefficient plots, Residual tracking, Time-series dashboards).
+Automated reporting tools and standalone chart components. The visualization framework follows a three-level architecture:
+1.  **Standalone Chart Components (`charts/`)**: Modular classes (e.g., `CoefficientBarChart`, `IRFPlot`) that handle the atomic plotting logic for specific data shapes.
+2.  **Library Defaults (`defaults/`)**: Bundled aesthetic settings, color palettes, and significance thresholds to ensure publication quality without external dependencies.
+3.  **Pipeline Wrappers (`models/`, `eda/`)**: High-level visualizers (e.g., `RegressionVisualizer`) that integrate into the `Pipeline` orchestrator and delegate plotting to the underlying chart components.
 
 ## 4. Project Directory Tree
 

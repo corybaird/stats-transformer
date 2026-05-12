@@ -1,0 +1,37 @@
+# Figure
+figure.figsize: 16, 9  # 16:9 aspect ratio for better word cloud display
+figure.dpi: 120
+figure.facecolor: white
+figure.edgecolor: white
+
+# Word Cloud Specific - Maximizing space for the visualization
+figure.constrained_layout.use: False  # Disable constrained layout for word clouds
+savefig.bbox: tight  # Tight bbox to remove excess whitespace
+savefig.pad_inches: 0.2  # Minimal padding
+
+# Font settings optimized for text-heavy visualizations
+font.family: sans-serif
+font.sans-serif: Arial, Helvetica, DejaVu Sans
+font.size: 14
+axes.titlesize: 18
+axes.labelsize: 16
+
+# Axes - Minimal for word clouds
+axes.facecolor: white
+axes.grid: False  # No grid for word clouds
+axes.spines.top: False
+axes.spines.right: False
+axes.spines.bottom: False
+axes.spines.left: False
+
+# Title appearance
+figure.titlesize: 20
+figure.titleweight: bold
+
+# Color settings
+# axes.prop_cycle: cycler(color=['#2C3E50', '#E74C3C', '#2ECC71', '#3498DB', '#9B59B6', '#F1C40F', '#1ABC9C', '#E67E22', '#7F8C8D'])
+# Output settings
+savefig.dpi: 300
+savefig.format: png
+savefig.facecolor: white
+savefig.edgecolor: white

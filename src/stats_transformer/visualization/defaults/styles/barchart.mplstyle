@@ -1,0 +1,50 @@
+# barchart.mplstyle
+# Figure
+
+figure.figsize: 24, 28
+figure.dpi: 100
+figure.facecolor: white
+figure.autolayout: True
+
+# Font settings
+font.size: 20
+font.family: sans-serif
+
+# Axes
+axes.titlesize: 60
+axes.titleweight: bold
+axes.labelsize: 50
+axes.grid: True
+axes.spines.top: False
+axes.spines.right: False
+axes.facecolor: white
+
+# Grid
+grid.color: "#E6E6E6"
+grid.linestyle: -
+grid.linewidth: 0.5
+# Note: Use ax.grid(True, axis='y') in code to show only horizontal grid lines
+
+# Bars
+patch.linewidth: 0  # Remove bar edges
+patch.facecolor: 'C0'  # Use color from color cycle
+
+# Ticks
+xtick.labelsize: 40
+ytick.labelsize: 30
+xtick.direction: out
+ytick.direction: out
+xtick.major.size: 5
+ytick.major.size: 5
+xtick.alignment: center  # Center align x-tick labels
+
+# Legend
+legend.fontsize: 20
+legend.frameon: True
+legend.framealpha: 0.8
+legend.edgecolor: gray
+legend.fancybox: True
+
+# Bar-specific spacing
+axes.xmargin: 0.02  # Reduce spacing between plot edge and first/last bar
+hist.bins: 50  # For histogram plots
