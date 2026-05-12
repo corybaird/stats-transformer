@@ -4,12 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "stats-transformer"
-version = "0.1.0"
+version = "1.0.0"
 description = "A comprehensive Python library for robust macroeconomic data transformation, analysis, and visualization."
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.12"
 authors = [
-  { name="Cory Baird", email="cory@example.com" }
+  { name="Cory Baird", email="open.empirical.macro@gmail.com" }
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -40,4 +41,15 @@ pythonpath = ["src"]
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/.agents",
+  "/data",
+  "/docs",
+  "/notebooks",
+  "/tests",
+  "/reports",
+  "/models",
 ]
