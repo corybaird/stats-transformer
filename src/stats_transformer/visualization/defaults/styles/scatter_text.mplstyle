@@ -1,0 +1,45 @@
+# scatter.mplstyle
+
+# Figure
+figure.figsize: 16, 12
+#figure.dpi: 100
+figure.facecolor: white
+figure.autolayout: True
+
+# Font settings
+font.size: 20
+font.family: sans-serif
+
+# Axes
+axes.titlesize: 40
+axes.titleweight: bold
+axes.labelsize: 50
+axes.grid: True
+axes.spines.top: False
+axes.spines.right: False
+axes.facecolor: white
+axes.prop_cycle: cycler('color', [ '808080', 'ffe119',  '3cb44b', 'e6194b','4363d8', 'f58231', '911eb4', '46f0f0', 'f032e6', 'bcf60c', 'fabebe', '008080', 'e6beff', '9a6324', 'fffac8', '800000', 'aaffc3','808000', 'ffd8b1', '000075', '808080', 'ffffff', '000000'])
+
+# Grid
+grid.color: "#E6E6E6"
+grid.linestyle: -
+grid.linewidth: 0.5
+
+# Lines (for markers in scatter plots)
+lines.markersize: 10
+lines.linewidth: 0  # Set linewidth to 0 for scatter plot markers
+
+# Ticks
+xtick.labelsize: 30
+ytick.labelsize: 30
+xtick.direction: out
+ytick.direction: out
+xtick.major.size: 20
+ytick.major.size: 20
+
+# Legend
+legend.fontsize: 20
+legend.frameon: True
+legend.framealpha: 0.8
+legend.edgecolor: gray
+legend.fancybox: True

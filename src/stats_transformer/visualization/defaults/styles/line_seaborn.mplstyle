@@ -1,0 +1,46 @@
+# timeseries.mplstyle
+
+# Figure
+axes.prop_cycle: cycler('color', ['FF0000', '00FF00', '0000FF', 'FFA500', '800080', '00FFFF', 'FF00FF', '008000', 'FFC0CB', 'A52A2A', 'FFD700', '808080', 'FF4500', '9370DB', '98FB98', 'DEB887', '4682B4', 'FF69B4', 'CD853F', '00FA9A', 'DC143C', '4B0082', 'FFE4B5', '8B4513', '7FFFD4', '000080', '8B0000', '7CFC00', 'FFFF00', 'BA55D3'])
+
+figure.figsize: 24, 16
+figure.dpi: 100
+figure.facecolor: white
+figure.autolayout: True
+
+# Font settings
+font.size: 20
+font.family: sans-serif
+
+# Axes
+axes.titlesize: 60
+axes.titleweight: bold
+axes.labelsize: 50
+axes.grid: True
+axes.spines.top: False
+axes.spines.right: False
+axes.facecolor: white
+
+# Grid
+grid.color: "#E6E6E6"
+grid.linestyle: -
+grid.linewidth: 0.5
+
+# Lines
+lines.markersize: 10
+lines.linewidth: 3
+
+# Ticks
+xtick.labelsize: 80
+ytick.labelsize: 80
+xtick.direction: out
+ytick.direction: out
+xtick.major.size: 5
+ytick.major.size: 5
+
+# Legend
+legend.fontsize: 20
+legend.frameon: True
+legend.framealpha: 0.8
+legend.edgecolor: gray
+legend.fancybox: True
