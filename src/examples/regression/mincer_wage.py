@@ -8,7 +8,7 @@ from src.examples.base import BaseExample
 class MincerWageExample(BaseExample):
     def __init__(self):
         self.data_url = "https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/wooldridge/wage1.csv"
-        self.data_dir = "data/raw/examples/regression"
+        self.data_dir = "data/examples/regression"
         self.data_path = f"{self.data_dir}/mincer_wage.csv"
         os.makedirs(self.data_dir, exist_ok=True)
 
