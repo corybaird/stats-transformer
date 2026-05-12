@@ -6,7 +6,7 @@
 
 - **Feature Engineering:** Advanced data transformations, frequency alignment, and robust merging capabilities for disparate datasets.
 - **Econometric Modeling:** Built-in support for standard OLS, Robust OLS, Panel Regression, as well as Unsupervised learning models (PCA, KMeans).
-- **Visualization:** Automated generation of Exploratory Data Analysis (EDA) and regression model visual summaries (e.g., coefficient plots, residual plots, time-series tracking).
+- **Visualization:** Automated generation of Exploratory Data Analysis (EDA) and regression model visual summaries (e.g., coefficient plots, residual plots, time-series tracking). Now includes a modular suite of standalone chart components for custom research plots.
 - **Configuration-Driven Orchestration:** Fully integrated with YAML configuration (`params.yaml`) to enable reproducible, stage-based execution compatible with DVC pipelines.
 
 ## Quickstart
@@ -83,6 +83,7 @@ For more details on test coverage, see the [Testing Suite](docs/validation/testi
 ## Documentation
 
 - **Examples:** For examples of running the models, see [docs/validation/academic_examples.md](docs/validation/academic_examples.md).
+- **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_visualization.ipynb](notebooks/07_visualization.ipynb).
 - **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
 - **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
 - **Documentation Standards:** For standards on how to write research documentation, see [docs/research_standards/documentation.md](docs/research_standards/documentation.md).
