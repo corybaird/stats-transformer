@@ -63,6 +63,12 @@ class SpecificationRunner:
                 mask = spec['subset_mask_func'](df_spec)
                 df_spec = df_spec[mask]
 
+            # Ensure entity and time cols are columns, not just in index
+            if isinstance(df_spec.index, pd.MultiIndex):
+                df_spec = df_spec.reset_index()
+            elif self.entity_col in df_spec.index.names or self.time_col in df_spec.index.names:
+                df_spec = df_spec.reset_index()
+
             for kv in spec['key_variables']:
                 # The independent variables for this run are the key variable + controls
                 indep_vars = [kv] + [c for c in controls if c != kv]
