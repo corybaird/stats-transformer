@@ -1,19 +1,19 @@
 # barchart.mplstyle
 # Figure
 
-figure.figsize: 24, 28
-figure.dpi: 100
+figure.figsize: 12, 8
+figure.dpi: 300
 figure.facecolor: white
 figure.autolayout: True
 
 # Font settings
-font.size: 20
+font.size: 12
 font.family: sans-serif
 
 # Axes
-axes.titlesize: 60
+axes.titlesize: 16
 axes.titleweight: bold
-axes.labelsize: 50
+axes.labelsize: 14
 axes.grid: True
 axes.spines.top: False
 axes.spines.right: False
@@ -30,8 +30,8 @@ patch.linewidth: 0  # Remove bar edges
 patch.facecolor: 'C0'  # Use color from color cycle
 
 # Ticks
-xtick.labelsize: 40
-ytick.labelsize: 30
+xtick.labelsize: 12
+ytick.labelsize: 12
 xtick.direction: out
 ytick.direction: out
 xtick.major.size: 5
@@ -39,7 +39,7 @@ ytick.major.size: 5
 xtick.alignment: center  # Center align x-tick labels
 
 # Legend
-legend.fontsize: 20
+legend.fontsize: 12
 legend.frameon: True
 legend.framealpha: 0.8
 legend.edgecolor: gray
