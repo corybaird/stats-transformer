@@ -13,9 +13,7 @@
 
 ### 1. Installation
 
-*Note: This package is currently being prepared for publishing to PyPI.* 
-
-To use it locally in your project:
+To use it in your project via PyPI:
 ```bash
 uv add stats-transformer
 ```
