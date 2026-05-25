@@ -15,6 +15,7 @@ from .visualization import (
     BinnedScatterPlot, ScatterWithRegression, CorrelationHeatmap
 )
 from .visualization.tables import TableGenerator
+from .models.timeseries.local_projections import LocalProjectionsModel
 
 __all__ = [
     "FeatureEngineer",
@@ -34,4 +35,5 @@ __all__ = [
     "ScatterWithRegression",
     "CorrelationHeatmap",
     "TableGenerator",
+    "LocalProjectionsModel",
 ]
