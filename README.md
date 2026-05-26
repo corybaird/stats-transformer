@@ -1,11 +1,11 @@
 # stats-transformer
 
-`stats-transformer` is a comprehensive Python library designed for robust macroeconomic data transformation, analysis, and visualization. Built around a configuration-driven architecture, it seamlessly handles data ingestion, resampling, feature engineering, and econometric modeling for time-series and panel datasets.
+`stats-transformer` is a Python library for macroeconomic data transformation, analysis, and visualization. Built around a configuration-driven architecture, it handles data ingestion, resampling, feature engineering, and econometric modeling for time-series and panel datasets.
 
 ## Features
 
 - **Feature Engineering:** Advanced data transformations, frequency alignment, and robust merging capabilities for disparate datasets.
-- **Econometric Modeling:** Built-in support for standard OLS, Robust OLS, Panel Regression, as well as Unsupervised learning models (PCA, KMeans).
+- **Econometric Modeling:** Built-in support for standard OLS, Robust OLS, Panel Regression, IV regression, discrete choice, time-series models, and unsupervised learning models (PCA, KMeans).
 - **Visualization:** Automated generation of Exploratory Data Analysis (EDA) and regression model visual summaries (e.g., coefficient plots, residual plots, time-series tracking). Now includes a modular suite of standalone chart components for custom research plots.
 - **Configuration-Driven Orchestration:** Fully integrated with YAML configuration (`params.yaml`) to enable reproducible, stage-based execution compatible with DVC pipelines.
 
@@ -16,6 +16,12 @@
 To use it in your project via PyPI:
 ```bash
 uv add stats-transformer
+```
+
+For local development from this repository:
+
+```bash
+uv sync
 ```
 
 ### 2. Configuration (`params.yaml`)
@@ -48,13 +54,13 @@ You can execute the pipeline via the command line using the `Pipeline` orchestra
 
 ```bash
 # Run the full end-to-end pipeline
-uv run python -m src.stats_transformer.pipeline --config params.yaml
+uv run python -m stats_transformer.pipeline --config params.yaml
 ```
 
 Or you can interact with the API programmatically:
 
 ```python
-from src.stats_transformer.pipeline import Pipeline
+from stats_transformer import Pipeline
 
 # Initialize the pipeline with your configuration
 pipeline = Pipeline(params_path="params.yaml")
@@ -77,6 +83,10 @@ uv run pytest tests
 ```
 
 For more details on test coverage, see the [Testing Suite](docs/validation/testing_suite.md).
+
+## Current Status
+
+The package has a typed `src/` layout, a PyPI Trusted Publishing workflow, bundled example data, notebooks, and a passing automated test suite. Before a broad public announcement, review the remaining release blockers in the [Publishing Plan](docs/library/publish_plan.md), especially CI version alignment, package metadata polish, and a clean installed-package smoke test.
 
 ## Documentation
 

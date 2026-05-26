@@ -1,74 +1,98 @@
-# stats-transformer Publish & Robust Testing Plan
+# stats-transformer Publishing Plan
 
-This plan bridges the goals of adding robust example datasets and running a safe, PyPI-ready publishing pipeline. All work strictly adheres to the `github-agent` branch/commit hygiene workflow and the `pypi-publisher` release methodologies.
+This plan tracks the work needed to move `stats-transformer` from a functional research library to a publishable package. The repository is close: the package builds, the local test suite passes, and a PyPI Trusted Publishing workflow exists. The remaining work is mostly release hardening, metadata polish, and public-facing documentation.
 
-## User Review Required
+## Current Readiness
 
-> [!WARNING]  
-> We need to decide what specific example datasets to add for testing before executing this plan.
->
-> **Questions:**
-> 1. What missing datasets should we use as examples for robust testing? Can we use local mock data, or do we need to pull specific datasets?
-> 2. What should the target version number be for the PyPI release (e.g., `v0.1.0`)?
+Status: **almost ready for a first public package release, not yet ready for a broad announcement.**
 
-## Proposed Changes
+Verified locally:
 
-We will execute this work across distinct execution phases, enforcing the rule that all changes happen on scoped feature/release branches and land via PR.
+- `uv run pytest`: 34 passed, 1 skipped.
+- `uv build`: wheel and source distribution build successfully.
+- `.github/workflows/publish.yml`: publishes on `v*.*.*` tags using PyPI Trusted Publishing.
 
----
+Release blockers to resolve before tagging:
 
-### Phase 1: Robust Testing and Dataset Integration
+- **Python version mismatch:** `pyproject.toml` requires Python `>=3.12`, but CI tests Python 3.10 and 3.11. Either lower `requires-python` after compatibility verification or change CI to 3.12/3.13 only.
+- **Installed usage smoke test:** confirm `uv add stats-transformer` in a clean environment, then import `stats_transformer`, run a minimal pipeline, and import chart/table helpers.
+- **Public API audit:** decide which classes are stable enough for `stats_transformer.__all__`, and keep experimental models accessible through submodules if their APIs may change.
+- **Runtime dependency audit:** move notebook-only and development-only packages out of runtime dependencies where possible.
+- **README examples:** keep examples focused on installed-package imports (`stats_transformer`, not `src.stats_transformer`) and use a small bundled example path that works after installation.
+- **Package data audit:** confirm bundled files needed at runtime, such as `py.typed`, visualization styles, and package example data, are included in the wheel.
+- **Project metadata polish:** add keywords, project URLs for documentation/issues, and confirm the license classifier matches the license file.
 
-**Goal:** Provide more example datasets to make sure `stats-transformer` is tested robustly.
+## Release Questions
 
-1. **Branching:** Create `feat/add-example-datasets` off `main`.
-2. **Dataset Additions:**
-   - Add new datasets into `tests/data/` or `data/raw/` (depending on the repository's convention for example data).
-3. **Test Refactor:**
-   - Update `tests/` to consume the new datasets, validating the core transformer pipeline handles them edge-case free across all refactored models and plots.
-4. **Committing & PR:**
-   - Split commits logically (e.g., one commit for raw dataset additions, one for test updates).
-   - Push and open a PR. **The user manually merges.**
+Before cutting the release:
 
----
+1. Is the next public tag `v1.0.0`, matching `pyproject.toml`, or should the project start with a lower public version such as `v0.1.0` while APIs settle?
+2. Should example datasets be shipped inside the package, kept only in the repository, or split into a separate examples artifact later?
+3. Which planned extensions are promised in documentation, and which should remain explicitly experimental?
 
-### Phase 2: PyPI Readiness Audit and Release Prep
+## Execution Plan
 
-**Goal:** Ensure the project meets modern PyPI publishing standards and cut the release.
-
-1. **Branching:** Create `release/v<TARGET_VERSION>` off `main`.
-2. **Audit & Fixes (via pypi-publisher rules):**
-   - `pyproject.toml`: Audit metadata (authors, description, urls, dependencies). Assure `[build-system]` is configured and exclusions are set for tests/agentic examples.
-   - `README.md`: Ensure a quick-start example uses the newly added datasets and points users to the `notebooks/` directory for detailed tutorials.
-   - `CHANGELOG.md`: Generate notes for this release.
-   - `src/`: verify `__version__` and `__all__` imports are clean. Marker files like `py.typed`.
-3. **Publish CI/CD Setup:**
-   - Add/Verify `.github/workflows/publish.yml` for PyPI Trusted Publishing via OIDC on tag events.
-4. **Committing & PR:**
-   - Logical commits (e.g., `UPDATE pyproject.toml bounds`, `ADD publish.yml workflow`, `DOCS update changelog bounds`).
-   - Push and open a PR. **The user manually merges.**
+Use scoped branches and PR review for release-facing changes.
 
 ---
 
-### Phase 3: The PyPI Release (Manual trigger)
+### Phase 1: Release Readiness Audit
 
-1. Once the `release/v<TARGET_VERSION>` PR is merged into `main`, the user locally applies the Git tag:
+**Goal:** remove blockers that can break installation, CI, or first-user experience.
+
+1. Align `requires-python`, CI matrix, and lockfile metadata.
+2. Audit package contents with `uv build` and inspect the wheel.
+3. Smoke-test a clean install in a temporary directory.
+4. Check that README code paths and imports work outside the repository.
+5. Review runtime dependencies and move optional/tutorial dependencies behind extras if appropriate.
+
+### Phase 2: Robust Testing and Dataset Integration
+
+**Goal:** make examples and tests representative enough for public users.
+
+1. Keep tiny deterministic fixtures in `tests/data/`.
+2. Keep larger pedagogical datasets under `data/examples/` or package data only when they are needed by installed examples.
+3. Add pipeline tests that cover:
+   - single-country and multi-country panels;
+   - missing dates and uneven frequencies;
+   - categorical fixed effects;
+   - model output serialization;
+   - visualization generation in a headless environment.
+4. Add one installed-package smoke test script that users can copy from the README.
+
+### Phase 3: PyPI Release Prep
+
+**Goal:** make the tag publish cleanly and make the project page credible.
+
+1. Update `CHANGELOG.md` with final release notes.
+2. Confirm `pyproject.toml` metadata, classifiers, project URLs, and dependency bounds.
+3. Confirm GitHub repository settings include a PyPI Trusted Publisher environment named `pypi`.
+4. Run:
+   ```bash
+   uv run pytest
+   uv build
+   ```
+5. Open a release PR and merge after CI is green.
+
+### Phase 4: The PyPI Release
+
+1. Tag the release:
    ```bash
    git tag v<TARGET_VERSION>
    git push origin v<TARGET_VERSION>
    ```
-2. The GitHub Action OIDC workflow will handle the build and secure publish to PyPI.
+2. Confirm the GitHub Action builds and publishes to PyPI.
+3. Smoke-test the published package:
+   ```bash
+   tmpdir=$(mktemp -d)
+   cd "$tmpdir"
+   uv init
+   uv add stats-transformer
+   uv run python -c "import stats_transformer; print(stats_transformer.__version__)"
+   ```
 
 ## Verification Plan
 
-### Automated Tests
-- We will run `uv run pytest` locally after the testing phase to ensure the test suite is green.
-- The CI workflow must run `pytest` cleanly before the PyPI build process begins.
-
-### Manual Verification
-- After successful OIDC publish, we will smoke-test the package in a clean temporary directory:
-  ```bash
-  mkdir /tmp/stats-transformer-smoketest && cd /tmp/stats-transformer-smoketest
-  uv init && uv add stats-transformer
-  uv run python -c "import stats_transformer; print(stats_transformer.__version__)"
-  ```
+- Automated: `uv run pytest`, `uv build`, CI matrix, publish workflow on tag.
+- Manual: clean install, README quickstart, one notebook smoke run, PyPI project page review.
+- Documentation: README, changelog, architecture docs, and planned extensions should describe current capabilities separately from future work.
