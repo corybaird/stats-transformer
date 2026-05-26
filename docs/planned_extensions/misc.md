@@ -4,11 +4,11 @@ This file captures smaller extensions that do not yet need their own design docu
 
 ## Granger Causality Tester
 
-A generalized `GrangerCausalityTester` should be implemented in the future to abstract away the paper-specific setup used for Granger causality testing (e.g., resampling, z-scoring, and running region-by-region checks).
+A generalized `GrangerCausalityTester` has a first-pass implementation in `stats_transformer.models.timeseries`. It abstracts away the paper-specific setup used for Granger causality testing (e.g., sorting, optional z-scoring, and running entity-by-entity checks).
 
-Currently, this logic lives in paper-specific pipelines (such as `notebooks.paper_econsurveys.modules.utils.granger_causality_tester.py`), but the underlying pattern of formatting panels for `statsmodels.tsa.stattools.grangercausalitytests` could be generalized as an extension to `stats_transformer.models.timeseries`.
+The implementation wraps `statsmodels.tsa.stattools.grangercausalitytests` and returns tidy results that can be filtered, joined into reports, or summarized with `get_model_metadata()`.
 
-Proposed API:
+Implemented API:
 
 ```python
 from stats_transformer.models.timeseries import GrangerCausalityTester
@@ -23,12 +23,17 @@ results = tester.fit(data, caused="gdp_growth", causing="interest_rate")
 summary = tester.get_model_metadata()
 ```
 
-Implementation notes:
+Implemented:
 
 - Support both single-series and panel workflows.
 - Return tidy results with entity, lag, test statistic, p-value, and selected lag.
-- Add config support under `model.model_type: granger_causality`.
 - Validate against a deterministic simulated dataset where the causal direction is known.
+
+Still planned:
+
+- Add config support under `model.model_type: granger_causality`.
+- Add visualization helpers for lag-wise p-values.
+- Add model-card/report export support.
 
 ## Example Dataset Registry
 
