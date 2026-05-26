@@ -30,6 +30,10 @@ Implemented first passes:
 - **Research report generation:** reproducible markdown or Quarto-style summaries that combine config, diagnostics, tables, and figures.
 - **Benchmark suite:** comparison against known econometrics examples with expected coefficients and diagnostics.
 
+Implemented first passes:
+
+- `ReportExporter` under `stats_transformer.reporting` for markdown model cards, JSON manifests, and markdown figure indexes.
+
 ## Extension Template
 
 Each planned extension should include:
