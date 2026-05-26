@@ -36,3 +36,19 @@ def test_pipeline_fit_transform():
     assert "x1" in transformed.columns
     assert pipeline.model_results is not None
     assert "metrics" in pipeline.model_results
+
+def test_pipeline_fit_transform_from_constructor_args():
+    pipeline = Pipeline(
+        entity_column="country",
+        target="y",
+        features=["x1", "x2"],
+        transformations=[],
+        model_type="ols",
+    )
+
+    df = pd.read_csv("tests/data/test_data.csv")
+    transformed = pipeline.fit_transform(df)
+
+    assert transformed is not None
+    assert pipeline.model_results is not None
+    assert "metrics" in pipeline.model_results

@@ -66,7 +66,7 @@ class Pipeline:
         self.feature_engineer = FeatureEngineer(params_path=None, transformations=self.transformations, entity_column=self.entity_column, date_column=self.date_column)
         
         if self.target or self.features:
-            model_type = kwargs.get("model_type", "ols").lower()
+            model_type = self.kwargs.get("model_type", "ols").lower()
             if model_type == "robust_ols":
                 self.model = RobustOLSModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
             elif model_type == "panel_ols":
