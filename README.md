@@ -50,6 +50,15 @@ visualization:
 
 ### 3. Usage
 
+Load a packaged example dataset:
+
+```python
+from stats_transformer.data import list_examples, load_example
+
+print(list_examples())
+df = load_example("macrodb_gdp_inflation")
+```
+
 You can execute the pipeline via the command line using the `Pipeline` orchestrator:
 
 ```bash
