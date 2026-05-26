@@ -24,8 +24,10 @@ This document outlines the planned extensions for the `stats-transformer` librar
 * **Target Script:** `Chap5.R`
 * **Data Input:** N/A (Uses dynamically simulated data via `arima.sim` like `arma.sim$y1`)
 * **Background:** Autoregressive Moving Average (ARMA) models are a staple of univariate time series forecasting. They are used to model the relationship between a variable and its own past values and random shocks. Adding ARIMA (with integration) will serve as a foundational building block for the library.
-* **Planned API:** `ARIMAModel(order=(p, d, q), seasonal_order=None, date_column="date")`.
-* **Validation:** compare coefficients and forecasts against `statsmodels.tsa.arima.model.ARIMA` examples.
+* **Implemented first pass:** `ARIMAModel(target, order=(p, d, q), date_column="date")` wraps `statsmodels.tsa.arima.model.ARIMA`.
+* **Current outputs:** scalar fit metrics, statsmodels text summary, tidy forecasts with confidence intervals, and reporting-friendly parameter metadata.
+* **Validation:** deterministic simulated AR(1)-style test coverage for fitting, forecast shape, and metadata extraction.
+* **Still planned:** seasonal SARIMAX support, exogenous regressors, date-aware forecast indexes, and config-driven pipeline integration.
 
 ## 2. Bayesian VAR (BVAR)
 * **Source:** Chapter 8

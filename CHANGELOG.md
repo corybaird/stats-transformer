@@ -5,14 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - Unreleased
+## [1.3.0] - ARIMA Forecasting Model (Unreleased)
+
+### Added
+- `ARIMAModel` for univariate ARIMA estimation, scalar fit metrics, tidy forecasts, and reporting-friendly metadata.
+- ARIMA tests covering simulated AR(1)-style data, forecast output shape, and fitted parameter metadata.
+
+## [1.2.0] - Report Export Helpers (Unreleased)
 
 ### Added
 - `ReportExporter` for markdown model cards, JSON run manifests, and markdown figure indexes.
 - Reporting exporter tests covering model-card rendering, manifest writing, and figure-index writing.
 - Planned-extension documentation for report export helpers and remaining follow-up work.
 
-## [1.1.0] - Unreleased
+## [1.1.0] - Time-Series Utilities and Extension Roadmap (Unreleased)
 
 ### Added
 - Packaged example dataset registry with `list_examples()`, `describe_example()`, and `load_example()`.
@@ -32,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refined planned econometric extension docs with proposed APIs, validation requirements, and current-vs-future capability notes.
 - Updated planned-extension docs to mark the Granger causality tester as implemented and identify remaining follow-up work.
 
-## [1.0.1] - Unreleased
+## [1.0.1] - Pipeline Constructor Fix (Unreleased)
 
 ### Fixed
 - Fixed `Pipeline` constructor-driven model selection by reading `model_type` from stored keyword arguments.
