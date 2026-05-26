@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Planned extension roadmap covering release hardening, diagnostics, time-series utilities, causal inference, macro time-series models, and provenance auditing.
 - `GrangerCausalityTester` for single-series and panel Granger causality tests under `stats_transformer.models.timeseries`.
 - Tests covering deterministic single-series and panel Granger causality workflows.
+- `TimeSeriesFeatureBuilder` for panel-safe lag, lead, and horizon feature construction.
+- `ForecastEvaluator` for MAE, MSE, RMSE, mean error, MAPE, and observation-count metrics.
+- `StationarityDiagnostics` for ADF and KPSS stationarity checks.
+- Time-series utility tests covering panel feature construction, forecast metrics, and stationarity diagnostics.
+- Planned-extension documentation for implemented time-series utilities and remaining follow-up work.
 
 ### Changed
 - Updated README quickstart guidance to use installed-package imports and document packaged example loading.

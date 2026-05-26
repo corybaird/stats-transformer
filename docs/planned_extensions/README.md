@@ -11,6 +11,11 @@ This directory tracks future work that is useful but not required for the curren
 - **Time-series utilities:** general lag builders, horizon builders, Granger causality tests, and forecast evaluation helpers.
 - **Example registry:** a documented way to locate bundled examples, load small teaching datasets, and run known-good model configurations.
 
+Implemented first passes:
+
+- `GrangerCausalityTester` under `stats_transformer.models.timeseries`.
+- `TimeSeriesFeatureBuilder`, `ForecastEvaluator`, and `StationarityDiagnostics` under `stats_transformer.models.timeseries`.
+
 ### Medium Term
 
 - **Causal inference suite:** IV diagnostics, event-study DiD, RDD helpers, propensity score weighting, and doubly robust estimators.
