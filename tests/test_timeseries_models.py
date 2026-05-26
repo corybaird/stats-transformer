@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from stats_transformer.models.timeseries.var import VARModel
 from stats_transformer.models.timeseries.vecm import VECMModel
-from stats_transformer.models.timeseries import GrangerCausalityTester
+from stats_transformer.models.timeseries import ARIMAModel, GrangerCausalityTester
 
 def test_var_model():
     # Simple VAR setup
@@ -34,6 +34,32 @@ def test_var_model():
     assert "aic" in metrics
     assert metrics["num_observations"] > 0
     assert model.model is not None
+
+def test_arima_model_forecast_and_metadata():
+    np.random.seed(123)
+    n = 120
+    y = np.zeros(n)
+    noise = np.random.normal(scale=0.3, size=n)
+    for t in range(1, n):
+        y[t] = 0.6 * y[t - 1] + noise[t]
+
+    df = pd.DataFrame({
+        "date": pd.date_range(start="2000-01-01", periods=n, freq="ME"),
+        "y": y,
+    })
+
+    model = ARIMAModel(target="y", order=(1, 0, 0), date_column="date")
+    metrics = model.fit(df)
+    forecast = model.forecast(steps=4)
+    metadata = model.get_model_metadata()
+
+    assert metrics["num_observations"] == n
+    assert metrics["order"] == (1, 0, 0)
+    assert len(forecast) == 4
+    assert {"step", "forecast", "lower_ci", "upper_ci"}.issubset(forecast.columns)
+    assert metadata["model_type"] == "ARIMA"
+    assert metadata["target"] == "y"
+    assert "ar.L1" in metadata["parameters"]
 
 def test_vecm_model():
     # Simple VECM setup

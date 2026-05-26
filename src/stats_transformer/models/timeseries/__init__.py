@@ -1,3 +1,4 @@
+from .arima import ARIMAModel
 from .diagnostics import StationarityDiagnostics
 from .granger import GrangerCausalityTester
 from .local_projections import LocalProjectionsModel
@@ -8,6 +9,7 @@ from .vecm import VECMModel
 
 __all__ = [
     "ForecastEvaluator",
+    "ARIMAModel",
     "GrangerCausalityTester",
     "LocalProjectionsModel",
     "SVARModel",
