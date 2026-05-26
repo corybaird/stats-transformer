@@ -1,10 +1,10 @@
-# Proposed Econometric Model Extensions: Causal Inference & Macroeconomic Time Series
+# Proposed Econometric Model Extensions: Causal Inference and Macroeconomic Time Series
 
 This document outlines a roadmap for expanding the statistical and econometric capabilities of the `stats-transformer` library. By cross-referencing our current [System Architecture](../library/architecture.md) (which relies on OLS, Robust OLS, Panel Regression, and unsupervised models) with adjacent repositories in the research ecosystem, we identify several critical gaps and propose a systematic plan to integrate them into our modular, configuration-driven structure.
 
 ---
 
-## 🗺️ Current vs. Proposed Modeling Capabilities
+## Current vs. Proposed Modeling Capabilities
 
 Our current model layer is designed for standard multivariate and panel estimation. To transition `stats-transformer` into a robust causal inference and advanced macroeconomic framework, we propose adding three missing suites:
 
@@ -14,20 +14,20 @@ Our current model layer is designed for standard multivariate and panel estimati
 | **Robust OLS Regression** | **Staggered Diff-in-Diff (TWFE / Event Study)** | `Econometrics-Agent` | Policy evaluation with variation in treatment timing. |
 | **Panel Regression (FE/RE)** | **Regression Discontinuity Design (RDD)** | `Econometrics-Agent` | Causal inference around strict administrative cutoffs. |
 | **PCA & KMeans Models** | **Propensity Score Matching & Double Robust** | `Econometrics-Agent` | Selection bias mitigation in observational studies. |
-| *(None)* | **Local Projections (Jordà LP)** | `reproducible-econ-ai` | Macroeconomic monetary and fiscal impulse responses. |
+| **Local Projections** | **Panel LP extensions and richer IRF diagnostics** | `reproducible-econ-ai` | Macroeconomic monetary and fiscal impulse responses. |
 | *(None)* | **Preflight Assumption & Diagnostics Checkers** | `aesdk` | Programmatic ex-ante verification of model assumptions. |
 | *(None)* | **Provenance Auditing Ledger** | `forking-paths` | Audit trail capturing Gelman's *garden of forking paths*. |
 
 ---
 
-## 🚀 1. The Causal Inference Modeling Suite
+## 1. The Causal Inference Modeling Suite
 
 The largest current gap in `stats-transformer` is the complete absence of causal identification strategies. Integrating these models will align `stats-transformer` with modern empirical microeconomics.
 
 ### A. Instrumental Variables (IV-2SLS / GMM)
-*   **What is missing**: The ability to handle endogeneity (measurement error, omitted variables, or reverse causality) using external instruments.
-*   **Architectural Integration**: Introduce `IVRegressionModel` inheriting from the base model class. It will wrap the `linearmodels.iv.IV2SLS` backend.
-*   **Statistical Preflight**: Programmatically execute weak-instrument diagnostics (Cragg-Donald and Kleibergen-Paap F-statistics) and exogeneity tests (Hausman test).
+*   **Current status**: `IVRegressionModel` exists in `src/stats_transformer/models/regression/iv.py`.
+*   **Next improvement**: harden weak-instrument diagnostics, first-stage reporting, overidentification tests, and README examples.
+*   **Statistical preflight**: programmatically execute weak-instrument diagnostics and exogeneity tests where backend support is available.
 
 ### B. Specialized Difference-in-Differences (DiD)
 *   **What is missing**: Standard panel fixed effects can absorb static group and time differences, but they do not automatically structure staggered treatments or compile dynamic Event Study coefficient plots.
@@ -49,19 +49,20 @@ The largest current gap in `stats-transformer` is the complete absence of causal
 
 ---
 
-## 📈 2. The Macroeconomic Time Series Suite
+## 2. The Macroeconomic Time Series Suite
 
 Given that `stats-transformer` focuses on macroeconomic panel structures (merging multi-source datasets with varying frequencies), it is missing time-series and structural macro estimation methods.
 
 ### A. Local Projections (Jordà 2005)
-*   **What is missing**: The ability to trace impulse response functions (IRFs) for macroeconomic shocks without imposing the strict structural assumptions of Vector Autoregressions (VARs).
-*   **Architectural Integration**: Add `LocalProjectionsModel`. It will run a series of predictive regressions at varying horizons $h$:
+*   **Current status**: `LocalProjectionsModel` exists in `src/stats_transformer/models/timeseries/local_projections.py`, and `IRFPlot` exists in the visualization layer.
+*   **Next improvement**: add panel local projections, horizon-specific controls, HAC/clustered standard errors, and better metadata for IRF plotting.
+*   **Architectural integration**: the model runs a series of predictive regressions at varying horizons $h$:
     $$Y_{i, t+h} = \alpha_{i, h} + \beta_h D_{i, t} + \sum_{j=1}^p \gamma_{j, h} X_{i, t-j} + \epsilon_{i, t+h}$$
 *   **Visualization**: Build `IRFPlot` under standalone chart components to programmatically graph $\beta_h$ coefficients across horizons.
 
 ---
 
-## 🛡️ 3. Methodological Governance & Process Auditing
+## 3. Methodological Governance and Process Auditing
 
 Our current architecture implements a configuration-driven design that guarantees *state* reproducibility. However, it lacks *process* governance, leaving it vulnerable to data-mining and specification hunting.
 
@@ -79,7 +80,7 @@ Ensure that the process of arriving at the final regression is transparent:
 
 ---
 
-## 🧩 Architectural Integration Blueprint
+## Architectural Integration Blueprint
 
 To integrate these models without bloating the codebase, we will extend the `stats-transformer` component tree by nesting the new estimators under the unified `ModelLayer` interface.
 
