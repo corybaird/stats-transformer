@@ -100,7 +100,7 @@ The package has a typed `src/` layout, a PyPI Trusted Publishing workflow, bundl
 ## Documentation
 
 - **Examples:** For examples of running the models, see [docs/validation/academic_examples.md](docs/validation/academic_examples.md).
-- **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_visualization.ipynb](notebooks/07_visualization.ipynb).
+- **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_chart_components.ipynb](notebooks/07_chart_components.ipynb).
 - **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
 - **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
 - **Documentation Standards:** For standards on how to write research documentation, see [docs/research_standards/documentation.md](docs/research_standards/documentation.md).
