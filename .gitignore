@@ -1,15 +1,28 @@
 # Byte-compiled / optimized / DLL files
+# Generated visualization outputs
 src/stats_transformer/visualization/expansion/
+# Generated dictionary mappings
 references/dictionaries/
+# Generated visualization configs
 references/viz/
+# Local archive of old project materials
 archive/
+# Generated/example review files
 src/examples/agent_reviews/
+# Notebook export outputs
 /data/notebook_exports/
+# DVC pipeline intermediates
 /data/pipeline/
+# Final processed data outputs
 /data/final/
+# Temporary working files
 /data/temp/
+# Immutable raw data (never modified)
 /data/raw/
+# Generated analysis reports and plots
 reports/
+# Archived/deprecated documentation (not tracked, preserved locally)
+docs/archive/
 __pycache__/
 *.py[codz]
 *$py.class
