@@ -93,16 +93,10 @@ uv run pytest tests
 
 For more details on test coverage, see the [Testing Suite](docs/validation/testing_suite.md).
 
-## Current Status
-
-The package has a typed `src/` layout, a PyPI Trusted Publishing workflow, bundled example data, notebooks, and a passing automated test suite. Before a broad public announcement, review the remaining release blockers in the [Publishing Plan](docs/library/publish_plan.md), especially CI version alignment, package metadata polish, and a clean installed-package smoke test.
-
 ## Documentation
 
 - **Examples:** For examples of running the models, see [docs/validation/academic_examples.md](docs/validation/academic_examples.md).
 - **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_chart_components.ipynb](notebooks/07_chart_components.ipynb).
 - **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
 - **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
-- **Documentation Standards:** For standards on how to write research documentation, see [docs/research_standards/documentation.md](docs/research_standards/documentation.md).
 - **Validation & Testing:** For details on the testing suite, see [docs/validation/testing_suite.md](docs/validation/testing_suite.md).
-- **Publishing Plan:** For more details on the release process, please refer to [docs/library/publish_plan.md](docs/library/publish_plan.md).

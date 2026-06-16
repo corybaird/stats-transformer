@@ -57,7 +57,4 @@ Running models or the main `pipeline.py` will automatically dump artifacts (JSON
 
 ## 3. Creating a New Research Project
 
-> [!NOTE]
-> The structure above describes the `stats-transformer` *library repository*. It is not necessarily the structure you should use for an individual research paper.
-> 
-> To create a new, reproducible economic research project that *uses* `stats-transformer`, see the roadmap in [docs/research_standards/cookie_cutter_refactor.md](../research_standards/cookie_cutter_refactor.md).
+The structure above describes the `stats-transformer` library repository. Individual research projects that use the package can keep their own paper-specific data, reports, notebooks, and manuscript files outside this package repository.
