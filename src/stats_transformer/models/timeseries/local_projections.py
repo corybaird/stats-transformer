@@ -40,6 +40,42 @@ class LocalProjectionsModel(ModelBase):
             self.build_model()
         return pd.DataFrame(self.irf_results)
 
+    def compute_vd(self):
+        vd_results = []
+        y = self.df_clean[self.target]
+        
+        x_controls = self.df_clean[self.controls] if self.controls else pd.DataFrame(index=self.df_clean.index)
+        x_controls = sm.add_constant(x_controls)
+        
+        x_full = self.df_clean[self.independent_variables]
+        x_full = sm.add_constant(x_full)
+        
+        for h in range(self.horizon + 1):
+            y_h = y.shift(-h)
+            valid_idx = y_h.notna()
+            y_valid = y_h[valid_idx]
+            
+            # Baseline model (controls only)
+            if not x_controls.empty and len(x_controls.columns) > 1:
+                res_base = sm.OLS(y_valid, x_controls.loc[valid_idx]).fit()
+                r2_base = res_base.rsquared
+            else:
+                r2_base = 0
+                
+            # Full model (controls + shock)
+            res_full = sm.OLS(y_valid, x_full.loc[valid_idx]).fit()
+            r2_full = res_full.rsquared
+            
+            # VD is the marginal R-squared of the shock
+            vd = r2_full - r2_base
+            
+            vd_results.append({
+                'horizon': h,
+                'variance_explained': max(0, vd)  # Avoid tiny negative numerical errors
+            })
+            
+        return pd.DataFrame(vd_results)
+
     def summary_df(self):
         return self.compute_irf()
 

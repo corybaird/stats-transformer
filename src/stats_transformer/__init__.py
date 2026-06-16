@@ -5,7 +5,7 @@ try:
 except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
 
-from .featurization import FeatureEngineer
+from .featurization import FeatureEngineer, EventStudyBuilder
 from .models import RegressionModel
 from .pipeline import Pipeline
 from .visualization import (
@@ -36,4 +36,5 @@ __all__ = [
     "CorrelationHeatmap",
     "TableGenerator",
     "LocalProjectionsModel",
+    "EventStudyBuilder",
 ]
