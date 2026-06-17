@@ -14,6 +14,13 @@
 ### 1. Installation
 
 To use it in your project via PyPI:
+
+```bash
+pip install stats-transformer
+```
+
+Or add it with `uv`:
+
 ```bash
 uv add stats-transformer
 ```
@@ -100,3 +107,21 @@ For more details on test coverage, see the [Testing Suite](docs/validation/testi
 - **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
 - **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
 - **Validation & Testing:** For details on the testing suite, see [docs/validation/testing_suite.md](docs/validation/testing_suite.md).
+
+## Agent Skill
+
+Source checkouts of this repository include an optional `stats-transformer-architecture` agent skill for AI coding tools. It gives agents a compact map of the library architecture, pipeline stages, model contracts, and feature-engineering vocabulary.
+
+The canonical skill source lives at `.agents/skills/stats-transformer-architecture/`. From the repository root, use the local terminal to run `scripts/install-agent-skill.sh`, which installs or refreshes tool-specific copies for Claude Code, OpenAI Codex, or Kilo Code:
+
+```bash
+./scripts/install-agent-skill.sh all
+```
+
+You can also target one tool at a time:
+
+```bash
+./scripts/install-agent-skill.sh claude
+./scripts/install-agent-skill.sh codex
+./scripts/install-agent-skill.sh kilo
+```

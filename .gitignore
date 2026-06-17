@@ -222,9 +222,10 @@ cython_debug/
 #   Local Kilo configuration directory
 .kilo/
 
-# Agent workflow definitions
-#   Local Kilo/opencode agent specs; not part of the published package
-.agents/
+# Generated agent skill installs
+#   Canonical agent instructions live in .agents/
+.claude/
+.codex/
 
 # Visual Studio Code
 #   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
