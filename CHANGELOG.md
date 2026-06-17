@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Documented the optional `stats-transformer-architecture` agent skill and helper script for installing Claude Code, OpenAI Codex, and Kilo Code copies from the canonical `.agents/` source.
+
 ## [1.2.0] - 2026-06-16
 
 ### Added
