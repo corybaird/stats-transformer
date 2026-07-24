@@ -95,18 +95,20 @@ pipeline.run(stage="visualization")
 Verify the installation and library integrity by running the test suite:
 
 ```bash
-uv run pytest tests
+/opt/homebrew/bin/uv run python -m pytest -q
 ```
 
 For more details on test coverage, see the [Testing Suite](docs/validation/testing_suite.md).
 
 ## Documentation
 
+- **Overview:** Start with [docs/overview.md](docs/overview.md) for the documentation map, model inventory, example inventory, and validation guide.
 - **Examples:** For examples of running the models, see [docs/validation/academic_examples.md](docs/validation/academic_examples.md).
 - **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_chart_components.ipynb](notebooks/07_chart_components.ipynb).
 - **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
 - **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
 - **Validation & Testing:** For details on the testing suite, see [docs/validation/testing_suite.md](docs/validation/testing_suite.md).
+- **MATLAB Validation:** For the optional Blanchard--Quah cross-language comparator, see [docs/validation/matlab_comparator.md](docs/validation/matlab_comparator.md).
 
 ## Agent Skill
 
