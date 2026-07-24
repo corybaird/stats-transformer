@@ -27,7 +27,27 @@ class SVARModel(ModelBase):
             self.df_clean = self.df_clean.sort_values(self.date_column)
             
         self.y = self.df_clean[self.target_variables]
-        
+        k = self.y.shape[1]
+        if self.svar_type == 'A' and self.A is None:
+            A_mask = np.zeros((k, k), dtype=object)
+            for i in range(k):
+                for j in range(k):
+                    if i == j:
+                        A_mask[i, j] = 1.0
+                    elif i > j:
+                        A_mask[i, j] = 'E'
+                    else:
+                        A_mask[i, j] = 0.0
+            self.A = A_mask
+        elif self.svar_type == 'B' and self.B is None:
+            B_mask = np.zeros((k, k), dtype=object)
+            for i in range(k):
+                for j in range(k):
+                    if i >= j:
+                        B_mask[i, j] = 'E'
+                    else:
+                        B_mask[i, j] = 0.0
+            self.B = B_mask
         self.svar_spec = SVAR(self.y, svar_type=self.svar_type, A=self.A, B=self.B)
         self.model = self.svar_spec.fit(maxlags=self.maxlags)
         return self.model

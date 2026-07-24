@@ -10,6 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Documented the optional `stats-transformer-architecture` agent skill and helper script for installing Claude Code, OpenAI Codex, and Kilo Code copies from the canonical `.agents/` source.
 
+## [1.3.0] - 2026-07-24
+
+### Added
+- Comprehensive macro time series and SVAR replication suite.
+- Five new time-series models: `BlanchardQuahModel`, `ProxySVARModel`, `SignRestrictionsSVARModel`, `LocalProjectionsIVModel`, and `TimeSeriesDecompositions`.
+- Four empirical paper replications: Stock and Watson (2001), Blanchard and Quah (1989), Gertler and Karadi (2015), and Jorda and Taylor (2025).
+- Integrated MATLAB Engine cross-verification comparator (`tests/verification/matlab_comparator.py`) against the canonical VAR-Toolbox.
+- Added optional `matlabengine` dependency for testing.
+
+### Changed
+- Reorganized `src/examples` structure: moved replications to `src/examples/academic/var`, and configuration YAML files to `references/configs`.
+- Updated `svar.py` to auto-construct missing $A$ and $B$ constraint masks.
+
+### Fixed
+- Fixed Pandas object dtype initialization crash inside `BlanchardQuahModel`.
+
 ## [1.2.0] - 2026-06-16
 
 ### Added

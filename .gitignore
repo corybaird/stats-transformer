@@ -27,6 +27,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+###
+*DS_Store
+
 # C extensions
 *.so
 
@@ -42,7 +45,7 @@ lib/
 lib64/
 parts/
 sdist/
-var/
+/var/
 wheels/
 share/python-wheels/
 *.egg-info/
@@ -252,3 +255,4 @@ __marimo__/
 
 # Temp files
 src/temp/
+references/matlab_benchmarks/
