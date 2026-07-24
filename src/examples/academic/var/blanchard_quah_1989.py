@@ -8,7 +8,7 @@ class BlanchardQuah1989Replication:
         if data_path:
             self.data_path = pathlib.Path(data_path)
         else:
-            self.data_path = pathlib.Path("references/matlab_benchmarks/Replic/BQ1989/BQ1989_Data.xlsx")
+            self.data_path = pathlib.Path("data/examples/matlab_examples/BQ1989_Data.xlsx")
         self.model = None
 
     def load_data(self):

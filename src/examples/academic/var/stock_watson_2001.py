@@ -8,7 +8,7 @@ class StockWatson2001Replication:
         if data_path:
             self.data_path = pathlib.Path(data_path)
         else:
-            self.data_path = pathlib.Path("references/matlab_benchmarks/Replic/SW2001/SW2001_Data.xlsx")
+            self.data_path = pathlib.Path("data/examples/matlab_examples/SW2001_Data.xlsx")
         self.model = None
 
     def load_data(self):

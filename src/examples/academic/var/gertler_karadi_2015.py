@@ -1,14 +1,14 @@
 import pathlib
 import pandas as pd
-from stats_transformer.models.timeseries.local_projections_iv import LocalProjectionsIVModel
+from stats_transformer.models.timeseries.proxy_svar import ProxySVARModel
 
-class JordaTaylor2025Replication:
+class GertlerKaradi2015Replication:
 
     def __init__(self, data_path=None):
         if data_path:
             self.data_path = pathlib.Path(data_path)
         else:
-            self.data_path = pathlib.Path("references/matlab_benchmarks/Replic/JT2025/JT2025_Data.xlsx")
+            self.data_path = pathlib.Path("data/examples/matlab_examples/GK2015_Data.xlsx")
         self.model = None
 
     def load_data(self):
@@ -21,9 +21,8 @@ class JordaTaylor2025Replication:
     def run(self):
         df = self.load_data()
         num_cols = [c for c in df.columns if c.lower() not in ['unnamed: 0', 'date', 'year', 'quarter'] and pd.api.types.is_numeric_dtype(df[c])]
-        target_var = num_cols[0]
-        shock_var = num_cols[1] if len(num_cols) > 1 else num_cols[0]
-        inst_var = num_cols[2] if len(num_cols) > 2 else shock_var
-        self.model = LocalProjectionsIVModel(target_variable=target_var, shock_variable=shock_var, instrument_variable=inst_var, horizons=10)
+        vars_to_use = num_cols[:3]
+        inst_var = num_cols[-1] if len(num_cols) > 3 else vars_to_use[0]
+        self.model = ProxySVARModel(target_variables=vars_to_use, instrument_variable=inst_var, maxlags=12)
         metrics = self.model.fit(df)
-        return {"metrics": metrics, "irf_coefficients": self.model.irf_coefficients}
+        return {"metrics": metrics, "summary": self.model.get_summary(), "impact": self.model.impact_column}
