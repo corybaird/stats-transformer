@@ -5,10 +5,10 @@ from stats_transformer.models.timeseries.proxy_svar import ProxySVARModel
 from stats_transformer.models.timeseries.sign_restrictions import SignRestrictionsSVARModel
 from stats_transformer.models.timeseries.local_projections_iv import LocalProjectionsIVModel
 from stats_transformer.models.timeseries.decompositions import TimeSeriesDecompositions
-from examples.replications.stock_watson_2001 import StockWatson2001Replication
-from examples.replications.blanchard_quah_1989 import BlanchardQuah1989Replication
-from examples.replications.gertler_karadi_2015 import GertlerKaradi2015Replication
-from examples.replications.jorda_taylor_2025 import JordaTaylor2025Replication
+from examples.academic.var.stock_watson_2001 import StockWatson2001Replication
+from examples.academic.var.blanchard_quah_1989 import BlanchardQuah1989Replication
+from examples.academic.var.gertler_karadi_2015 import GertlerKaradi2015Replication
+from examples.academic.var.jorda_taylor_2025 import JordaTaylor2025Replication
 
 def create_synthetic_data():
     np.random.seed(42)
