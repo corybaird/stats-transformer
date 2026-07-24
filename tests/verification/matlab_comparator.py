@@ -44,7 +44,7 @@ class MATLABComparator:
         else:
             print("Skipped MATLAB engine run (engine not active). Python model trained successfully.")
 
-    def run(self, sample_data_path="references/matlab_benchmarks/Replic/BQ1989/BQ1989_Data.xlsx"):
+    def run(self, sample_data_path="data/examples/matlab_examples/BQ1989_Data.xlsx"):
         connected = self.connect_matlab_engine()
         if os.path.exists(sample_data_path):
             df = pd.read_excel(sample_data_path)
