@@ -8,6 +8,14 @@ from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
+from stats_transformer.models.timeseries import (
+    BlanchardQuahModel,
+    LocalProjectionsIVModel,
+    ProxySVARModel,
+    SignRestrictionsSVARModel,
+    SVARModel,
+    VARModel,
+)
 from stats_transformer.visualization.models.regression_viz import RegressionVisualizer
 from stats_transformer.visualization.eda.data_viz import DataVisualizer
 from stats_transformer.visualization.eda.eda import EDAVisualizer
@@ -20,9 +28,9 @@ class Pipeline:
         self.entity_column = entity_column
         self.date_column = date_column
         self.target = target
-        self.features = features or []
+        self.features = features
+        self.transformations = transformations
         self.add_entity_fixed_effects = add_entity_fixed_effects
-        self.transformations = transformations or []
         self.kwargs = kwargs
         self.feature_engineer = None
         self.model = None
@@ -30,9 +38,6 @@ class Pipeline:
         self.model_results = None
 
     def _initialize_from_params(self):
-        if not self.params_path:
-            return
-        
         with open(self.params_path, "r") as f:
             params = yaml.safe_load(f)
         
@@ -56,6 +61,14 @@ class Pipeline:
             self.model = PCAModel(params_path=self.params_path, features=self.features)
         elif model_type == "kmeans":
             self.model = KMeansModel(params_path=self.params_path, features=self.features)
+        elif model_type == "blanchard_quah":
+            self.model = BlanchardQuahModel(params_path=self.params_path)
+        elif model_type == "proxy_svar":
+            self.model = ProxySVARModel(params_path=self.params_path)
+        elif model_type == "sign_restrictions":
+            self.model = SignRestrictionsSVARModel(params_path=self.params_path)
+        elif model_type == "lp_iv":
+            self.model = LocalProjectionsIVModel(params_path=self.params_path)
         else:
             self.model = RegressionModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
 
@@ -75,6 +88,14 @@ class Pipeline:
                 self.model = PCAModel(params_path=None, features=self.features)
             elif model_type == "kmeans":
                 self.model = KMeansModel(params_path=None, features=self.features)
+            elif model_type == "blanchard_quah":
+                self.model = BlanchardQuahModel(params_path=None, target_variables=[self.target] + (self.features or []))
+            elif model_type == "proxy_svar":
+                self.model = ProxySVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
+            elif model_type == "sign_restrictions":
+                self.model = SignRestrictionsSVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
+            elif model_type == "lp_iv":
+                self.model = LocalProjectionsIVModel(params_path=None, target_variable=self.target, shock_variable=self.features[0] if self.features else None)
             else:
                 self.model = RegressionModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
 

@@ -86,9 +86,11 @@ class ModelBase(ABC):
             if self.add_entity_fixed_effects and self.entity_column in required_columns:
                 self.df_clean = self.df[required_columns].dropna()
             else:
-                self.df_clean = self.df.set_index([self.entity_column, 'date'])[required_columns].dropna()
+                cols = [c for c in required_columns if c not in [self.entity_column, 'date']]
+                self.df_clean = self.df.set_index([self.entity_column, 'date'])[cols].dropna()
         elif 'date' in self.df.columns:
-            self.df_clean = self.df.set_index(['date'])[required_columns].dropna()
+            cols = [c for c in required_columns if c != 'date']
+            self.df_clean = self.df.set_index(['date'])[cols].dropna()
         else:
             self.df_clean = self.df[required_columns].dropna()
             

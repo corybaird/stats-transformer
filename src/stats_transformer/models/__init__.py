@@ -3,5 +3,33 @@ from .regression.regression import RegressionModel
 from .regression.robust_ols import RobustOLSModel
 from .regression.panel import PanelRegressionModel
 from .unsupervised.unsupervised import PCAModel, KMeansModel
+from .timeseries import (
+    BlanchardQuahModel,
+    LocalProjectionsModel,
+    LocalProjectionsIVModel,
+    ProxySVARModel,
+    SignRestrictionsSVARModel,
+    SVARModel,
+    TimeSeriesDecompositions,
+    VARModel,
+    VECMModel,
+)
 
-__all__ = ["ModelBase", "RegressionModel", "RobustOLSModel", "PanelRegressionModel", "PCAModel", "KMeansModel"]
+__all__ = [
+    "ModelBase",
+    "RegressionModel",
+    "RobustOLSModel",
+    "PanelRegressionModel",
+    "PCAModel",
+    "KMeansModel",
+    "BlanchardQuahModel",
+    "LocalProjectionsModel",
+    "LocalProjectionsIVModel",
+    "ProxySVARModel",
+    "SignRestrictionsSVARModel",
+    "SVARModel",
+    "TimeSeriesDecompositions",
+    "VARModel",
+    "VECMModel",
+]
+
