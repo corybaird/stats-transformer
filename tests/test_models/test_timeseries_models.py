@@ -1,8 +1,8 @@
 import pytest
 import pandas as pd
 import numpy as np
-from stats_transformer.models.timeseries.var import VARModel
-from stats_transformer.models.timeseries.vecm import VECMModel
+from stats_transformer.models.timeseries.reduced_form.var import VARModel
+from stats_transformer.models.timeseries.reduced_form.vecm import VECMModel
 from stats_transformer.models.timeseries import GrangerCausalityTester
 
 def test_var_model():
