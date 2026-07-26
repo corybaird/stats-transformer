@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 from stats_transformer.models.timeseries.decompositions import TimeSeriesDecompositions
 from stats_transformer.reporting.timeseries.results import TimeSeriesReportData
@@ -38,42 +39,55 @@ def _build_coefficient_frame(result):
     return pd.DataFrame(rows, columns=["equation", "term", "estimate", "std_error", "statistic", "p_value"])
 
 
-def _build_irf_frame(result, impact, variables, horizons):
+def _build_irf_dataset(result, impact, variables, horizons):
     responses = result.ma_rep(maxn=horizons)
     structural_responses = np.einsum("hij,jk->hik", responses, impact)
-    rows = []
-    for horizon in range(structural_responses.shape[0]):
-        for response_index, response in enumerate(variables):
-            for shock_index, shock in enumerate(variables):
-                rows.append([horizon, response, shock, float(structural_responses[horizon, response_index, shock_index])])
-    return pd.DataFrame(rows, columns=["horizon", "response", "shock", "estimate"])
+    da = xr.DataArray(
+        structural_responses,
+        coords=[np.arange(structural_responses.shape[0]), variables, variables],
+        dims=["horizon", "response", "shock"],
+        name="estimate"
+    )
+    return da.to_dataset()
 
 
-def _build_fevd_frame(result, impact, variables, horizons):
+def _build_fevd_dataset(result, impact, variables, horizons):
     values = TimeSeriesDecompositions(result, B_0=impact).compute_fevd(steps=horizons + 1)
-    rows = []
-    for horizon in range(values.shape[0]):
-        for response_index, response in enumerate(variables):
-            for shock_index, shock in enumerate(variables):
-                rows.append([horizon, response, shock, float(values[horizon, response_index, shock_index])])
-    return pd.DataFrame(rows, columns=["horizon", "response", "shock", "share"])
+    da = xr.DataArray(
+        values,
+        coords=[np.arange(values.shape[0]), variables, variables],
+        dims=["horizon", "response", "shock"],
+        name="share"
+    )
+    return da.to_dataset()
 
 
-def _build_decomposition_frames(model, result, impact, variables):
+def _build_decomposition_datasets(model, result, impact, variables):
     historical, shocks = TimeSeriesDecompositions(result, B_0=impact).compute_hd()
     dates = _resolve_dates(model, result)
-    historical_rows = []
-    shock_rows = []
-    for observation_index, date in enumerate(dates):
-        for response_index, response in enumerate(variables):
-            reconstruction = float(historical[observation_index, response_index, :].sum())
-            for shock_index, shock in enumerate(variables):
-                historical_rows.append([date, response, shock, float(historical[observation_index, response_index, shock_index]), reconstruction])
-        for shock_index, shock in enumerate(variables):
-            shock_rows.append([date, shock, float(shocks[observation_index, shock_index])])
-    historical_frame = pd.DataFrame(historical_rows, columns=["date", "response", "shock", "contribution", "reconstructed"])
-    shock_frame = pd.DataFrame(shock_rows, columns=["date", "shock", "value"])
-    return historical_frame, shock_frame
+    
+    historical_da = xr.DataArray(
+        historical,
+        coords=[dates, variables, variables],
+        dims=["date", "response", "shock"],
+        name="contribution"
+    )
+    reconstructed = historical.sum(axis=2)
+    reconstructed_da = xr.DataArray(
+        reconstructed,
+        coords=[dates, variables],
+        dims=["date", "response"],
+        name="reconstructed"
+    )
+    historical_ds = xr.merge([historical_da, reconstructed_da])
+    
+    shocks_da = xr.DataArray(
+        shocks,
+        coords=[dates, variables],
+        dims=["date", "shock"],
+        name="value"
+    )
+    return historical_ds, shocks_da.to_dataset()
 
 
 def _resolve_dates(model, result):
@@ -108,12 +122,12 @@ class VARResultAdapter(TimeSeriesResultAdapter):
         variables = list(self.model.target_variables)
         covariance = np.asarray(result.sigma_u)
         impact = np.linalg.cholesky(covariance)
-        historical, shocks = _build_decomposition_frames(self.model, result, impact, variables)
+        historical, shocks = _build_decomposition_datasets(self.model, result, impact, variables)
         return TimeSeriesReportData(
             specification=_build_specification_frame("VAR", result, variables, "recursive Cholesky"),
             coefficients=_build_coefficient_frame(result),
-            irfs=_build_irf_frame(result, impact, variables, self.horizons),
-            fevd=_build_fevd_frame(result, impact, variables, self.horizons),
+            irfs=_build_irf_dataset(result, impact, variables, self.horizons),
+            fevd=_build_fevd_dataset(result, impact, variables, self.horizons),
             historical_decomposition=historical,
             structural_shocks=shocks,
         )
@@ -127,12 +141,12 @@ class BlanchardQuahResultAdapter(TimeSeriesResultAdapter):
             raise ValueError("BlanchardQuahModel must be fitted before reporting")
         variables = list(self.model.target_variables)
         impact = np.asarray(self.model.B_0)
-        historical, shocks = _build_decomposition_frames(self.model, result, impact, variables)
+        historical, shocks = _build_decomposition_datasets(self.model, result, impact, variables)
         return TimeSeriesReportData(
             specification=_build_specification_frame("Blanchard-Quah SVAR", result, variables, "long-run restrictions"),
             coefficients=_build_coefficient_frame(result),
-            irfs=_build_irf_frame(result, impact, variables, self.horizons),
-            fevd=_build_fevd_frame(result, impact, variables, self.horizons),
+            irfs=_build_irf_dataset(result, impact, variables, self.horizons),
+            fevd=_build_fevd_dataset(result, impact, variables, self.horizons),
             historical_decomposition=historical,
             structural_shocks=shocks,
         )
@@ -145,7 +159,10 @@ class LocalProjectionsResultAdapter(TimeSeriesResultAdapter):
         rows = []
         for row in source.itertuples(index=False):
             rows.append([int(row.horizon), self.model.target, self.model.shock_var, float(row.effect), float(row.stderr), float(row.lower_ci), float(row.upper_ci), float(row.pvalue)])
-        irfs = pd.DataFrame(rows, columns=["horizon", "response", "shock", "estimate", "std_error", "lower", "upper", "p_value"])
+        
+        irfs_df = pd.DataFrame(rows, columns=["horizon", "response", "shock", "estimate", "std_error", "lower", "upper", "p_value"])
+        irfs_ds = irfs_df.set_index(["horizon", "response", "shock"]).to_xarray()
+        
         specification = pd.DataFrame([
             ["model", "Local projections"],
             ["response", self.model.target],
@@ -153,7 +170,7 @@ class LocalProjectionsResultAdapter(TimeSeriesResultAdapter):
             ["horizons", int(self.model.horizon)],
             ["covariance", "HC3"],
         ], columns=["statistic", "value"])
-        return TimeSeriesReportData(specification=specification, irfs=irfs)
+        return TimeSeriesReportData(specification=specification, irfs=irfs_ds)
 
 
 class LocalProjectionsIVResultAdapter(TimeSeriesResultAdapter):
@@ -166,7 +183,10 @@ class LocalProjectionsIVResultAdapter(TimeSeriesResultAdapter):
             standard_error = self.model.irf_std_errors[horizon]
             lower, upper = _normal_95_interval(estimate, standard_error)
             rows.append([horizon, self.model.target_variable, self.model.shock_variable, estimate, standard_error, lower, upper])
-        irfs = pd.DataFrame(rows, columns=["horizon", "response", "shock", "estimate", "std_error", "lower", "upper"])
+            
+        irfs_df = pd.DataFrame(rows, columns=["horizon", "response", "shock", "estimate", "std_error", "lower", "upper"])
+        irfs_ds = irfs_df.set_index(["horizon", "response", "shock"]).to_xarray()
+        
         specification = pd.DataFrame([
             ["model", "Local projections IV"],
             ["response", self.model.target_variable],
@@ -175,4 +195,4 @@ class LocalProjectionsIVResultAdapter(TimeSeriesResultAdapter):
             ["horizons", int(self.model.horizons)],
             ["confidence_interval", "normal approximation, 95%"],
         ], columns=["statistic", "value"])
-        return TimeSeriesReportData(specification=specification, irfs=irfs)
+        return TimeSeriesReportData(specification=specification, irfs=irfs_ds)

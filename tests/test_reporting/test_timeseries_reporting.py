@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from pathlib import Path
+import xarray as xr
 
 from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
 from stats_transformer.models.timeseries.reduced_form.local_projections import LocalProjectionsModel
@@ -35,13 +36,17 @@ def test_var_adapter_normalizes_reporting_results():
 
     report = VARResultAdapter(model, horizons=6).build()
 
-    assert set(report.irfs.columns) == {"horizon", "response", "shock", "estimate"}
-    assert report.irfs["horizon"].max() == 6
-    assert report.fevd["horizon"].max() == 6
-    sums = report.fevd.groupby(["horizon", "response"])["share"].sum()
+    assert isinstance(report.irfs, xr.Dataset)
+    assert set(report.irfs.coords.keys()) == {"horizon", "response", "shock"}
+    assert report.irfs.coords["horizon"].max().item() == 6
+    assert report.fevd.coords["horizon"].max().item() == 6
+    
+    fevd_df = report.fevd.to_dataframe().reset_index()
+    sums = fevd_df.groupby(["horizon", "response"])["share"].sum()
     np.testing.assert_allclose(sums.to_numpy(), 1.0)
-    assert not report.historical_decomposition.empty
-    assert not report.structural_shocks.empty
+    
+    assert len(report.historical_decomposition.data_vars) > 0
+    assert len(report.structural_shocks.data_vars) > 0
 
 
 def test_blanchard_quah_adapter_uses_long_run_impact_matrix():
@@ -50,7 +55,7 @@ def test_blanchard_quah_adapter_uses_long_run_impact_matrix():
     model.fit(data)
 
     report = BlanchardQuahResultAdapter(model, horizons=4).build()
-    impact = report.irfs[report.irfs["horizon"] == 0].pivot(index="response", columns="shock", values="estimate").reindex(index=model.target_variables, columns=model.target_variables)
+    impact = report.irfs["estimate"].sel(horizon=0).to_pandas().reindex(index=model.target_variables, columns=model.target_variables)
 
     np.testing.assert_allclose(impact.to_numpy(), model.B_0)
     assert report.specification.loc[report.specification["statistic"] == "identification", "value"].iloc[0] == "long-run restrictions"
@@ -66,10 +71,10 @@ def test_local_projection_adapters_preserve_inference():
     iv_model.fit(data)
     iv_report = LocalProjectionsIVResultAdapter(iv_model).build()
 
-    assert {"std_error", "lower", "upper"}.issubset(lp_report.irfs.columns)
-    assert {"std_error", "lower", "upper"}.issubset(iv_report.irfs.columns)
-    assert len(lp_report.irfs) == 5
-    assert len(iv_report.irfs) == 5
+    assert {"std_error", "lower", "upper"}.issubset(set(lp_report.irfs.data_vars.keys()))
+    assert {"std_error", "lower", "upper"}.issubset(set(iv_report.irfs.data_vars.keys()))
+    assert len(lp_report.irfs.coords["horizon"]) == 5
+    assert len(iv_report.irfs.coords["horizon"]) == 5
 
 
 def test_reporter_exports_var_figures_and_tables(tmp_path):

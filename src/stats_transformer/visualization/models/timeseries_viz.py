@@ -7,12 +7,15 @@ class TimeSeriesVisualizer(BaseVisualizer):
     def create_visualization(self, report_data, outputs=None, labels=None, display_only=False):
         selected_outputs = outputs or ["irfs", "fevd", "historical_decomposition"]
         saved = {}
-        if "irfs" in selected_outputs and not report_data.irfs.empty:
-            saved["irfs"] = self.plot_irfs(report_data.irfs, labels=labels, display_only=display_only)
-        if "fevd" in selected_outputs and not report_data.fevd.empty:
-            saved["fevd"] = self.plot_fevd(report_data.fevd, labels=labels, display_only=display_only)
-        if "historical_decomposition" in selected_outputs and not report_data.historical_decomposition.empty:
-            saved["historical_decomposition"] = self.plot_historical_decomposition(report_data.historical_decomposition, labels=labels, display_only=display_only)
+        if "irfs" in selected_outputs and len(report_data.irfs.data_vars) > 0:
+            df = report_data.irfs.to_dataframe().reset_index()
+            saved["irfs"] = self.plot_irfs(df, labels=labels, display_only=display_only)
+        if "fevd" in selected_outputs and len(report_data.fevd.data_vars) > 0:
+            df = report_data.fevd.to_dataframe().reset_index()
+            saved["fevd"] = self.plot_fevd(df, labels=labels, display_only=display_only)
+        if "historical_decomposition" in selected_outputs and len(report_data.historical_decomposition.data_vars) > 0:
+            df = report_data.historical_decomposition.to_dataframe().reset_index()
+            saved["historical_decomposition"] = self.plot_historical_decomposition(df, labels=labels, display_only=display_only)
         return saved
 
     def plot_irfs(self, data, labels=None, display_only=False):
