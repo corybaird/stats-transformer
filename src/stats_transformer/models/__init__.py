@@ -13,6 +13,8 @@ from .timeseries import (
     TimeSeriesDecompositions,
     VARModel,
     VECMModel,
+    VolatilitySVARModel,
+    IndependenceSVARModel,
 )
 
 __all__ = [
