@@ -1,6 +1,6 @@
 from .identification.blanchard_quah import BlanchardQuahModel
 from .decompositions import TimeSeriesDecompositions
-from .diagnostics import StationarityDiagnostics
+from .diagnostics.stationarity import StationarityDiagnostics
 from .granger import GrangerCausalityTester
 from .reduced_form.local_projections import LocalProjectionsModel
 from .reduced_form.local_projections_iv import LocalProjectionsIVModel
