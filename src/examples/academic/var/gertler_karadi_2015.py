@@ -1,6 +1,6 @@
 import pathlib
 import pandas as pd
-from stats_transformer.models.timeseries.proxy_svar import ProxySVARModel
+from stats_transformer.models.timeseries.identification.proxy_svar import ProxySVARModel
 
 class GertlerKaradi2015Replication:
 

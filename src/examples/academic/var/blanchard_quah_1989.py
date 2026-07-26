@@ -1,6 +1,6 @@
 import pathlib
 import pandas as pd
-from stats_transformer.models.timeseries.blanchard_quah import BlanchardQuahModel
+from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
 
 class BlanchardQuah1989Replication:
 
