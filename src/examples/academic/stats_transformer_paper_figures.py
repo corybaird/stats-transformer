@@ -7,7 +7,7 @@ import pandas as pd
 from stats_transformer.data import load_example
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
-from stats_transformer.models.timeseries.var import VARModel
+from stats_transformer.models.timeseries.reduced_form.var import VARModel
 from stats_transformer.visualization.charts.bar import CoefficientBarChart
 from stats_transformer.visualization.charts.time_series import IRFPlot
 
