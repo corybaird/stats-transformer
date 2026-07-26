@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from stats_transformer.models.timeseries.vecm import VECMModel
+from stats_transformer.models.timeseries.reduced_form.vecm import VECMModel
 
 class GhyselsChap7VECMExample:
     def __init__(self):
