@@ -40,6 +40,8 @@ Changelog = "https://github.com/corybaird/stats-transformer/blob/main/CHANGELOG.
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+python_files = ["*.py"]
+python_functions = ["test_*"]
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
