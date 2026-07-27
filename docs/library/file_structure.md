@@ -61,7 +61,7 @@ Paper-specific logic and data should remain in an example, notebook, or downstre
 
 ## Validation boundary
 
-Automated tests belong in `tests/`. Cross-language checks that require local software, data, or licensing belong in `tests/replication/` and are documented separately. Academic examples under `src/examples/academic/` are executable demonstrations, not substitutes for the automated test suite.
+Automated tests belong in `tests/`. Cross-language checks and empirical paper demonstrations belong in `tests/replication/` and are documented in [replications.md](../validation/replications.md). Academic examples under `src/examples/academic/` are executable demonstrations.
 
 ## Agent skill
 
