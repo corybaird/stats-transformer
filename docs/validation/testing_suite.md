@@ -39,7 +39,7 @@ The `pyproject.toml` test configuration adds `src/` to the Python path. The test
 | `tests/test_utils/` | configuration, country conversion, time-series utilities | helper behavior and error conditions |
 | `tests/test_examples/` | example registry | example discovery and registration |
 | `tests/data/` | stable test fixtures | small local inputs used by tests |
-| `tests/verification/` | opt-in external verification | MATLAB Engine comparison; not collected by default |
+| `tests/replication/` | opt-in external replication | MATLAB & R Engine comparison; not collected by default |
 
 Run a focused area with the same module form, for example:
 
