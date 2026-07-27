@@ -15,14 +15,14 @@ R_AVAILABLE = os.environ.get("R_AVAILABLE", "0") == "1"
 @pytest.mark.xfail(reason="Minor discrepancy in regime split/VAR fit compared to R svars")
 def test_svars_volatility_integration():
     # 1. Run the R script to generate the data and the benchmark results
-    r_script_path = Path("tests/integration/svar/svar.R")
+    r_script_path = Path("tests/replication/r_packages/svar/svar.R")
     
     # We run Rscript
     subprocess.run(["Rscript", str(r_script_path)], check=True)
     
     # 2. Load the outputs
-    data_path = Path("tests/integration/svar/data_usa.csv")
-    res_path = Path("tests/integration/svar/svars_results.json")
+    data_path = Path("tests/replication/r_packages/svar/data_usa.csv")
+    res_path = Path("tests/replication/r_packages/svar/svars_results.json")
     
     assert data_path.exists()
     assert res_path.exists()

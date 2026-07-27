@@ -13,18 +13,18 @@ R_AVAILABLE = os.environ.get("R_AVAILABLE", "0") == "1"
 @pytest.mark.skipif(not R_AVAILABLE, reason="R environment not available")
 def test_general_regressions_integration():
     # 1. Run R regression script
-    r_script = Path("tests/integration/regression/regression.R")
+    r_script = Path("tests/replication/r_packages/regression/regression.R")
     subprocess.run(["Rscript", str(r_script)], check=True)
     
     # 2. Read results
-    res_file = Path("tests/integration/regression/regression_results.json")
+    res_file = Path("tests/replication/r_packages/regression/regression_results.json")
     assert res_file.exists()
     
     with open(res_file, "r") as f:
         r_res = json.load(f)
         
     # Load dataset
-    df = pd.read_csv("tests/integration/data/ghysels/ex2_regress_gdp_us.csv")
+    df = pd.read_csv("data/examples/academic/ghysels_2018/Ch_2/ex2_regress_gdp_us.csv")
     
     # OLS Validation
     X = sm.add_constant(df[['ipr', 'su', 'pr', 'sr']])

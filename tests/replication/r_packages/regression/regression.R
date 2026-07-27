@@ -4,7 +4,7 @@ suppressMessages(library(lmtest))
 suppressMessages(library(AER))
 
 # 1. OLS & Robust OLS on Ghysels US GDP data
-us_gdp <- read.csv("tests/integration/data/ghysels/ex2_regress_gdp_us.csv")
+us_gdp <- read.csv("data/examples/academic/ghysels_2018/Ch_2/ex2_regress_gdp_us.csv")
 
 fit_ols <- lm(y ~ ipr + su + pr + sr, data = us_gdp)
 coef_ols <- coef(fit_ols)
@@ -21,7 +21,6 @@ fit_logit <- glm(y_bin ~ ipr + su, data = us_gdp, family = binomial(link = "logi
 coef_logit <- coef(fit_logit)
 
 # 3. IV Regression using AER::ivreg
-# Formula: y ~ ipr + su | sr + pr (ipr endog, sr/pr instruments)
 fit_iv <- ivreg(y ~ ipr + su | sr + pr + su, data = us_gdp)
 coef_iv <- coef(fit_iv)
 
@@ -35,4 +34,4 @@ res <- list(
   iv_coef = as.list(coef_iv)
 )
 
-write_json(res, "tests/integration/regression/regression_results.json", auto_unbox = TRUE, digits = 8)
+write_json(res, "tests/replication/r_packages/regression/regression_results.json", auto_unbox = TRUE, digits = 8)

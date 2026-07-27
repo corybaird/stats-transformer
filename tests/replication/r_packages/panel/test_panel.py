@@ -12,17 +12,17 @@ R_AVAILABLE = os.environ.get("R_AVAILABLE", "0") == "1"
 @pytest.mark.skipif(not R_AVAILABLE, reason="R environment not available")
 def test_panel_models_integration():
     # 1. Run R panel script
-    r_script = Path("tests/integration/panel/panel.R")
+    r_script = Path("tests/replication/r_packages/panel/panel.R")
     subprocess.run(["Rscript", str(r_script)], check=True)
     
     # 2. Read results
-    res_file = Path("tests/integration/panel/panel_results.json")
+    res_file = Path("tests/replication/r_packages/panel/panel_results.json")
     assert res_file.exists()
     
     with open(res_file, "r") as f:
         r_res = json.load(f)
         
-    df = pd.read_csv("tests/integration/panel/grunfeld.csv")
+    df = pd.read_csv("tests/replication/r_packages/panel/grunfeld.csv")
     df = df.set_index(['firm', 'year'])
     
     # Panel OLS (Fixed Effects - Entity effects)

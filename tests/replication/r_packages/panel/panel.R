@@ -4,19 +4,24 @@ suppressMessages(library(plm))
 data("Grunfeld", package = "plm")
 
 # Write out Grunfeld dataset to CSV for Python to load
-write.csv(Grunfeld, "tests/integration/panel/grunfeld.csv", row.names = FALSE)
+write.csv(Grunfeld, "tests/replication/r_packages/panel/grunfeld.csv", row.names = FALSE)
+# Run pooled OLS model
+fit_pooled <- plm(inv ~ value + capital, data = Grunfeld, model = "pooling")
+sum_pooled <- summary(fit_pooled)
 
-# 1. Fixed Effects (Within)
-fe_model <- plm(inv ~ value + capital, data = Grunfeld, model = "within")
-fe_coef <- coef(fe_model)
+# Run fixed effects model (within)
+fit_fe <- plm(inv ~ value + capital, data = Grunfeld, model = "within")
+sum_fe <- summary(fit_fe)
 
-# 2. Random Effects
-re_model <- plm(inv ~ value + capital, data = Grunfeld, model = "random")
-re_coef <- coef(re_model)
+# Run random effects model (random)
+fit_re <- plm(inv ~ value + capital, data = Grunfeld, model = "random")
+sum_re <- summary(fit_re)
 
+# Export coefficients and SEs to JSON
 res <- list(
-  fe_coef = as.list(fe_coef),
-  re_coef = as.list(re_coef)
+  pooled = list(coefficients = as.list(coef(fit_pooled)), se = as.list(sqrt(diag(vcov(fit_pooled))))),
+  fe = list(coefficients = as.list(coef(fit_fe)), se = as.list(sqrt(diag(vcov(fit_fe))))),
+  re = list(coefficients = as.list(coef(fit_re)), se = as.list(sqrt(diag(vcov(fit_re)))))
 )
 
-write_json(res, "tests/integration/panel/panel_results.json", auto_unbox = TRUE, digits = 8)
+write_json(res, "tests/replication/r_packages/panel/panel_results.json", auto_unbox = TRUE, digits = 8)

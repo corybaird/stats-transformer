@@ -1,21 +1,25 @@
 suppressMessages(library(vars))
-suppressMessages(library(tsDyn))
 suppressMessages(library(jsonlite))
 
-# 1. Standard VAR(2) on Canada dataset
 data(Canada)
-write.csv(Canada, "tests/integration/var/canada.csv", row.names = FALSE)
 
-v <- VAR(Canada, p = 2, type = "const")
-coef_var <- Bcoef(v)
+# Save Canada dataset to CSV for Python to load
+write.csv(Canada, "tests/replication/r_packages/var/canada.csv", row.names = FALSE)
 
-# 2. Johansen VECM
-vecm_fit <- VECM(Canada, lag = 2, r = 1, estim = "ML")
-coef_vecm <- coef(vecm_fit)
+# Fit VAR(2) model
+fit_var <- VAR(Canada, p = 2, type = "const")
+
+# Extract VAR coefficients
+coef_e <- coef(fit_var)$e[, "Estimate"]
+coef_prod <- coef(fit_var)$prod[, "Estimate"]
+coef_rw <- coef(fit_var)$rw[, "Estimate"]
+coef_U <- coef(fit_var)$U[, "Estimate"]
 
 res <- list(
-  var_coef = coef_var,
-  vecm_coef = coef_vecm
+  coef_e = as.list(coef_e),
+  coef_prod = as.list(coef_prod),
+  coef_rw = as.list(coef_rw),
+  coef_U = as.list(coef_U)
 )
 
-write_json(res, "tests/integration/var/var_results.json", auto_unbox = TRUE, digits = 8)
+write_json(res, "tests/replication/r_packages/var/var_results.json", auto_unbox = TRUE, digits = 8)
