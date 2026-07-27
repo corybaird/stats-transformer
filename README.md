@@ -127,3 +127,12 @@ You can also target one tool at a time:
 ./scripts/install-agent-skill.sh codex
 ./scripts/install-agent-skill.sh kilo
 ```
+
+## Data & Replications
+
+The following datasets and papers are referenced in the examples and replication suites:
+
+- Ghysels, E., & Marcellino, M. (2018). *Applied economic forecasting using time series methods*. Oxford University Press.
+  - Data sourced from: [Online repository](https://www.dropbox.com/scl/fo/xi8gvbsntc47796rkivf1/AILfUDEFiYoxp58R8O2ID5U?rlkey=04guitnsndcxxud3bf7sr9n8y&e=1&dl=0)
+- Gürkaynak, R. S., Sack, B., & Wright, J. H. (2010). The TIPS yield curve and inflation compensation. *American Economic Journal: Macroeconomics*, 2(1), 70-92.
+- Nakamura, E., & Steinsson, J. (2018). High-frequency identification of monetary non-neutrality: the information effect. *The Quarterly Journal of Economics*, 133(3), 1283-1330.
