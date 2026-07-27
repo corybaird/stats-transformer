@@ -6,7 +6,7 @@ suppressMessages(library(jsonlite))
 data(USA)
 
 # Write to CSV for Python to load
-write.csv(USA, "tests/integration/data_usa.csv", row.names=FALSE)
+write.csv(USA, "tests/integration/svar/data_usa.csv", row.names=FALSE)
 
 # 2. Fit VAR(6)
 v <- VAR(USA, p = 6, type = "const")
@@ -29,4 +29,4 @@ res <- list(
   Lambda_cv = diag(Lambda)
 )
 
-write_json(res, "tests/integration/svars_results.json")
+write_json(res, "tests/integration/svar/svars_results.json")

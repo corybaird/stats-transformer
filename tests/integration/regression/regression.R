@@ -35,4 +35,4 @@ res <- list(
   iv_coef = as.list(coef_iv)
 )
 
-write_json(res, "tests/integration/regression_results.json", auto_unbox = TRUE, digits = 8)
+write_json(res, "tests/integration/regression/regression_results.json", auto_unbox = TRUE, digits = 8)

@@ -12,17 +12,17 @@ R_AVAILABLE = os.environ.get("R_AVAILABLE", "0") == "1"
 @pytest.mark.skipif(not R_AVAILABLE, reason="R environment not available")
 def test_var_models_integration():
     # 1. Run R VAR script
-    r_script = Path("tests/integration/r_scripts/var.R")
+    r_script = Path("tests/integration/var/var.R")
     subprocess.run(["Rscript", str(r_script)], check=True)
     
     # 2. Read results
-    res_file = Path("tests/integration/var_results.json")
+    res_file = Path("tests/integration/var/var_results.json")
     assert res_file.exists()
     
     with open(res_file, "r") as f:
         r_res = json.load(f)
         
-    df = pd.read_csv("tests/integration/data/canada.csv")
+    df = pd.read_csv("tests/integration/var/canada.csv")
     
     # Fit VAR(2) with statsmodels
     model = VAR(df)

@@ -4,7 +4,7 @@ suppressMessages(library(plm))
 data("Grunfeld", package = "plm")
 
 # Write out Grunfeld dataset to CSV for Python to load
-write.csv(Grunfeld, "tests/integration/data/grunfeld.csv", row.names = FALSE)
+write.csv(Grunfeld, "tests/integration/panel/grunfeld.csv", row.names = FALSE)
 
 # 1. Fixed Effects (Within)
 fe_model <- plm(inv ~ value + capital, data = Grunfeld, model = "within")
@@ -19,4 +19,4 @@ res <- list(
   re_coef = as.list(re_coef)
 )
 
-write_json(res, "tests/integration/panel_results.json", auto_unbox = TRUE, digits = 8)
+write_json(res, "tests/integration/panel/panel_results.json", auto_unbox = TRUE, digits = 8)

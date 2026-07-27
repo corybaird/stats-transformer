@@ -4,7 +4,7 @@ suppressMessages(library(jsonlite))
 
 # 1. Standard VAR(2) on Canada dataset
 data(Canada)
-write.csv(Canada, "tests/integration/data/canada.csv", row.names = FALSE)
+write.csv(Canada, "tests/integration/var/canada.csv", row.names = FALSE)
 
 v <- VAR(Canada, p = 2, type = "const")
 coef_var <- Bcoef(v)
@@ -18,4 +18,4 @@ res <- list(
   vecm_coef = coef_vecm
 )
 
-write_json(res, "tests/integration/var_results.json", auto_unbox = TRUE, digits = 8)
+write_json(res, "tests/integration/var/var_results.json", auto_unbox = TRUE, digits = 8)
