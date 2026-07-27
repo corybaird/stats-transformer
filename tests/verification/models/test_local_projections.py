@@ -1,0 +1,3 @@
+import pytest
+
+from tests.verification.var_toolbox.test_local_projections import test_local_projections_jt2025_ols_match
