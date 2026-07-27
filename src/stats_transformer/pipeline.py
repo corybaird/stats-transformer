@@ -13,6 +13,8 @@ from stats_transformer.models.timeseries import (
     LocalProjectionsIVModel,
     ProxySVARModel,
     SignZeroSVARModel,
+    VolatilitySVARModel,
+    IndependenceSVARModel,
     SVARModel,
     VARModel,
 )
