@@ -1,7 +1,7 @@
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-from stats_transformer.models.timeseries.vecm import VECMModel
+from stats_transformer.models.timeseries.reduced_form.vecm import VECMModel
 
 class KilianVECMExample:
     def __init__(self):

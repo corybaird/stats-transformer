@@ -1,6 +1,6 @@
 import pathlib
 import pandas as pd
-from stats_transformer.models.timeseries.var import VARModel
+from stats_transformer.models.timeseries.reduced_form.var import VARModel
 
 class StockWatson2001Replication:
 

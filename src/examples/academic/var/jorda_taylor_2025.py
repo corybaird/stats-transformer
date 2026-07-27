@@ -1,6 +1,6 @@
 import pathlib
 import pandas as pd
-from stats_transformer.models.timeseries.local_projections_iv import LocalProjectionsIVModel
+from stats_transformer.models.timeseries.reduced_form.local_projections_iv import LocalProjectionsIVModel
 
 class JordaTaylor2025Replication:
 

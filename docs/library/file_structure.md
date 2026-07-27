@@ -1,60 +1,68 @@
-# stats-transformer Repository Structure
+# Repository structure
 
-This document outlines the file structure of the `stats-transformer` repository. As a general-purpose library, this repository is organized primarily by **capabilities** rather than paper-specific workflows.
+The repository follows a Cookiecutter Data Science-style separation between reusable library code, empirical inputs, executable examples, tests, configuration, and generated outputs.
 
-## 1. Directory Tree
+## Contents
+
+1. [Repository tree](#repository-tree)
+2. [Core package](#core-package)
+3. [Configuration and artifacts](#configuration-and-artifacts)
+4. [Validation boundary](#validation-boundary)
+5. [Agent skill](#agent-skill)
+6. [Related documentation](#related-documentation)
 
 ```text
 .
-├── data/                          # Immutable and derived data (gitignored)
-│   ├── raw/                       # Original, untouched source files
-│   │   └── examples/              # Data for sanity checks and unit tests
-│   ├── final/                     # Feature-engineered datasets for modeling
-│   ├── pipeline/                  # Intermediate merged artifacts
-│   └── temp/                      # Temporary scratch space
-├── docs/                          # Architectural and user documentation
-├── models/                        # Serialized model artifacts (.pkl, .joblib)
-├── notebooks/                     # Exploratory analysis and demonstrations
-├── references/                    # CONFIGURATION CENTER
-│   ├── configs/                   # YAML configuration files
-│   │   └── examples/              # YAML configs for validation tests
-│   ├── dictionaries/              # Mapping files (e.g., country codes)
-│   └── prompts/                   # LLM templates and DSPy signatures
-├── reports/                       # AUTOMATED OUTPUTS
-│   ├── figures/                   # Charts and plots
-│   ├── tables/                    # Regression results and summary stats
-│   └── visualizations/            # EDA and tracking visualizations
-├── src/                           # SOURCE CODE
-│   ├── examples/                  # Validation scripts and sanity checks
-│   ├── stats_transformer/         # The core Python library package
-│   │   ├── data/                  # Data ingestion utilities
-│   │   ├── featurization/         # Feature engineering and merging
-│   │   ├── models/                # Econometric and ML implementations
-│   │   ├── utils/                 # Shared helpers
-│   │   ├── visualization/         # Plotting logic
-│   │   └── pipeline.py            # Main YAML-driven orchestrator
-│   └── temp/                      # Scratch/debug scripts
-└── tests/                         # Unit and integration tests
+├── .agents/                       # project instructions and agent skills
+├── data/
+│   ├── examples/                  # bundled and validation example data
+│   ├── final/                     # engineered analysis-ready data
+│   ├── pipeline/                  # resampled and merged artifacts
+│   ├── raw/                       # source data
+│   └── temp/                      # disposable local data
+├── docs/
+│   ├── archive/                   # historical planning and refactoring records
+│   ├── library/                   # architecture and repository documentation
+│   └── validation/                # test, replication, and comparator guides
+├── models/                        # serialized model artifacts when produced
+├── notebooks/                     # exploratory demonstrations
+├── references/
+│   ├── configs/                   # YAML specifications
+│   └── dictionaries/              # constant mappings
+├── reports/
+│   ├── figures/                   # generated visual outputs
+│   ├── tables/                    # generated table outputs
+│   └── visualizations/            # EDA and model visualizations
+├── src/
+│   ├── examples/                  # executable demonstrations and comparisons
+│   ├── stats_transformer/         # installable Python package
+│   └── temp/                      # disposable development scripts
+└── tests/
+    ├── verification/              # cross-language verification utilities
+    └── test_*.py                  # automated unit and integration tests
 ```
 
-## 2. Core Directory Principles
+## Core package
 
-### `src/stats_transformer/` (The Tool/Library)
-This is the core Python package. It is organized by *capability* (e.g., `models/`, `featurization/`, `visualization/`). Code here should be stateless, modular, and unaware of specific papers or datasets. It is driven purely by configuration.
+`src/stats_transformer/` contains reusable code only. It is organized by capability:
 
-### `data/` (The Data Warehouse)
-The `data/` directory is excluded from Git (`.gitignore`). It follows a strict data lifecycle:
-*   **`raw/`**: Where immutable data lives.
-*   **`pipeline/`**: For intermediate, merged, or resampled data before final featurization.
-*   **`final/`**: The ultimate analytical datasets fed into models.
-*   **`temp/`**: For temporary scratch files.
+- `featurization/` for transformation, resampling, merging, and event-study construction.
+- `models/` for regression, discrete, unsupervised, and time-series implementations.
+- `visualization/` for reusable charts, EDA, model visualizers, styling, and tables.
+- `reporting/` for export helpers.
+- `data/` for packaged example data and panel utilities.
+- `pipeline.py` for YAML-driven orchestration.
 
-### `references/configs/` (The Control Center)
-The `stats-transformer` pipeline relies heavily on YAML configuration. `references/configs/` stores these YAML files, enabling you to change datasets, transformation lags, or model specifications without touching Python code. The `examples/` subdirectory contains configurations used to validate the library against academic benchmarks.
+Paper-specific logic and data should remain in an example, notebook, or downstream research project rather than in the installable package.
 
-### `reports/` (Automated Outputs)
-Running models or the main `pipeline.py` will automatically dump artifacts (JSON summaries, PNG coefficient plots) into the `reports/` directory.
+## Configuration and artifacts
 
-## 3. Creating a New Research Project
+`references/configs/` is the control center for reproducible YAML specifications. Configurations select raw data, transformation settings, model options, and output paths. The pipeline writes generated artifacts to `data/pipeline/`, `data/final/`, and `reports/` rather than modifying source data.
 
-The structure above describes the `stats-transformer` library repository. Individual research projects that use the package can keep their own paper-specific data, reports, notebooks, and manuscript files outside this package repository.
+## Validation boundary
+
+Automated tests belong in `tests/`. Cross-language checks that require local software, data, or licensing belong in `tests/verification/` and are documented separately. Academic examples under `src/examples/academic/` are executable demonstrations, not substitutes for the automated test suite.
+
+## Agent skill
+
+The project-specific architecture skill is stored in `.agents/skills/stats-transformer-architecture/`. It gives compatible coding agents the same file-routing and extension conventions described here. Install or refresh tool-specific copies with `scripts/install-agent-skill.sh`.

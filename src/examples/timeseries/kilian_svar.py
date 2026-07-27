@@ -1,7 +1,7 @@
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-from stats_transformer.models.timeseries.svar import SVARModel
+from stats_transformer.models.timeseries.identification.svar import SVARModel
 
 class KilianSVARExample:
     def __init__(self):

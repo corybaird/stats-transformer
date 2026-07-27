@@ -7,7 +7,7 @@ import pandas as pd
 from stats_transformer.data import load_example
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
-from stats_transformer.models.timeseries.var import VARModel
+from stats_transformer.models.timeseries.reduced_form.var import VARModel
 from stats_transformer.visualization.charts.bar import CoefficientBarChart
 from stats_transformer.visualization.charts.time_series import IRFPlot
 
@@ -76,8 +76,10 @@ class PaperFigureBuilder:
         self._save_figure(fig, "mincer_coefficients.pdf")
 
     def _make_macro_irf(self):
-        data = self._panel_data()
+        data = load_example().sort_values(["country", "date"]).copy()
+        data["gdp_growth"] = data.groupby("country")["gdp"].transform(lambda values: 100 * np.log(values).diff())
         annual = data.groupby("date", as_index=False)[["gdp_growth", "inflation"]].mean().dropna()
+        annual[["gdp_growth", "inflation"]] = annual[["gdp_growth", "inflation"]].apply(lambda values: (values - values.mean()) / values.std())
         model = VARModel(target_variables=["gdp_growth", "inflation"], date_column="date", maxlags=2)
         model.fit(annual)
         irf = model.model.irf(8)
@@ -88,7 +90,7 @@ class PaperFigureBuilder:
                 rows.append((horizon, response, irf.irfs[horizon, response_index, 1], lower[horizon, response_index, 1], upper[horizon, response_index, 1]))
         plot_data = pd.DataFrame(rows, columns=["horizon", "response", "coef", "lower", "upper"])
         chart = IRFPlot()
-        fig, _ = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "response", labels={"gdp_growth": "GDP growth", "inflation": "Inflation"}, title="Macro VAR impulse responses", ylabel="Response to inflation shock")
+        fig, _ = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "response", labels={"gdp_growth": "GDP per capita growth", "inflation": "Inflation"}, title="Macro VAR impulse responses", ylabel="Response in standardized units")
         fig.suptitle("Macro VAR impulse responses", y=0.97)
         fig.subplots_adjust(top=0.84)
         self._save_figure(fig, "macro_irf.pdf")

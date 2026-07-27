@@ -4,12 +4,13 @@ from statsmodels.tsa.api import VAR
 from stats_transformer.models.base import ModelBase
 
 class VARModel(ModelBase):
-    def __init__(self, target_variables=None, date_column=None, maxlags=None, ic=None, **kwargs):
+    def __init__(self, target_variables=None, date_column=None, maxlags=None, ic=None, mask=None, **kwargs):
         super().__init__(target=target_variables[0] if target_variables else "dummy", independent_variables=["dummy"], **kwargs)
         self.target_variables = target_variables or []
         self.date_column = date_column
         self.maxlags = maxlags
         self.ic = ic  # e.g., 'aic', 'bic', 'hqic', 'fpe'
+        self.mask = mask
 
     def _get_required_columns(self):
         cols = list(self.target_variables)
@@ -27,8 +28,15 @@ class VARModel(ModelBase):
         self.y = self.df_clean[self.target_variables]
         
         # Initialize and fit
-        self.var_spec = VAR(self.y)
-        self.model = self.var_spec.fit(maxlags=self.maxlags, ic=self.ic)
+        if self.mask is not None:
+            from stats_transformer.models.timeseries.reduced_form.restrictions import RestrictedVAR
+            # We assume a fixed maxlags if mask is provided, as IC selection doesn't apply to masks
+            lags = self.maxlags if self.maxlags is not None else 1
+            self.model = RestrictedVAR(self.y, mask=self.mask, maxlags=lags, trend="c").fit()
+            self.var_spec = None
+        else:
+            self.var_spec = VAR(self.y)
+            self.model = self.var_spec.fit(maxlags=self.maxlags, ic=self.ic)
         return self.model
 
     def fit(self, df, drop_na=True):
@@ -53,9 +61,9 @@ class VARModel(ModelBase):
         if self.model is None:
             raise ValueError("Model not trained")
         return {
-            "aic": self.model.aic,
-            "bic": self.model.bic,
-            "hqic": self.model.hqic,
-            "fpe": self.model.fpe,
-            "num_observations": self.model.nobs,
+            "aic": getattr(self.model, "aic", None),
+            "bic": getattr(self.model, "bic", None),
+            "hqic": getattr(self.model, "hqic", None),
+            "fpe": getattr(self.model, "fpe", None),
+            "num_observations": getattr(self.model, "nobs", None),
         }
