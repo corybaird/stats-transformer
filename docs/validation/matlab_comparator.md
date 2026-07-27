@@ -23,7 +23,7 @@ The following local installations were inspected on 2026-07-24:
 | Kilian & Lütkepohl (2017) | SVAR Code | External MATLAB scripts used for verifying structural VAR implementations. |
 | Dynare | 7.1, Apple Silicon package | Available for DSGE work, but not currently called by an example, test, or comparator. |
 
-Dynare 7.1 documents compatibility with MATLAB R2025b. The Kilian SVAR test suite (`tests/verification/test_kilian_comparator.py`) also uses MATLAB R2025b. This records computational provenance only: Dynare availability does not imply a Dynare model has been validated by `stats-transformer`.
+Dynare 7.1 documents compatibility with MATLAB R2025b. The Kilian SVAR test suite (`tests/replication/kilian/test_svar.py`) also uses MATLAB R2025b. This records computational provenance only: Dynare availability does not imply a Dynare model has been validated by `stats-transformer`.
 
 When adding a Dynare-based benchmark, record the `.mod` file, solver options, MATLAB or Octave runtime, Dynare release, calibration or data, the object compared, tolerance, and observed discrepancy alongside that benchmark.
 
