@@ -1,3 +1,3 @@
 import pytest
 
-from tests.replication.var_toolbox.test_local_projections import test_local_projections_jt2025_ols_match
+from tests.replication.var_toolbox.local_projections import test_local_projections_jt2025_ols_match
