@@ -4,6 +4,10 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y \
     r-base \
     r-base-dev \
+    gfortran \
+    libgsl-dev \
+    cmake \
+    libnlopt-dev \
     libcurl4-openssl-dev \
     libssl-dev \
     libxml2-dev \
@@ -14,11 +18,10 @@ RUN apt-get update && apt-get install -y \
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
 
 # Install R packages
-RUN Rscript -e 'install.packages(c("vars", "svars", "jsonlite"), repos="https://cloud.r-project.org/")'
+RUN Rscript -e 'options(warn=2); install.packages(c("vars", "svars", "jsonlite", "lmtest", "sandwich", "AER", "plm", "tsDyn"), repos="https://cloud.r-project.org/")'
 
 WORKDIR /app
 
-# We will mount the repo into /app at runtime
 # Set environment variable to indicate R is available for tests
 ENV R_AVAILABLE=1
 
