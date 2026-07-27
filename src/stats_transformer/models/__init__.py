@@ -8,11 +8,13 @@ from .timeseries import (
     LocalProjectionsModel,
     LocalProjectionsIVModel,
     ProxySVARModel,
-    SignRestrictionsSVARModel,
+    SignZeroSVARModel,
     SVARModel,
     TimeSeriesDecompositions,
     VARModel,
     VECMModel,
+    VolatilitySVARModel,
+    IndependenceSVARModel,
 )
 
 __all__ = [

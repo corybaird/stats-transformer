@@ -12,7 +12,9 @@ from stats_transformer.models.timeseries import (
     BlanchardQuahModel,
     LocalProjectionsIVModel,
     ProxySVARModel,
-    SignRestrictionsSVARModel,
+    SignZeroSVARModel,
+    VolatilitySVARModel,
+    IndependenceSVARModel,
     SVARModel,
     VARModel,
 )

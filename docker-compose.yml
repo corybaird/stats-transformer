@@ -1,0 +1,11 @@
+services:
+  r-integration:
+    build:
+      context: .
+      dockerfile: tests/integration/Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - R_AVAILABLE=1
+    command: >
+      bash -c "uv sync && uv run python -m pytest tests/integration/ -v"

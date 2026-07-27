@@ -1,0 +1,63 @@
+# Structural Restrictions Configuration Schema
+# Defines the identification scheme for Structural Vector Autoregressions (SVAR).
+
+variables:
+  - output
+  - inflation
+  - interest_rate
+
+shocks:
+  - aggregate_supply
+  - aggregate_demand
+  - monetary_policy
+
+restrictions:
+  # Aggregate Supply Shock
+  - shock: aggregate_supply
+    response: output
+    type: sign
+    value: "+"
+    horizon: [0, 4]  # Restrict impact for horizons 0 through 4 (inclusive)
+    
+  - shock: aggregate_supply
+    response: inflation
+    type: sign
+    value: "-"
+    horizon: 0
+    
+  # Aggregate Demand Shock
+  - shock: aggregate_demand
+    response: output
+    type: sign
+    value: "+"
+    horizon: 0
+    
+  - shock: aggregate_demand
+    response: inflation
+    type: sign
+    value: "+"
+    horizon: 0
+    
+  # Monetary Policy Shock
+  - shock: monetary_policy
+    response: output
+    type: zero       # Zero restriction on impact
+    horizon: 0
+    
+  - shock: monetary_policy
+    response: interest_rate
+    type: sign
+    value: "+"
+    horizon: 0
+    
+  - shock: monetary_policy
+    response: inflation
+    type: sign
+    value: "-"
+    horizon: 1       # Restrict the delayed response at horizon 1
+
+narrative_restrictions:
+  - shock: monetary_policy
+    type: sign
+    value: "+"
+    date: "2008-09-01"  # Requires the monetary policy shock to be positive on this date

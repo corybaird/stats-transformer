@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
 ## [Unreleased]
 
 ### Added
@@ -27,12 +28,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Pandas object dtype initialization crash inside `BlanchardQuahModel`.
 
 ## [1.2.0] - 2026-06-16
+=======
+## [1.3.0] - ARIMA Forecasting Model (Unreleased)
+
+### Added
+- `ARIMAModel` for univariate ARIMA estimation, scalar fit metrics, tidy forecasts, and reporting-friendly metadata.
+- ARIMA tests covering simulated AR(1)-style data, forecast output shape, and fitted parameter metadata.
+
+## [1.2.0] - Report Export Helpers (Unreleased)
+>>>>>>> feat/arima-forecasting-model
 
 ### Added
 - `ReportExporter` for markdown model cards, JSON run manifests, and markdown figure indexes.
 - Reporting exporter tests covering model-card rendering, manifest writing, and figure-index writing.
 
+<<<<<<< HEAD
 ## [1.1.0] - 2026-05-26
+=======
+## [1.1.0] - Time-Series Utilities and Extension Roadmap (Unreleased)
+>>>>>>> feat/arima-forecasting-model
 
 ### Added
 - `PanelBuilder` for panel data construction and validation workflows.
@@ -53,7 +67,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated README quickstart guidance to use installed-package imports and document packaged example loading.
 
+<<<<<<< HEAD
 ## [1.0.1] - 2026-05-26
+=======
+## [1.0.1] - Pipeline Constructor Fix (Unreleased)
+>>>>>>> feat/arima-forecasting-model
 
 ### Fixed
 - Fixed `Pipeline` constructor-driven model selection by reading `model_type` from stored keyword arguments.
