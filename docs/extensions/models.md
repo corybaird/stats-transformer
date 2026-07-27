@@ -1,35 +1,10 @@
-# stats-transformer: Models & Extensions Registry
+# stats-transformer: Planned Extensions Roadmap
 
-This document catalogs the current capabilities of the library and the triaged roadmap for future extensions, focusing on the frequentist VAR family, structural identification, and nonlinear dynamics.
-
----
-
-## 1. Currently Implemented Models
-
-These models are fully integrated into the library. For exact numerical validation targets against MATLAB, R, or Stata, see the [Replications Registry](../validation/replications.md).
-
-### Reduced-Form & Structural Time Series
-- **`VARModel`**: Reduced-form Vector Autoregression.
-- **`VECMModel`**: Vector Error Correction Model (Johansen MLE).
-- **`LocalProjectionsModel`**: Local Projections (OLS).
-- **`SVARModel`**: Structural VAR with recursive (Cholesky) identification.
-- **`BlanchardQuahModel`**: Structural VAR with long-run restrictions.
-- **`ProxySVARModel`**: External instrument identification (Proxy SVAR).
-- **`VolatilitySVARModel`**: Identification via changes in volatility.
-
-### Regression & Panel
-- **`RobustOLSModel`**: OLS with HC0-HC3 standard errors.
-- **`PanelRegressionModel`**: Fixed and Random Effects panel estimators.
-- **`IV2SLSModel`**: Instrumental Variables / 2SLS.
-- **`LogitModel`**: Logistic regression classifier.
-
-### Unsupervised Learning
-- **`PCAModel`**: Principal Component Analysis.
-- **`KMeansModel`**: K-Means clustering.
+This document catalogs the triaged roadmap for future extensions, focusing on the frequentist VAR family, structural identification, and nonlinear dynamics.
 
 ---
 
-## 2. Planned Extensions (Triaged Roadmap)
+## 1. Planned Extensions (Triaged)
 
 The following extensions are planned and triaged by implementation difficulty.
 
@@ -51,3 +26,11 @@ These models depart from linear global dynamics and require complex threshold gr
 - **Threshold VECM (TVECM)**: TVAR logic applied to cointegrated systems. *(Benchmark: R `tsDyn`)*
 - **Smooth Transition VAR (STVAR)**: Bounded logistic transition function optimization. *(Benchmark: R `sstvars`)*
 - **Generalized IRF (GIRF)**: Simulation-based state-dependent impulse responses for non-linear models. *(Benchmark: R `sstvars`)*
+
+---
+
+## 2. Currently Implemented Models
+
+The list of currently implemented models (e.g., `VARModel`, `SVARModel`, `ProxySVARModel`, `PanelRegressionModel`) and their exact numerical validation targets against MATLAB, R, or Stata is maintained separately. 
+
+Please refer to the **[Replications Registry](../validation/replications.md)** for the active matrix of verified models and test paths.
