@@ -256,3 +256,4 @@ __marimo__/
 # Temp files
 src/temp/
 references/matlab_benchmarks/
+/data/examples/academic/ghysels_2018/
