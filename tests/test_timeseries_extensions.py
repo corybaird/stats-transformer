@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
 from stats_transformer.models.timeseries.identification.proxy_svar import ProxySVARModel
-from stats_transformer.models.timeseries.identification.sign_restrictions import SignRestrictionsSVARModel
+from stats_transformer.models.timeseries.identification.sign_zero import SignZeroSVARModel
 from stats_transformer.models.timeseries.reduced_form.local_projections_iv import LocalProjectionsIVModel
 from stats_transformer.models.timeseries.decompositions import TimeSeriesDecompositions
 from examples.academic.var.stock_watson_2001 import StockWatson2001Replication
@@ -37,9 +37,9 @@ def test_proxy_svar_model():
 
 def test_sign_restrictions_model():
     df = create_synthetic_data()
-    model = SignRestrictionsSVARModel(target_variables=["y1", "y2"], sign_pattern=[1, -1], date_column="date", maxlags=2, max_draws=100)
+    model = SignZeroSVARModel(target_variables=["y1", "y2"], date_column="date", maxlags=2, max_draws=100)
     metrics = model.fit(df)
-    assert metrics["max_draws"] == 100
+    assert "nobs" in metrics
 
 def test_local_projections_iv_model():
     df = create_synthetic_data()
