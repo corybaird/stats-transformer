@@ -21,7 +21,7 @@
 | Assess example and replication claims | [Academic and numerical validation](validation/academic_examples.md) |
 | Compare the Blanchard--Quah result with MATLAB VAR-Toolbox | [MATLAB cross-language comparator](validation/matlab_comparator.md) |
 | Record MATLAB, Dynare, and VAR-Toolbox provenance | [MATLAB comparator software environment](validation/matlab_comparator.md#software-environment) |
-| Review the proposed frequentist VAR, SVAR, nonlinear-model, and reporting work | [Frequentist multivariate time-series roadmap](extensions/frequentist_var_roadmap.md) |
+| Review the proposed frequentist VAR, SVAR, nonlinear-model, and reporting work | [Frequentist multivariate time-series roadmap](extensions/roadmap.md) |
 
 ## 2. Documentation map
 
@@ -30,10 +30,11 @@
 | Project entry point | [README](../README.md) | Installation, a quick pipeline example, and project-level links. | First use of the repository. |
 | Library | [Architecture](library/architecture.md) | Explains the pipeline, package boundaries, models, features, reporting, and visualizations. | Planning an analysis or extending the library. |
 | Library | [File structure](library/file_structure.md) | Maps repository directories to their responsibilities. | Finding the right home for code, data, a configuration, or an output. |
+| Library | [Academic citations](library/citations.md) | Catalogs literature, datasets, and benchmark software cited in the library. | Reviewing academic foundations and data provenance. |
 | Validation | [Testing suite](validation/testing_suite.md) | Defines the automated test categories and command. | Checking package behavior before a change. |
 | Validation | [Academic examples](validation/academic_examples.md) | Records what each direct comparison or academic example does and does not establish. | Reporting results responsibly. |
 | Validation | [MATLAB comparator](validation/matlab_comparator.md) | Gives the reproducible cross-language Blanchard--Quah check and records MATLAB, Dynare, and VAR-Toolbox provenance. | Verifying the defined structural VAR benchmark. |
-| Extensions | [Frequentist multivariate time-series roadmap](extensions/frequentist_var_roadmap.md) | Defines the proposed model, reporting, visualization, and cross-language validation milestones while explicitly deferring Bayesian estimation. | Planning and reviewing future time-series work. |
+| Extensions | [Frequentist multivariate time-series roadmap](extensions/roadmap.md) | Defines the proposed model, reporting, visualization, and cross-language validation milestones while explicitly deferring Bayesian estimation. | Planning and reviewing future time-series work. |
 | Historical archive | `docs/archive/` | Retains dated planning and refactoring records. | Understanding prior decisions, not current operating guidance. |
 | Notebook | `notebooks/07_chart_components.ipynb` | Demonstrates modular chart components interactively. | Learning visualization usage. |
 | Notebook | `notebooks/08_structural_timeseries_models.ipynb` | Demonstrates direct-use structural VAR, local-projection, and decomposition APIs on synthetic data. | Learning the newer time-series models. |
@@ -106,4 +107,4 @@ Only the last label supports a claim of numerical parity, and only for the data,
 
 ## 6. Extension planning
 
-Future work is separated from documentation of current behavior. The [frequentist multivariate time-series roadmap](extensions/frequentist_var_roadmap.md) proposes a phased expansion covering common reporting, fuller linear VAR diagnostics and forecasting, structural restrictions, selected data-driven SVAR methods, and nonlinear threshold models. Bayesian estimation is explicitly deferred to avoid adding a large dependency and maintenance surface before the frequentist foundation is complete.
+Future work is separated from documentation of current behavior. The [frequentist multivariate time-series roadmap](extensions/roadmap.md) proposes a phased expansion covering common reporting, fuller linear VAR diagnostics and forecasting, structural restrictions, selected data-driven SVAR methods, and nonlinear threshold models. Bayesian estimation is explicitly deferred to avoid adding a large dependency and maintenance surface before the frequentist foundation is complete.
