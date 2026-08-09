@@ -200,7 +200,7 @@ flowchart LR
 The repository maintains strict separation between reusable library code and empirical specifications:
 
 - `references/configs/`: Stores YAML specification files (`params.yaml`).
-- `data/`: Holds raw, intermediate, final, and example datasets.
+- `data/`: Holds raw, intermediate, final, and example datasets. See [Data directory guide](data.md) for full dataset catalog and layout.
 - `reports/`: Stores output figures, LaTeX tables, and JSON metadata.
 - `src/examples/academic/`: Contains runnable paper replication scripts.
 
@@ -215,7 +215,7 @@ The repository includes an agent skill at `.agents/skills/stats-transformer-arch
 ## 6. Related documentation
 
 - [Repository structure](file_structure.md)
+- [Data directory guide](data.md)
 - [Academic Citations](citations.md)
 - [Testing suite](../validation/testing_suite.md)
-- [Academic and numerical validation](../validation/academic_examples.md)
-- [MATLAB cross-language comparator](../validation/matlab_comparator.md)
+- [Academic & numerical validation](../validation/academic_validation.md)
