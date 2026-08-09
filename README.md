@@ -2,16 +2,45 @@
 
 `stats-transformer` is a Python library for macroeconomic data transformation, analysis, and visualization. Built around a configuration-driven architecture, it handles data ingestion, resampling, feature engineering, and econometric modeling for time-series and panel datasets.
 
-## Features
+## Table of Contents
+
+- [1. Features](#1-features)
+- [2. Documentation](#2-documentation)
+- [3. Quickstart](#3-quickstart)
+  - [3.1. Installation](#31-installation)
+  - [3.2. Configuration (`params.yaml`)](#32-configuration-paramsyaml)
+  - [3.3. Usage](#33-usage)
+  - [3.4. Testing](#34-testing)
+- [4. Agent Skill](#4-agent-skill)
+
+---
+
+## 1. Features
 
 - **Feature Engineering:** Advanced data transformations, frequency alignment, and robust merging capabilities for disparate datasets.
 - **Econometric Modeling:** Built-in support for standard OLS, Robust OLS, Panel Regression, IV regression, discrete choice, time-series models, and unsupervised learning models (PCA, KMeans).
 - **Visualization:** Automated generation of Exploratory Data Analysis (EDA) and regression model visual summaries (e.g., coefficient plots, residual plots, time-series tracking). Now includes a modular suite of standalone chart components for custom research plots.
 - **Configuration-Driven Orchestration:** Fully integrated with YAML configuration (`params.yaml`) to enable reproducible, stage-based execution compatible with DVC pipelines.
 
-## Quickstart
+---
 
-### 1. Installation
+## 2. Documentation
+
+- **Overview:** Start with [docs/overview.md](docs/overview.md) for the documentation map, model inventory, example inventory, and validation guide.
+- **Academic Citations:** For citations of literature, paper datasets, and reference software, see [docs/library/citations.md](docs/library/citations.md).
+- **Extensions & Roadmap:** For planned frequentist VAR extensions, see [docs/extensions/roadmap.md](docs/extensions/roadmap.md) and [docs/extensions/models.md](docs/extensions/models.md).
+- **Examples:** For examples of running the models, see [docs/validation/academic_examples.md](docs/validation/academic_examples.md).
+- **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_chart_components.ipynb](notebooks/07_chart_components.ipynb).
+- **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
+- **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
+- **Validation & Testing:** For details on the testing suite, see [docs/validation/testing_suite.md](docs/validation/testing_suite.md).
+- **MATLAB Validation:** For the optional Blanchard--Quah cross-language comparator, see [docs/validation/matlab_comparator.md](docs/validation/matlab_comparator.md).
+
+---
+
+## 3. Quickstart
+
+### 3.1. Installation
 
 To use it in your project via PyPI:
 
@@ -31,7 +60,7 @@ For local development from this repository:
 uv sync
 ```
 
-### 2. Configuration (`params.yaml`)
+### 3.2. Configuration (`params.yaml`)
 
 Define your data sources, pipeline parameters, and model specifications in a `params.yaml` file:
 
@@ -55,7 +84,7 @@ visualization:
   output_dir: reports/visualizations
 ```
 
-### 3. Usage
+### 3.3. Usage
 
 Load a packaged example dataset:
 
@@ -90,7 +119,7 @@ model_results = pipeline.run(stage="regression")
 pipeline.run(stage="visualization")
 ```
 
-### 4. Testing
+### 3.4. Testing
 
 Verify the installation and library integrity by running the test suite:
 
@@ -100,17 +129,9 @@ Verify the installation and library integrity by running the test suite:
 
 For more details on test coverage, see the [Testing Suite](docs/validation/testing_suite.md).
 
-## Documentation
+---
 
-- **Overview:** Start with [docs/overview.md](docs/overview.md) for the documentation map, model inventory, example inventory, and validation guide.
-- **Examples:** For examples of running the models, see [docs/validation/academic_examples.md](docs/validation/academic_examples.md).
-- **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_chart_components.ipynb](notebooks/07_chart_components.ipynb).
-- **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
-- **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
-- **Validation & Testing:** For details on the testing suite, see [docs/validation/testing_suite.md](docs/validation/testing_suite.md).
-- **MATLAB Validation:** For the optional Blanchard--Quah cross-language comparator, see [docs/validation/matlab_comparator.md](docs/validation/matlab_comparator.md).
-
-## Agent Skill
+## 4. Agent Skill
 
 Source checkouts of this repository include an optional `stats-transformer-architecture` agent skill for AI coding tools. It gives agents a compact map of the library architecture, pipeline stages, model contracts, and feature-engineering vocabulary.
 
