@@ -1,7 +1,5 @@
 # stats-transformer
 
-`stats-transformer` is a Python library for macroeconomic data transformation, analysis, and visualization. Built around a configuration-driven architecture, it handles data ingestion, resampling, feature engineering, and econometric modeling for time-series and panel datasets.
-
 ## Table of Contents
 
 - [1. Features](#1-features)
@@ -17,10 +15,12 @@
 
 ## 1. Features
 
-- **Feature Engineering:** Advanced data transformations, frequency alignment, and robust merging capabilities for disparate datasets.
-- **Econometric Modeling:** Built-in support for standard OLS, Robust OLS, Panel Regression, IV regression, discrete choice, time-series models, and unsupervised learning models (PCA, KMeans).
-- **Visualization:** Automated generation of Exploratory Data Analysis (EDA) and regression model visual summaries (e.g., coefficient plots, residual plots, time-series tracking). Now includes a modular suite of standalone chart components for custom research plots.
-- **Configuration-Driven Orchestration:** Fully integrated with YAML configuration (`params.yaml`) to enable reproducible, stage-based execution compatible with DVC pipelines.
+`stats-transformer` is a Python library for data transformation, econometric modeling, and visualization.. It handles data ingestion, resampling, feature engineering, and econometric modeling for time-series and panel datasets using a fully traceable and transparent configuration file workflow.
+
+- **Unified Empirical Workflow:** Combines analysis-ready feature construction with econometric estimation, diagnostic checks, and publication outputs in a single reproducible pipeline.
+- **Declarative YAML Orchestration:** Records data sources, frequency alignment, feature transformations, model specifications, and visual outputs in declarative YAML files that persist intermediate stage artifacts.
+- **Broad Econometric Coverage:** Exposes standardized interfaces across cross-sectional, panel, time-series, instrumental-variable, discrete-choice, and unsupervised methods, reducing setup burden relative to composing separate APIs.
+- **Auditable & Agent-Ready:** Incorporates verified MATLAB VAR translations (including machine-precision Blanchard-Quah verification against VAR-Toolbox 4.0) and includes a versioned architectural skill for compatible coding agents.
 
 ---
 
@@ -28,13 +28,12 @@
 
 - **Overview:** Start with [docs/overview.md](docs/overview.md) for the documentation map, model inventory, example inventory, and validation guide.
 - **Academic Citations:** For citations of literature, paper datasets, and reference software, see [docs/library/citations.md](docs/library/citations.md).
+- **Academic & Numerical Validation:** For paper transformation examples, replication benchmarks, and the MATLAB comparator, see [docs/validation/academic_validation.md](docs/validation/academic_validation.md).
 - **Extensions & Roadmap:** For planned frequentist VAR extensions, see [docs/extensions/roadmap.md](docs/extensions/roadmap.md) and [docs/extensions/models.md](docs/extensions/models.md).
-- **Examples:** For examples of running the models, see [docs/validation/academic_examples.md](docs/validation/academic_examples.md).
 - **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_chart_components.ipynb](notebooks/07_chart_components.ipynb).
 - **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
 - **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
 - **Validation & Testing:** For details on the testing suite, see [docs/validation/testing_suite.md](docs/validation/testing_suite.md).
-- **MATLAB Validation:** For the optional Blanchard--Quah cross-language comparator, see [docs/validation/matlab_comparator.md](docs/validation/matlab_comparator.md).
 
 ---
 
@@ -124,7 +123,7 @@ pipeline.run(stage="visualization")
 Verify the installation and library integrity by running the test suite:
 
 ```bash
-/opt/homebrew/bin/uv run python -m pytest -q
+uv run python -m pytest -q
 ```
 
 For more details on test coverage, see the [Testing Suite](docs/validation/testing_suite.md).
