@@ -21,6 +21,9 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- Johansen, S. (1991). Estimation and hypothesis testing of cointegration vectors in the presence of linear trend. _Econometrica_, _59_(6), 1551-1580.
 	- ***Usage*:** Cointegration rank tests and VECM estimation
 		- `src/stats_transformer/models/timeseries/reduced_form/vecm.py`
+- **Kilian, L., & Lütkepohl, H. (2017)**.
+	- Kilian, L., & Lütkepohl, H. (2017). *Structural Vector Autoregressive Analysis*. Cambridge University Press.
+	- ***Usage*:** Theoretical foundation for Structural VAR identification, restricted VAR estimation, historical decompositions, sign restrictions, and structural bootstrap methods.
 
 ### 1.2 Sign, Zero, and Narrative Restrictions
 
@@ -104,6 +107,12 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- Teräsvirta, T., & Yang, Y. (2014). Specification, estimation and evaluation of vector smooth transition autoregressive models with applications.
 	  - *Usage*: Smooth Transition VAR (STVAR) formulation.
 
+### 1.7 Applied Time-Series Forecasting & Textbooks
+
+- **Ghysels, E., & Marcellino, M. (2018)**.
+	- Ghysels, E., & Marcellino, M. (2018). *Applied Economic Forecasting Using Time Series Methods*. Oxford University Press.
+	  - *Usage*: Applied regression, VAR, VECM, and forecasting textbook demonstrations in `src/examples/regression/ghysels_chap1.py`, `ghysels_chap2.py`, `src/examples/timeseries/ghysels_chap6.py`, and `ghysels_chap7.py`.
+
 ---
 
 ## 2. Academic Datasets & Data Sources
@@ -112,7 +121,7 @@ This document catalogs the academic literature, econometric papers, benchmark da
 
 - **Description**: Quarterly and monthly macroeconomic datasets maintained by the Federal Reserve Bank of St. Louis.
 - **Citation**: McCracken, M. W., & Ng, S. (2016). FRED-MD: A monthly database for macroeconomic research. _Journal of Business & Economic Statistics_, _34_(4), 574-589.
-- **Location**: `data/raw/macrodb_gdp_inflation.parquet`, `data/examples/timeseries/`
+- **Location**: `data/examples/macrodb_gdp_inflation.parquet`, `data/examples/timeseries/`
 - **Usage**: Used for VAR, VECM, LP-IV, and structural monetary shock benchmarks.
 
 ### 2.2 Stock & Watson Macro Data (2001)
@@ -163,6 +172,13 @@ This document catalogs the academic literature, econometric papers, benchmark da
 - **Citation**: Spector, L. C., & Mazzeo, M. (1980). Probit analysis and economic education. _The Journal of Economic Education_, _11_(2), 37-44.
 - **Location**: `src/examples/discrete/spector_logit.py`
 - **Usage**: Binary Logit classification benchmark.
+
+### 2.9 Ghysels & Marcellino Time-Series Datasets (2018)
+
+- **Description**: Textbook replication data for US macro monetary series, EU GDP growth, UK term structure, and US leading economic indicators (LEI).
+- **Citation**: Ghysels, E., & Marcellino, M. (2018). *Applied Economic Forecasting Using Time Series Methods*. Oxford University Press.
+- **Location**: `data/examples/timeseries/ghysels_ch6/`, `data/examples/timeseries/ghysels_ch7/`
+- **Usage**: Applied VAR and VECM textbook demonstration scripts (`ghysels_chap1.py`, `ghysels_chap2.py`, `ghysels_chap6.py`, `ghysels_chap7.py`).
 
 ---
 

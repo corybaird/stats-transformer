@@ -18,9 +18,7 @@
 | Understand the configured workflow and its components | [Library architecture](library/architecture.md) |
 | Locate code, data, configurations, outputs, and examples | [Repository structure](library/file_structure.md) |
 | Run the automated checks or understand their scope | [Testing suite](validation/testing_suite.md) |
-| Assess example and replication claims | [Academic and numerical validation](validation/academic_examples.md) |
-| Compare the Blanchard--Quah result with MATLAB VAR-Toolbox | [MATLAB cross-language comparator](validation/matlab_comparator.md) |
-| Record MATLAB, Dynare, and VAR-Toolbox provenance | [MATLAB comparator software environment](validation/matlab_comparator.md#software-environment) |
+| Assess replication claims, paper examples, and MATLAB comparator | [Academic and numerical validation](validation/academic_validation.md) |
 | Review the proposed frequentist VAR, SVAR, nonlinear-model, and reporting work | [Frequentist multivariate time-series roadmap](extensions/roadmap.md) |
 
 ## 2. Documentation map
@@ -31,11 +29,10 @@
 | Library | [Architecture](library/architecture.md) | Explains the pipeline, package boundaries, models, features, reporting, and visualizations. | Planning an analysis or extending the library. |
 | Library | [File structure](library/file_structure.md) | Maps repository directories to their responsibilities. | Finding the right home for code, data, a configuration, or an output. |
 | Library | [Academic citations](library/citations.md) | Catalogs literature, datasets, and benchmark software cited in the library. | Reviewing academic foundations and data provenance. |
+| Library | [Data directory guide](library/data.md) | Details the data/ directory structure, dataset catalog, frequencies, and pipeline flow. | Locating raw series, final panel parquets, and example datasets. |
 | Validation | [Testing suite](validation/testing_suite.md) | Defines the automated test categories and command. | Checking package behavior before a change. |
-| Validation | [Academic examples](validation/academic_examples.md) | Records what each direct comparison or academic example does and does not establish. | Reporting results responsibly. |
-| Validation | [MATLAB comparator](validation/matlab_comparator.md) | Gives the reproducible cross-language Blanchard--Quah check and records MATLAB, Dynare, and VAR-Toolbox provenance. | Verifying the defined structural VAR benchmark. |
+| Validation | [Academic & numerical validation](validation/academic_validation.md) | Records direct comparisons, paper transformation examples, and MATLAB cross-language comparator tools. | Reporting results responsibly and verifying numerical parity. |
 | Extensions | [Frequentist multivariate time-series roadmap](extensions/roadmap.md) | Defines the proposed model, reporting, visualization, and cross-language validation milestones while explicitly deferring Bayesian estimation. | Planning and reviewing future time-series work. |
-| Historical archive | `docs/archive/` | Retains dated planning and refactoring records. | Understanding prior decisions, not current operating guidance. |
 | Notebook | `notebooks/07_chart_components.ipynb` | Demonstrates modular chart components interactively. | Learning visualization usage. |
 | Notebook | `notebooks/08_structural_timeseries_models.ipynb` | Demonstrates direct-use structural VAR, local-projection, and decomposition APIs on synthetic data. | Learning the newer time-series models. |
 
