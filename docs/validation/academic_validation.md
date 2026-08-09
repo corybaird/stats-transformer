@@ -1,83 +1,78 @@
 # Academic & Numerical Validation Guide
 
-This document details the academic benchmarks, numerical verification procedures, paper transformation examples, and cross-language MATLAB comparator tools in `stats-transformer`.
+This document details the academic benchmarks, numerical verification procedures, paper transformation examples, cross-language MATLAB comparator tools, and the cross-language verification roadmap for `stats-transformer`.
 
 ## Table of Contents
 
-1. [1. Evidence Hierarchy](#1-evidence-hierarchy)
-2. [2. Direct Python Estimator Comparisons](#2-direct-python-estimator-comparisons)
-3. [3. Academic Feature Transformation Examples](#3-academic-feature-transformation-examples)
-4. [4. Structural VAR & Local Projections Demonstrations](#4-structural-var--local-projections-demonstrations)
-5. [5. Cross-Language MATLAB Comparator](#5-cross-language-matlab-comparator)
-   - [5.1 Software Environment & Provenance](#51-software-environment--provenance)
-   - [5.2 Numerical Specification & Comparison Object](#52-numerical-specification--comparison-object)
-   - [5.3 Prerequisites & Execution](#53-prerequisites--execution)
+1. [1. Intuitive Verification Status Levels](#1-intuitive-verification-status-levels)
+2. [2. Master Comparison & Example Catalog](#2-master-comparison--example-catalog)
+3. [3. Cross-Language MATLAB Comparator](#3-cross-language-matlab-comparator)
+   - [3.1 Software Environment & Computational Provenance](#31-software-environment--computational-provenance)
+   - [3.2 Verified Numerical Specification & Discrepancy](#32-verified-numerical-specification--discrepancy)
+   - [3.3 Execution Protocol & Programmatic Reuse](#33-execution-protocol--programmatic-reuse)
+4. [4. Cross-Language Verification Roadmap (R, Stata, & MATLAB)](#4-cross-language-verification-roadmap-r-stata--matlab)
+5. [5. Detailed Breakdown by Functional Area](#5-detailed-breakdown-by-functional-area)
+   - [5.1 Structural VAR, Reduced-Form, & Local Projections](#51-structural-var-reduced-form--local-projections)
+   - [5.2 High-Frequency Monetary & Policy Surprise Replications](#52-high-frequency-monetary--policy-surprise-replications)
+   - [5.3 Applied Micro & Macro Econometric Regressions](#53-applied-micro--macro-econometric-regressions)
+   - [5.4 Discrete Choice & Classification Models](#54-discrete-choice--classification-models)
+   - [5.5 Featurization & External Provider Integration](#55-featurization--external-provider-integration)
 6. [6. Protocol for Reporting Validation Claims](#6-protocol-for-reporting-validation-claims)
 
 ---
 
-## 1. Evidence Hierarchy
+## 1. Intuitive Verification Status Levels
 
-Validation in `stats-transformer` distinguishes four distinct evidence tiers:
+To avoid confusion, every example script and model implementation in `stats-transformer` is categorized by one of four intuitive verification statuses:
 
-1. **Automated Unit & Integration Tests**: Controlled pytest routines verifying package APIs, transformations, and output data structures.
-2. **Execution Checks**: Sample scripts confirming that specialized models fit bundled datasets without throwing errors.
-3. **Direct Python Comparisons**: Array-level verification comparing library wrappers against `statsmodels` or `linearmodels` on identical data.
-4. **Cross-Language Numerical Comparisons**: Machine-precision numerical validation comparing Python estimates against external implementations like Ambrogio Cesa-Bianchi's MATLAB VAR-Toolbox.
+1. **Cross-Language Verified (MATLAB / R / Stata)**: The estimated numerical outputs (coefficients, structural impact matrices, or IRFs) are explicitly cross-checked and matched to machine precision against external software routines (e.g. MATLAB VAR-Toolbox 4.0, R `vars`, Stata `svar`).
+2. **Direct Python Verified (`statsmodels` / `linearmodels`)**: The estimated numerical outputs are cross-checked and matched against underlying Python packages on identical input data.
+3. **Paper Replication Example (Pending R/Stata/MATLAB Check)**: An executable Python script translating an academic paper's econometric specification, data transformations, and model structure. It runs end-to-end on real research data, and is queued for formal cross-language numerical comparison against R, Stata, or MATLAB published code.
+4. **Data & Feature Pipeline Demo**: Demonstrates automated data ingestion, frequency resampling, and featurization pipelines without estimating an econometric model.
 
-> [!IMPORTANT]
-> An example script that executes successfully is a runnable demonstration. It constitutes numerical parity only when data, lag structures, ordering, restrictions, and outputs match a stated external benchmark within a documented tolerance.
-
----
-
-## 2. Direct Python Estimator Comparisons
-
-`src/examples/timeseries/macro_var.py` prepares real GDP, real consumption, and real investment from the quarterly `statsmodels` macroeconomic dataset using $100 \Delta \log(x_t)$ transformations. It estimates a VAR(2) with a constant directly through `statsmodels` and through `VARModel`.
-
-```bash
-/opt/homebrew/bin/uv run python -m src.examples.timeseries.macro_var
-```
-
-The script asserts numerical equality of coefficient matrices and standard errors across both implementations.
+> [!NOTE]
+> A script labeled as a **Paper Replication Example** is a functional Python implementation of a published paper. It becomes **Cross-Language Verified** once its numerical outputs are formally benchmarked against R, Stata, or MATLAB outputs within a documented tolerance.
 
 ---
 
-## 3. Academic Feature Transformation Examples
+## 2. Master Comparison & Example Catalog
 
-The following scripts verify that `FeatureEngineer` transformations match paper-specific processing routines and supplied replication data:
+The table below catalogs all 24 example modules in `src/examples/`, detailing their academic citations, script paths, data sources, intuitive verification statuses, and benchmark targets.
 
-| Example Paper | Execution Module | Target Benchmark | Scope of Transformation |
-| --- | --- | --- | --- |
-| **Nakamura & Steinsson (2018)** | `src.examples.academic.nakamura_steinsson` | Supplied Stata `master.dta` output | Daily first difference of nominal yield curve shocks |
-| **Bauer & Swanson (2023)** | `src.examples.academic.bauer_swanson` | MATLAB log-difference and lag logic | Monthly high-frequency monetary surprise series |
-| **Bauer, Bernanke, & Milstein (2023)** | `src.examples.academic.bauer_bernanke_milstein` | Python reference calculations | Daily financial variable difference & % change logic |
-
-Run these academic demonstrations from the repository root:
-
-```bash
-/opt/homebrew/bin/uv run python -m src.examples.academic.nakamura_steinsson
-/opt/homebrew/bin/uv run python -m src.examples.academic.bauer_swanson
-/opt/homebrew/bin/uv run python -m src.examples.academic.bauer_bernanke_milstein
-```
+| Domain / Method | Script Module Path | Academic Paper / Benchmark Target | Data Source / Location | Intuitive Verification Status | Target Verification / Compared Object |
+| --- | --- | --- | --- | --- | --- |
+| **MATLAB Comparator** | `src.examples.academic.var.matlab_comparator` | Blanchard & Quah (1989) / MATLAB VAR-Toolbox 4.0 | `data/examples/matlab_examples/BQ1989_Data.xlsx` | **Cross-Language Verified (MATLAB)** | Structural impact matrix $C(1)$ ($2.22 \times 10^{-16}$ max diff) |
+| **Structural VAR** | `src.examples.academic.var.blanchard_quah_1989` | Blanchard & Quah (1989) | `data/examples/matlab_examples/BQ1989_Data.xlsx` | **Cross-Language Verified (MATLAB)** | Long-run structural supply & demand shock identification |
+| **Proxy SVAR / SVAR-IV** | `src.examples.academic.var.gertler_karadi_2015` | Gertler & Karadi (2015) | `data/examples/academic/gertler_karadi/` | **Paper Replication Example** (Pending MATLAB/R check) | External-instrument monetary policy shock identification |
+| **LP-IV Local Projections** | `src.examples.academic.var.jorda_taylor_2025` | Jordà & Taylor (2025) / Stock & Watson (2018) | `data/examples/academic/` | **Paper Replication Example** (Pending R `lpirfs` check) | Instrumental-variable impulse response functions |
+| **Reduced-Form VAR** | `src.examples.academic.var.stock_watson_2001` | Stock & Watson (2001) | `data/examples/academic/stock_watson/` | **Paper Replication Example** (Pending Stata check) | 3-variable macro VAR (Inflation, Unemployment, Fed Funds) |
+| **Reduced-Form VAR** | `src.examples.timeseries.macro_var` | `statsmodels.tsa.vector_ar.var_model` | `data/examples/timeseries/macrodata.csv` | **Direct Python Verified (`statsmodels`)** | VAR(2) coefficient matrices & standard error parity |
+| **SVAR Identification** | `src.examples.timeseries.kilian_svar` | Kilian & Lütkepohl (2017) | `data/examples/timeseries/` | **Paper Replication Example** (Pending R `svars` check) | Short-run Cholesky & A-model structural identification |
+| **Johansen VECM** | `src.examples.timeseries.kilian_vecm` | Johansen (1991) / Kilian & Lütkepohl (2017) | `data/examples/timeseries/` | **Paper Replication Example** (Pending R `urca` check) | Cointegration rank test & error-correction dynamics |
+| **VAR & Forecasting** | `src.examples.timeseries.ghysels_chap6` | Ghysels & Marcellino (2018) Chapter 6 | `data/examples/timeseries/ghysels_ch6/` | **Textbook Replication Example** (Pending R check) | Multi-step forecasting & simulated VAR impulse responses |
+| **VECM & Cointegration** | `src.examples.timeseries.ghysels_chap7` | Ghysels & Marcellino (2018) Chapter 7 | `data/examples/timeseries/ghysels_ch7/` | **Textbook Replication Example** (Pending R `tsDyn` check) | UK term structure cointegration & vector error correction |
+| **High-Frequency Shock** | `src.examples.academic.nakamura_steinsson` | Nakamura & Steinsson (2018) | Supplied Stata `master.dta` | **Paper Replication Example** (Stata parity check) | Daily first difference of Fed Funds futures surprise series |
+| **PCA Shock Extraction** | `src.examples.academic.nakamura_steinsson_pca` | Nakamura & Steinsson (2018) | Supplied Stata `master.dta` | **Paper Replication Example** (Pending Stata check) | First principal component extraction from monetary futures |
+| **High-Frequency Shock** | `src.examples.academic.bauer_swanson` | Bauer & Swanson (2023) | MATLAB reference dataset | **Paper Replication Example** (MATLAB parity check) | Monthly orthogonalized monetary surprise transformations |
+| **High-Frequency Shock** | `src.examples.academic.bauer_bernanke_milstein` | Bauer, Bernanke, & Milstein (2023) | Daily financial series | **Paper Replication Example** (Python reference check) | Daily difference and percentage-change transformation logic |
+| **Collinear OLS** | `src.examples.regression.longley` | Longley (1967) | `data/examples/regression/longley.csv` | **Direct Python Verified (`statsmodels`)** | OLS & Robust OLS numerical stability under collinearity |
+| **Panel Regression** | `src.examples.regression.grunfeld` | Grunfeld (1958) | `data/examples/regression/grunfeld.csv` | **Direct Python Verified (`linearmodels`)** | Fixed-effects corporate investment panel regression |
+| **Instrumental Variables** | `src.examples.regression.mroz_iv` | Mroz (1987) | `data/examples/regression/mroz.csv` | **Direct Python Verified (`linearmodels`)** | 2SLS female labor supply hours equation |
+| **Mincer Wage Equation** | `src.examples.regression.mincer_wage` | Mincer (1974) | `data/examples/regression/` | **Textbook Replication Example** | Semi-logarithmic human capital wage regression |
+| **Okun's Law** | `src.examples.regression.okuns_law` | Okun (1962) | `data/examples/timeseries/` | **Textbook Replication Example** | GDP growth vs unemployment rate change regression |
+| **Applied Regression** | `src.examples.regression.ghysels_chap1` | Ghysels & Marcellino (2018) Chapter 1 | `data/examples/regression/` | **Textbook Replication Example** | Linear trend & seasonal dummy regression models |
+| **Applied Regression** | `src.examples.regression.ghysels_chap2` | Ghysels & Marcellino (2018) Chapter 2 | `data/examples/regression/` | **Textbook Replication Example** | Autoregressive distributed lag (ARDL) forecasting |
+| **Binary Discrete Choice** | `src.examples.discrete.spector_logit` | Spector & Mazzeo (1980) | `data/examples/discrete/spector.csv` | **Direct Python Verified (`statsmodels`)** | Binary Logit educational choice estimation |
+| **Provider Pipeline** | `src.examples.featurization.fred` | St. Louis Fed FRED API | Remote FRED API / Local cache | **Data & Feature Pipeline Demo** | Automated multi-series FRED data download & alignment |
+| **Provider Pipeline** | `src.examples.featurization.monetary` | Federal Reserve Macro Series | `data/raw/` | **Data & Feature Pipeline Demo** | Monetary policy indicator featurization pipeline |
 
 ---
 
-## 4. Structural VAR & Local Projections Demonstrations
+## 3. Cross-Language MATLAB Comparator
 
-The `src/examples/academic/var/` directory contains structural time-series demonstrations based on bundled VAR-Toolbox datasets:
+The MATLAB comparator in `src/examples/academic/var/matlab_comparator.py` (and test wrapper `tests/verification/matlab_comparator.py`) provides an opt-in cross-language verification tool against Ambrogio Cesa-Bianchi's MATLAB VAR-Toolbox.
 
-- **Stock & Watson (2001)** (`stock_watson_2001.py`): 3-variable reduced-form VAR demonstration.
-- **Blanchard & Quah (1989)** (`blanchard_quah_1989.py`): Long-run structural identification.
-- **Gertler & Karadi (2015)** (`gertler_karadi_2015.py`): External-instrument SVAR (Proxy SVAR / SVAR-IV).
-- **Jordà & Taylor (2025)** (`jorda_taylor_2025.py`): Instrumental-variables local projections (LP-IV).
-
----
-
-## 5. Cross-Language MATLAB Comparator
-
-The MATLAB comparator in `src/examples/academic/var/matlab_comparator.py` (and wrapper `tests/verification/matlab_comparator.py`) provides an opt-in cross-language verification tool against Ambrogio Cesa-Bianchi's MATLAB VAR-Toolbox.
-
-### 5.1 Software Environment & Provenance
+### 3.1 Software Environment & Computational Provenance
 
 | Component | Verified Version | Role in Verification Suite |
 | --- | --- | --- |
@@ -85,25 +80,25 @@ The MATLAB comparator in `src/examples/academic/var/matlab_comparator.py` (and w
 | **VAR-Toolbox** | 4.0 | Benchmark MATLAB implementation of structural VAR methods |
 | **Dynare** | 7.1 (Apple Silicon) | Recorded for environment provenance (not called by tests) |
 
-### 5.2 Numerical Specification & Comparison Object
+### 3.2 Verified Numerical Specification & Discrepancy
 
 The comparator uses the bundled `data/examples/matlab_examples/BQ1989_Data.xlsx` dataset and estimates:
-- **System Variables**: GDP growth and unemployment rate ($K=2$).
+- **System Variables**: GDP growth ($\Delta y_t$) and unemployment rate ($u_t$).
 - **Lag Structure**: VAR(8) with an intercept.
 - **Identification Scheme**: Blanchard & Quah (1989) long-run structural restrictions ($C(1)$ lower-triangular).
 
-####Discrepancy Discrepancy
+#### Discrepancy Verification
 - **Tolerance Criterion**: Absolute and relative tolerance set to $1.0 \times 10^{-10}$.
 - **Observed Discrepancy**: Maximum absolute difference between Python and MATLAB structural impact matrices: **$2.22 \times 10^{-16}$** (machine precision).
 
-### 5.3 Prerequisites & Execution
+### 3.3 Execution Protocol & Programmatic Reuse
 
 Executing the MATLAB comparator requires:
 1. Licensed local MATLAB installation.
 2. `matlabengine` installed in the active Python virtual environment (`.venv`).
 3. Local checkout of [VAR-Toolbox](https://github.com/ambropo/VAR-Toolbox).
 
-Execute the comparison by pointing `VAR_TOOLBOX_DIR` to the local VAR-Toolbox path:
+Execute the comparison by setting `VAR_TOOLBOX_DIR` to the local VAR-Toolbox path:
 
 ```bash
 VAR_TOOLBOX_DIR=/path/to/VAR-Toolbox /opt/homebrew/bin/uv run python -m src.examples.academic.var.matlab_comparator
@@ -116,6 +111,94 @@ from src.examples.academic.var.matlab_comparator import MATLABComparator
 
 result = MATLABComparator("/path/to/VAR-Toolbox").run()
 print("Max absolute difference:", result["max_abs_diff"])
+```
+
+---
+
+## 4. Cross-Language Verification Roadmap (R, Stata, & MATLAB)
+
+To expand numerical validation across econometrics software, future releases will introduce automated comparators for R, Stata, and additional MATLAB toolboxes:
+
+| Software Target | Target Package / Routine | Planned Benchmark Comparison | Expected Verification Target |
+| --- | --- | --- | --- |
+| **MATLAB** | VAR-Toolbox 4.0 | Gertler & Karadi (2015) Proxy SVAR | Impact matrix $B_0^{-1}$ & IRF paths |
+| **MATLAB** | VAR-Toolbox 4.0 / Dynare | Uhlig (2005) & Rubio-Ramírez et al. (2010) | Sign restriction QR rotation draws |
+| **R** | `vars` (Pfaff 2008) | Reduced-Form VAR & Forecast Error Decompositions | Coefficient matrices & FEVD tables |
+| **R** | `svars` (Lange et al. 2021) | `USA` benchmark (`id.cv` changes-in-volatility SVAR) | Baseline VAR(6) log-lik `-564.30`, $\text{diag}(\Lambda) = (0.393, 0.192, 1.244)$, Wald stat `7.66` ($p=0.01$), LR stat `8.734` ($p=0.033$) |
+| **R** | `tsDyn` (Stigler 2010) | Johansen VECM & Threshold VAR (TVAR) | Cointegrating vectors $\beta$ & regime thresholds |
+| **R** | `lpirfs` | Jordà (2005) Local Projections | LP impulse response point estimates |
+| **Stata** | `svar` / `vec` | Reduced-Form VAR, SVAR, & VECM | Standard errors & log-likelihood values |
+
+---
+
+## 5. Detailed Breakdown by Functional Area
+
+### 5.1 Structural VAR, Reduced-Form, & Local Projections
+
+```bash
+# Reduced-Form VAR direct parity check against statsmodels
+/opt/homebrew/bin/uv run python -m src.examples.timeseries.macro_var
+
+# Stock & Watson 3-variable VAR demonstration
+/opt/homebrew/bin/uv run python -m src.examples.academic.var.stock_watson_2001
+
+# Blanchard & Quah long-run structural identification (MATLAB verified)
+/opt/homebrew/bin/uv run python -m src.examples.academic.var.blanchard_quah_1989
+
+# Gertler & Karadi Proxy SVAR / SVAR-IV monetary policy shocks
+/opt/homebrew/bin/uv run python -m src.examples.academic.var.gertler_karadi_2015
+
+# Jordà & Taylor instrumental-variable local projections (LP-IV)
+/opt/homebrew/bin/uv run python -m src.examples.academic.var.jorda_taylor_2025
+```
+
+### 5.2 High-Frequency Monetary & Policy Surprise Replications
+
+```bash
+# Nakamura & Steinsson (2018) daily monetary policy surprises
+/opt/homebrew/bin/uv run python -m src.examples.academic.nakamura_steinsson
+
+# PCA monetary shock extraction from futures
+/opt/homebrew/bin/uv run python -m src.examples.academic.nakamura_steinsson_pca
+
+# Bauer & Swanson (2023) orthogonalized monetary shocks
+/opt/homebrew/bin/uv run python -m src.examples.academic.bauer_swanson
+
+# Bauer, Bernanke, & Milstein (2023) daily transformation routines
+/opt/homebrew/bin/uv run python -m src.examples.academic.bauer_bernanke_milstein
+```
+
+### 5.3 Applied Micro & Macro Econometric Regressions
+
+```bash
+# Longley (1967) OLS & Robust OLS numerical benchmark
+/opt/homebrew/bin/uv run python -m src.examples.regression.longley
+
+# Grunfeld (1958) fixed-effects corporate investment panel
+/opt/homebrew/bin/uv run python -m src.examples.regression.grunfeld
+
+# Mroz (1987) 2SLS instrumental variables female labor supply
+/opt/homebrew/bin/uv run python -m src.examples.regression.mroz_iv
+
+# Mincer (1974) human capital wage regression
+/opt/homebrew/bin/uv run python -m src.examples.regression.mincer_wage
+```
+
+### 5.4 Discrete Choice & Classification Models
+
+```bash
+# Spector & Mazzeo (1980) binary Logit educational choice model
+/opt/homebrew/bin/uv run python -m src.examples.discrete.spector_logit
+```
+
+### 5.5 Featurization & External Provider Integration
+
+```bash
+# Automated FRED dataset download & frequency alignment
+/opt/homebrew/bin/uv run python -m src.examples.featurization.fred
+
+# DBnomics multi-country provider pipeline
+/opt/homebrew/bin/uv run python -m src.examples.featurization.dbnomics
 ```
 
 ---
