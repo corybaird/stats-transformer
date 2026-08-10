@@ -41,7 +41,7 @@ The table below catalogs all 24 example modules in `src/examples/`, detailing th
 
 | Domain / Method | Script Module Path | Academic Paper / Benchmark Target | Data Source / Location | Intuitive Verification Status | Target Verification / Compared Object |
 | --- | --- | --- | --- | --- | --- |
-| **MATLAB Comparator** | `src.examples.academic.var.matlab_comparator` | Blanchard & Quah (1989) / MATLAB VAR-Toolbox 4.0 | `data/examples/matlab_examples/BQ1989_Data.xlsx` | **Cross-Language Verified (MATLAB)** | Structural impact matrix $C(1)$ ($2.22 \times 10^{-16}$ max diff) |
+| **MATLAB Comparator** | `src.examples.software_benchmarks.matlab_comparator` | Blanchard & Quah (1989) / MATLAB VAR-Toolbox 4.0 | `data/examples/matlab_examples/BQ1989_Data.xlsx` | **Cross-Language Verified (MATLAB)** | Structural impact matrix $C(1)$ ($2.22 \times 10^{-16}$ max diff) |
 | **Structural VAR** | `src.examples.academic.var.blanchard_quah_1989` | Blanchard & Quah (1989) | `data/examples/matlab_examples/BQ1989_Data.xlsx` | **Cross-Language Verified (MATLAB)** | Long-run structural supply & demand shock identification |
 | **Proxy SVAR / SVAR-IV** | `src.examples.academic.var.gertler_karadi_2015` | Gertler & Karadi (2015) | `data/examples/academic/gertler_karadi/` | **Paper Replication Example** (Pending MATLAB/R check) | External-instrument monetary policy shock identification |
 | **LP-IV Local Projections** | `src.examples.academic.var.jorda_taylor_2025` | Jordà & Taylor (2025) / Stock & Watson (2018) | `data/examples/academic/` | **Paper Replication Example** (Pending R `lpirfs` check) | Instrumental-variable impulse response functions |
@@ -70,7 +70,7 @@ The table below catalogs all 24 example modules in `src/examples/`, detailing th
 
 ## 3. Cross-Language MATLAB Comparator
 
-The MATLAB comparator in `src/examples/academic/var/matlab_comparator.py` (and test wrapper `tests/verification/matlab_comparator.py`) provides an opt-in cross-language verification tool against Ambrogio Cesa-Bianchi's MATLAB VAR-Toolbox.
+The MATLAB comparator in `src/examples/software_benchmarks/matlab_comparator.py` (and test wrapper `tests/verification/matlab_comparator.py`) provides an opt-in cross-language verification tool against Ambrogio Cesa-Bianchi's MATLAB VAR-Toolbox.
 
 ### 3.1 Software Environment & Computational Provenance
 
@@ -96,18 +96,24 @@ The comparator uses the bundled `data/examples/matlab_examples/BQ1989_Data.xlsx`
 Executing the MATLAB comparator requires:
 1. Licensed local MATLAB installation.
 2. `matlabengine` installed in the active Python virtual environment (`.venv`).
-3. Local checkout of [VAR-Toolbox](https://github.com/ambropo/VAR-Toolbox).
+3. Local checkout of [VAR-Toolbox](https://github.com/ambropo/VAR-Toolbox) placed in `data/temp/VAR-Toolbox`.
 
-Execute the comparison by setting `VAR_TOOLBOX_DIR` to the local VAR-Toolbox path:
+Execute the comparison directly:
 
 ```bash
-VAR_TOOLBOX_DIR=/path/to/VAR-Toolbox /opt/homebrew/bin/uv run python -m src.examples.academic.var.matlab_comparator
+/opt/homebrew/bin/uv run python -m src.examples.software_benchmarks.matlab_comparator
+```
+
+Alternatively, if your VAR-Toolbox is located elsewhere, set the `VAR_TOOLBOX_DIR` environment variable:
+
+```bash
+VAR_TOOLBOX_DIR=/path/to/VAR-Toolbox /opt/homebrew/bin/uv run python -m src.examples.software_benchmarks.matlab_comparator
 ```
 
 Alternatively, invoke `MATLABComparator` programmatically:
 
 ```python
-from src.examples.academic.var.matlab_comparator import MATLABComparator
+from src.examples.software_benchmarks.matlab_comparator import MATLABComparator
 
 result = MATLABComparator("/path/to/VAR-Toolbox").run()
 print("Max absolute difference:", result["max_abs_diff"])
@@ -115,19 +121,33 @@ print("Max absolute difference:", result["max_abs_diff"])
 
 ---
 
-## 4. Cross-Language Verification Roadmap (R, Stata, & MATLAB)
+## 4. Complete Cross-Language Model Subsystem Matrix
 
-To expand numerical validation across econometrics software, future releases will introduce automated comparators for R, Stata, and additional MATLAB toolboxes:
+To expand numerical validation across econometrics software, the following table maps every core `stats-transformer` model to its corresponding benchmark routine in R, Stata, and MATLAB. We are actively building test comparators in `src/examples/software_benchmarks/` to formally verify parity against these targets.
 
-| Software Target | Target Package / Routine | Planned Benchmark Comparison | Expected Verification Target |
-| --- | --- | --- | --- |
-| **MATLAB** | VAR-Toolbox 4.0 | Gertler & Karadi (2015) Proxy SVAR | Impact matrix $B_0^{-1}$ & IRF paths |
-| **MATLAB** | VAR-Toolbox 4.0 / Dynare | Uhlig (2005) & Rubio-Ramírez et al. (2010) | Sign restriction QR rotation draws |
-| **R** | `vars` (Pfaff 2008) | Reduced-Form VAR & Forecast Error Decompositions | Coefficient matrices & FEVD tables |
-| **R** | `svars` (Lange et al. 2021) | `USA` benchmark (`id.cv` changes-in-volatility SVAR) | Baseline VAR(6) log-lik `-564.30`, $\text{diag}(\Lambda) = (0.393, 0.192, 1.244)$, Wald stat `7.66` ($p=0.01$), LR stat `8.734` ($p=0.033$) |
-| **R** | `tsDyn` (Stigler 2010) | Johansen VECM & Threshold VAR (TVAR) | Cointegrating vectors $\beta$ & regime thresholds |
-| **R** | `lpirfs` | Jordà (2005) Local Projections | LP impulse response point estimates |
-| **Stata** | `svar` / `vec` | Reduced-Form VAR, SVAR, & VECM | Standard errors & log-likelihood values |
+| Family           | Model                     | Target Software / Function                                | Benchmark Script File                                                                                                                                                                                                                                                  | Verification Status & Max Diff                         |
+| ---------------- | ------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Regression** | `RegressionModel` | R (`stats::lm`), Stata (`regress`), MATLAB (`mldivide`) | [`regression_benchmark.py`](../../src/examples/software_benchmarks/regression/regression_benchmark.py) | **Verified** (R: $2.07 \times 10^{-6}$, Stata: $0.00$, MATLAB: $3.52 \times 10^{-6}$) |
+| **Regression**   | `RobustOLSModel`          | R (`sandwich::vcovHC`), Stata (`regress, robust`)         | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Regression**   | `PanelRegressionModel`    | R (`plm::plm`), Stata (`xtreg`)                           | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Regression**   | `IV2SLSModel`             | R (`AER::ivreg`), Stata (`ivregress 2sls`)                | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Regression**   | `SpecificationRunner`     | *N/A (Utility wrapper)*                                   | *N/A*                                                                                                                                                                                                                                                                  | *N/A*                                                  |
+| **Time Series**  | `VARModel`                | R (`vars::VAR`), Stata (`var`), MATLAB (`varm`)           | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `VECMModel`               | R (`urca::ca.jo`), Stata (`vec`), MATLAB (`vecm`)         | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `RestrictedVAR`           | R (`vars::restrict`), Stata (`var`)                       | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `ARIMAModel`              | R (`forecast::auto.arima`), Stata (`arima`)               | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `SVARModel`               | R (`vars::SVAR`), Stata (`svar`), MATLAB (VAR-Toolbox)    | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `BlanchardQuahModel`      | MATLAB (`VAR-Toolbox 4.0`), R (`vars::BQ`)                | [`blanchard_quah_benchmark.py`](../../src/examples/software_benchmarks/timeseries/blanchard_quah_benchmark.py) | **Verified** (MATLAB: $2.22 \times 10^{-16}$)          |
+| **Time Series**  | `ProxySVARModel`          | R (`svars`), MATLAB (`VAR-Toolbox 4.0`)                   | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `SignZeroSVARModel`       | MATLAB (`VAR-Toolbox 4.0`), R (`BMR`)                     | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `VolatilitySVARModel`     | R (`svars`)                                               | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `IndependenceSVARModel`   | R (`svars`)                                               | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `SVEC`                    | R (`vars::SVEC`), MATLAB (`VAR-Toolbox 4.0`)              | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `LocalProjectionsModel`   | R (`lpirfs::lp_lin`), Stata (`jorda`)                     | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Time Series**  | `LocalProjectionsIVModel` | R (`lpirfs::lp_lin_iv`), Stata (`lproj`)                  | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
+| **Discrete**     | `LogitModel`              | R (`stats::glm`), Stata (`logit`)                         | [`logit_benchmark.py`](../../src/examples/software_benchmarks/discrete/logit_benchmark.py) | **Verified** (R: $1.81 \times 10^{-9}$, Stata: $0.00$) |
+| **Unsupervised** | `PCAModel`                | R (`stats::prcomp`), Stata (`pca`)        | [`pca_benchmark.py`](../../src/examples/software_benchmarks/unsupervised/pca_benchmark.py) | **Verified** (R: $3.33 \times 10^{-16}$, Stata: $0.00$) |
+| **Unsupervised** | `KMeansModel`             | R (`stats::kmeans`), Stata (`cluster`), MATLAB (`kmeans`) | `src/examples/software_benchmarks/`                                                                                                                                                                                                                                    | *Planned*                                              |
 
 ---
 
