@@ -218,4 +218,4 @@ The repository includes an agent skill at `.agents/skills/stats-transformer-arch
 - [Data directory guide](data.md)
 - [Academic Citations](citations.md)
 - [Testing suite](../validation/testing_suite.md)
-- [Academic & numerical validation](../validation/academic_validation.md)
+- [Academic & numerical validation](../validation/validation.md)

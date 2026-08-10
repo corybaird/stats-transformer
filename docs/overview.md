@@ -18,7 +18,7 @@
 | Understand the configured workflow and its components | [Library architecture](library/architecture.md) |
 | Locate code, data, configurations, outputs, and examples | [Repository structure](library/file_structure.md) |
 | Run the automated checks or understand their scope | [Testing suite](validation/testing_suite.md) |
-| Assess replication claims, paper examples, and MATLAB comparator | [Academic and numerical validation](validation/academic_validation.md) |
+| Assess replication claims, paper examples, and MATLAB comparator | [Academic and numerical validation](validation/validation.md) |
 | Review the proposed frequentist VAR, SVAR, nonlinear-model, and reporting work | [Frequentist multivariate time-series roadmap](extensions/roadmap.md) |
 
 ## 2. Documentation map
@@ -31,7 +31,7 @@
 | Library | [Academic citations](library/citations.md) | Catalogs literature, datasets, and benchmark software cited in the library. | Reviewing academic foundations and data provenance. |
 | Library | [Data directory guide](library/data.md) | Details the data/ directory structure, dataset catalog, frequencies, and pipeline flow. | Locating raw series, final panel parquets, and example datasets. |
 | Validation | [Testing suite](validation/testing_suite.md) | Defines the automated test categories and command. | Checking package behavior before a change. |
-| Validation | [Academic & numerical validation](validation/academic_validation.md) | Records direct comparisons, paper transformation examples, and MATLAB cross-language comparator tools. | Reporting results responsibly and verifying numerical parity. |
+| Validation | [Academic & numerical validation](validation/validation.md) | Records direct comparisons, paper transformation examples, and MATLAB cross-language comparator tools. | Reporting results responsibly and verifying numerical parity. |
 | Extensions | [Frequentist multivariate time-series roadmap](extensions/roadmap.md) | Defines the proposed model, reporting, visualization, and cross-language validation milestones while explicitly deferring Bayesian estimation. | Planning and reviewing future time-series work. |
 | Notebook | `notebooks/07_chart_components.ipynb` | Demonstrates modular chart components interactively. | Learning visualization usage. |
 | Notebook | `notebooks/08_structural_timeseries_models.ipynb` | Demonstrates direct-use structural VAR, local-projection, and decomposition APIs on synthetic data. | Learning the newer time-series models. |
@@ -89,7 +89,7 @@ Examples are executable demonstrations, not all formal replications. The validat
 | Academic features | `academic/nakamura_steinsson_pca.py` | Synthetic PCA shock extraction. | Demonstration |
 | Academic reporting | `academic/stats_transformer_paper_figures.py` | Generates figures used by the Overleaf draft. | Figure-generation workflow |
 | VAR-Toolbox translations | `academic/var/stock_watson_2001.py`, `blanchard_quah_1989.py`, `gertler_karadi_2015.py`, `jorda_taylor_2025.py` | Reduced-form VAR, long-run identification, proxy SVAR, and LP-IV on bundled data. | Execution checks; see validation page |
-| Cross-language check | `academic/var/matlab_comparator.py` | Blanchard--Quah Python/MATLAB impact-matrix comparison. | Verified numerical comparison |
+| Cross-language check | `src/examples/software_benchmarks/matlab_comparator.py` | Blanchard--Quah Python/MATLAB impact-matrix comparison. | Verified numerical comparison |
 
 ## 5. How to read validation claims
 

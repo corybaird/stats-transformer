@@ -15,25 +15,32 @@
 
 ## 1. Features
 
-`stats-transformer` is a Python library for data transformation, econometric modeling, and visualization.. It handles data ingestion, resampling, feature engineering, and econometric modeling for time-series and panel datasets using a fully traceable and transparent configuration file workflow.
+`stats-transformer` is a Python library for data transformation, econometric modeling, and visualization. It automates feature engineering, model estimation, and reporting across time-series, panel, and cross-sectional datasets using a reproducible configuration workflow.
 
-- **Unified Empirical Workflow:** Combines analysis-ready feature construction with econometric estimation, diagnostic checks, and publication outputs in a single reproducible pipeline.
-- **Declarative YAML Orchestration:** Records data sources, frequency alignment, feature transformations, model specifications, and visual outputs in declarative YAML files that persist intermediate stage artifacts.
-- **Broad Econometric Coverage:** Exposes standardized interfaces across cross-sectional, panel, time-series, instrumental-variable, discrete-choice, and unsupervised methods, reducing setup burden relative to composing separate APIs.
-- **Auditable & Agent-Ready:** Incorporates verified MATLAB VAR translations (including machine-precision Blanchard-Quah verification against VAR-Toolbox 4.0) and includes a versioned architectural skill for compatible coding agents.
+- **Unified Empirical Workflow:** Combines feature engineering, model estimation, diagnostic checks, and publication-ready charts in one pipeline.
+- **Declarative YAML Configuration:** Controls data sources, frequency resampling, transformations, model specifications, and visual outputs via `params.yaml`.
+- **Broad Econometric Coverage:** Provides unified APIs for cross-sectional (OLS, Robust OLS), panel (Fixed Effects), time-series (VAR, VECM, SVAR, Local Projections), instrumental-variables (2SLS, LP-IV), discrete-choice (Logit), and unsupervised methods (PCA, KMeans).
+- **Cross-Language Validation & Agent-Ready:** Numerically verified against R (`stats`, `vars`), Stata (`regress`, `logit`, `pca`), and MATLAB (`mldivide`), with an embedded architectural skill for AI agents.
+- **Extensible Roadmap:** Built for active expansion into high-frequency, non-linear, and structural macroeconomic extensions (see [Roadmap](docs/extensions/roadmap.md)).
 
 ---
 
 ## 2. Documentation
 
-- **Overview:** Start with [docs/overview.md](docs/overview.md) for the documentation map, model inventory, example inventory, and validation guide.
-- **Academic Citations:** For citations of literature, paper datasets, and reference software, see [docs/library/citations.md](docs/library/citations.md).
-- **Academic & Numerical Validation:** For paper transformation examples, replication benchmarks, and the MATLAB comparator, see [docs/validation/academic_validation.md](docs/validation/academic_validation.md).
-- **Extensions & Roadmap:** For planned frequentist VAR extensions, see [docs/extensions/roadmap.md](docs/extensions/roadmap.md) and [docs/extensions/models.md](docs/extensions/models.md).
-- **Visualization Walkthrough:** For a guide on using the modular chart components, see [notebooks/07_chart_components.ipynb](notebooks/07_chart_components.ipynb).
-- **System Design:** For more details on the system design, see [docs/library/architecture.md](docs/library/architecture.md).
-- **File Structure:** For the standardized research folder structure, see [docs/library/file_structure.md](docs/library/file_structure.md).
-- **Validation & Testing:** For details on the testing suite, see [docs/validation/testing_suite.md](docs/validation/testing_suite.md).
+- **Core Guides (`docs/`)**
+  - **[Overview](docs/overview.md):** Documentation map, model inventory, and example index.
+  - **[Architecture & Design](docs/library/architecture.md):** Pipeline stages, object hierarchy, and data flow.
+  - **[Numerical Validation](docs/validation/validation.md):** Cross-language R, Stata, and MATLAB verification matrix.
+  - **[Testing Suite](docs/validation/testing_suite.md):** Automated unit, integration, and verification test guide.
+  - **[Academic Citations](docs/library/citations.md):** Literature sources, paper datasets, and reference software.
+  - **[Roadmap & Extensions](docs/extensions/roadmap.md):** Planned model expansions and frequentist VAR milestones.
+  - **[File Structure](docs/library/file_structure.md):** Cookiecutter-based research folder layout.
+
+- **Interactive Notebooks (`notebooks/`)**
+  - **[Overall Pipeline](notebooks/0-overall-pipeline.ipynb):** End-to-end data ingestion, transformation, and estimation.
+  - **[Regression & Panel](notebooks/01_regression_examples.ipynb):** OLS, robust covariance, panel, and 2SLS examples.
+  - **[Time Series & Structural VAR](notebooks/08_structural_timeseries_models.ipynb):** VAR, SVAR, local projection, and decomposition APIs.
+  - **[Modular Chart Components](notebooks/07_chart_components.ipynb):** Interactive visualization components and publication plotting.
 
 ---
 
