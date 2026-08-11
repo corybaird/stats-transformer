@@ -5,6 +5,7 @@ import os
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.iv import IV2SLSModel
+from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
 
 def test_robust_ols_model():
     df = pd.DataFrame({
@@ -29,25 +30,43 @@ def test_robust_ols_model():
 
 def test_panel_regression_model():
     # linearmodels PanelOLS expects a MultiIndex or entity/time columns
+    
+    rng = np.random.default_rng(42)
+
+    n_entities = 50
+    n_periods = 10
+
+    entity = np.repeat(
+        np.arange(n_entities),
+        n_periods,
+    )
+    time = np.tile(
+        np.arange(n_periods),
+        n_entities,
+    )
+    n = len(entity)
+    
     df = pd.DataFrame({
-        "entity": ["A", "A", "A", "B", "B", "B"],
-        "date": pd.to_datetime(["2020-01-01", "2021-01-01", "2022-01-01", "2020-01-01", "2021-01-01", "2022-01-01"]),
-        "target": [1.1, 2.1, 3.1, 1.2, 2.2, 3.2],
-        "feature": [0.5, 1.5, 2.5, 0.6, 1.6, 2.6]
-    })
+        "entity": entity,
+        "date": time,
+        "target": rng.random(size=n),
+        "feature": rng.random(size=n),
+    })    
     
     model = PanelRegressionModel(
         target="target",
         independent_variables=["feature"],
         entity_column="entity",
         time_column="date",
-        entity_effects=True
+        entity_effects=True,
+        cov_type="clustered",
+        cluster_entity=True
     )
     
     metrics = model.fit(df)
     
     assert "rsquared" in metrics
-    assert metrics["nobs"] == 6
+    assert metrics["nobs"] == n
     assert model.model is not None
 
 def test_iv_2sls_model():
@@ -102,3 +121,111 @@ def test_regression_diagnostics():
     assert "p_value" in bp
     assert "statistic" in jb
     assert "statistic" in dw
+
+def test_panel_iv_model():
+    # Simple Panel IV setting
+    # Structural equation:
+    # y_it = 2*x_it + 0.5*w_it + entity FE + time FE + error
+    #
+    # First stage:
+    # x_it = 1.2*z_it + 0.3*w_it + entity FE + time FE + u_it
+
+    rng = np.random.default_rng(42)
+
+    n_entities = 50
+    n_periods = 10
+
+    entity = np.repeat(
+        np.arange(n_entities),
+        n_periods,
+    )
+    time = np.tile(
+        np.arange(n_periods),
+        n_entities,
+    )
+    n = len(entity)
+
+    z = rng.normal(size=n) # instrument
+    w = rng.normal(size=n) # exogenous control
+    u = rng.normal(size=n)
+    e = rng.normal(size=n)
+
+    entity_effect_x = rng.normal(
+        size=n_entities
+    )[entity]
+    time_effect_x = rng.normal(
+        size=n_periods
+    )[time]
+
+    entity_effect_y = rng.normal(
+        size=n_entities
+    )[entity]
+    time_effect_y = rng.normal(
+        size=n_periods
+    )[time]
+
+    x = (
+        1.2*z + 0.3*w + entity_effect_x + time_effect_x + u
+    )
+
+    y = (
+        2.0*x + 0.5*w + entity_effect_y + time_effect_y + u + 0.2*e
+    )
+
+    df = pd.DataFrame({
+        "entity": entity,
+        "time": time,
+        "y": y,
+        "x": x,
+        "z": z,
+        "w": w,
+    })
+
+    model = PanelIV2SLSModel(
+        target="y",
+        independent_variables=["w"],
+        endogenous=["x"],
+        instruments=["z"],
+        entity_column="entity",
+        time_column="time",
+        entity_effects=True,
+        time_effects=True,
+        cov_type="clustered",
+        cluster_by="entity",
+    )
+
+    metrics = model.fit(df)
+
+    assert model.model is not None
+    assert metrics["num_observations"] == n
+
+    assert model.model.params["x"] == pytest.approx(
+        2.0,
+        abs=0.15,
+    )
+
+    assert (
+        metrics["first_stage"]["x"]["f.stat"]
+        > 10
+    )
+
+    entity_dummies = [
+        column
+        for column in model.X_exog.columns
+        if column.startswith("entity_")
+    ]
+    time_dummies = [
+        column
+        for column in model.X_exog.columns
+        if column.startswith("time_")
+    ]
+
+    assert len(entity_dummies) == n_entities - 1
+    assert len(time_dummies) == n_periods - 1
+
+    metadata = model.get_model_metadata(metrics)
+
+    assert "x" in metadata["coefficients"]
+    assert metadata["summary"]["entity_effects"] is True
+    assert metadata["summary"]["time_effects"] is True
+    assert metadata["summary"]["cov_type"] == "clustered"
