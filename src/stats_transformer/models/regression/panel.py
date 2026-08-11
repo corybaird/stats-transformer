@@ -7,18 +7,25 @@ from datetime import datetime
 class PanelRegressionModel(ModelBase):
     # Panel data modeling using entity and time fixed effects
 
-    def __init__(self, params_path=None, target=None, independent_variables=None, entity_column=None, time_column="date", entity_effects=True, time_effects=False, check_rank=True, **kwargs):
+    def __init__(self, params_path=None, target=None, independent_variables=None, entity_column=None, time_column="date", entity_effects=True, time_effects=False, check_rank=True, cov_type="unadjusted", cluster_entity=False, cluster_time=False, **kwargs):
         super().__init__(params_path=params_path, target=target, independent_variables=independent_variables, entity_column=entity_column, **kwargs)
         self.time_column = time_column
         if self.params:
             panel_config = self.params.get("model", {}).get("panel_ols", {})
+            
             self.entity_effects = panel_config.get("entity_effects", entity_effects)
             self.time_effects = panel_config.get("time_effects", time_effects)
             self.check_rank = panel_config.get("check_rank", check_rank)
+            self.cov_type = panel_config.get("cov_type", cov_type)
+            self.cluster_entity = panel_config.get("cluster_entity", cluster_entity)
+            self.cluster_time = panel_config.get("cluster_time", cluster_time)
         else:
             self.entity_effects = entity_effects
             self.time_effects = time_effects
             self.check_rank = check_rank
+            self.cov_type = cov_type
+            self.cluster_entity = cluster_entity
+            self.cluster_time = cluster_time
 
 
     def load_data(self, data):
@@ -29,6 +36,7 @@ class PanelRegressionModel(ModelBase):
         missing = [c for c in req if c not in df.columns]
         if missing:
             raise ValueError(f"Missing columns: {missing}")
+        
 
         self.df_clean = df.dropna(subset=req).copy()
         
@@ -51,8 +59,18 @@ class PanelRegressionModel(ModelBase):
         if self.X is None or self.y is None:
             raise ValueError("Data not loaded, X or y is None")
         
-        self.model_spec = PanelOLS(self.y, self.X, entity_effects=self.entity_effects, time_effects=self.time_effects, check_rank=self.check_rank)
-        self.model = self.model_spec.fit()
+        fit_options = {
+            "cov_type": self.cov_type,
+        }
+        if self.cov_type == "clustered":
+            fit_options["cluster_entity"] = self.cluster_entity
+            fit_options["cluster_time"] = self.cluster_time
+        
+        self.model_spec = PanelOLS(
+            self.y, self.X, entity_effects=self.entity_effects, time_effects=self.time_effects, check_rank=self.check_rank, 
+            )
+        
+        self.model = self.model_spec.fit(**fit_options)
         return self.model
 
     def get_summary(self):
