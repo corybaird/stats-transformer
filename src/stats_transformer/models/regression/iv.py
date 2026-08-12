@@ -55,7 +55,7 @@ class IV2SLSModel(RegressionModel):
         # added first-stage diagnostics
         first_stage = self.model.first_stage.diagnostics.replace({np.nan: None}).to_dict(orient="index")
         for variable, diagnostics in first_stage.items():
-            if diagnostics.get("f.stat") is not None and diagnostics["f.stats"] <10:
+            if diagnostics.get("f.stat") is not None and diagnostics["f.stat"] < 10:
                 self.logger.warning(f"Weak instrument warning for {variable}: first stage statistic is below 10")
         
         return {
