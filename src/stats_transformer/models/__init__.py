@@ -32,10 +32,12 @@ __all__ = [
     "LocalProjectionsModel",
     "LocalProjectionsIVModel",
     "ProxySVARModel",
-    "SignRestrictionsSVARModel",
+    "SignZeroSVARModel",
     "SVARModel",
     "TimeSeriesDecompositions",
     "VARModel",
     "VECMModel",
+    "VolatilitySVARModel",
+    "IndependenceSVARModel",
 ]
 
