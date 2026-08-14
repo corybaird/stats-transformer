@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-08-14
+
+### Fixed
+- `sign_restrictions` model_type dispatched to an undefined class name, raising `NameError`; now dispatches to `SignZeroSVARModel`.
+- `from stats_transformer.models import *` raised `AttributeError` due to a stale entry in `__all__`.
+- The `mroz_iv.yaml` example config silently ran OLS instead of the declared 2SLS replication; `IV2SLSModel` now reads `endogenous`/`instruments` from `params_path` configs.
+- Unknown `model_type` and unknown pipeline `stage` values now raise `ValueError` instead of silently falling back to OLS or a full pipeline run.
+- `SVEC` and `StabilityDiagnostics.ols_cusum` previously returned fabricated placeholder results; both now raise `NotImplementedError` until estimation is implemented.
+- Fixed a broken import in `visualization/charts/timeseries/structural.py` that made `RestrictionHeatmap` and `SwathePlot` unusable.
+- `IndependenceSVARModel` and `SignZeroSVARModel` no longer mutate global numpy RNG state; seed is now configurable per instance.
+- `docker-compose.yml`'s `r-benchmarks` service no longer mutates the host's `pyproject.toml`/`uv.lock`.
+
 ## [1.5.0] - 2026-07-27
 
 ### Added
