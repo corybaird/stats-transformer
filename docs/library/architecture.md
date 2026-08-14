@@ -147,7 +147,7 @@ flowchart TD
 | **Time Series** | `SignZeroSVARModel` | Sign & zero restriction structural VAR identification | Pipeline: `sign_restrictions`; Direct API |
 | **Time Series** | `VolatilitySVARModel` | Changes-in-volatility heteroskedastic structural VAR | Direct API |
 | **Time Series** | `IndependenceSVARModel` | Distance covariance / ICA data-driven structural VAR | Direct API |
-| **Time Series** | `SVEC` | Structural VECM combining cointegration with restrictions | Direct API |
+| **Time Series** | `SVEC` | Structural VECM combining cointegration with restrictions | Direct API — *Planned* (ML estimation not yet implemented) |
 | **Time Series** | `LocalProjectionsModel` | Jordà (2005) horizon-by-horizon local projections | Direct API |
 | **Time Series** | `LocalProjectionsIVModel` | Instrumented local projections (Stock & Watson 2018) | Pipeline: `lp_iv`; Direct API |
 | **Discrete** | `LogitModel` | Binary logit maximum-likelihood classification | Direct API |

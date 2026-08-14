@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 from statsmodels.tsa.vector_ar.var_model import VAR
 from stats_transformer.models.timeseries.diagnostics.residuals import ResidualDiagnostics
 from stats_transformer.models.timeseries.diagnostics.stability import StabilityDiagnostics
@@ -48,7 +49,8 @@ def test_stability_diagnostics():
     # 2 equations, 1 lag -> 2 roots
     assert len(roots) == 2
     assert diag.is_stable()
-    
-    cusum = diag.ols_cusum()
-    assert "process" in cusum
-    assert "bounds" in cusum
+
+    # ols_cusum is not implemented; it must raise rather than silently
+    # return a zero process with fixed +/-1.0 bounds.
+    with pytest.raises(NotImplementedError):
+        diag.ols_cusum()

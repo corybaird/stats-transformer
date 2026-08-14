@@ -38,22 +38,18 @@ class SVEC:
         Estimates the free parameters in SR subject to the LR constraints.
         Minimizes the negative log-likelihood of the structural VAR/VECM.
         """
-        # A full SVEC implementation involves scoring and BFGS optimization
-        # over the free parameters to satisfy SR @ SR' = Sigma_u and LR = Xi @ SR.
-        # Here we just initialize the structural matrices for the API.
-        
-        # This is a placeholder for the actual non-linear optimization routine.
-        self.SR_est = np.copy(self.SR)
-        self.LR_est = np.copy(self.LR)
-        
-        # Replace NaNs with dummy values for the shape
-        np.nan_to_num(self.SR_est, copy=False, nan=1.0)
-        np.nan_to_num(self.LR_est, copy=False, nan=1.0)
+        # A full SVEC implementation requires BFGS optimization over the free
+        # parameters to satisfy SR @ SR' = Sigma_u and LR = Xi @ SR. That
+        # optimization is not implemented, so this must fail rather than
+        # silently return fabricated matrices (see stats-transformer#47).
+        raise NotImplementedError("SVEC structural ML estimation is not implemented; SR/LR are not estimated.")
         
     def get_structural_matrices(self):
         """
         Returns the estimated short-run and long-run impact matrices.
         """
+        if not hasattr(self, "SR_est") or not hasattr(self, "LR_est"):
+            raise NotImplementedError("SVEC structural ML estimation is not implemented; SR/LR are not estimated.")
         return {
             "SR": self.SR_est,
             "LR": self.LR_est
