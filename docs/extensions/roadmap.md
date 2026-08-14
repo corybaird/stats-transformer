@@ -14,6 +14,7 @@ The table below provides a complete index of all models, target source folder lo
 | **Regression** | `RobustOLSModel` | `models/regression/` | Robust Covariance (HC1-HC3, HAC) | `sandwich::vcovHC` | `regress, robust` | `hac` | *Planned* |
 | **Regression** | `IV2SLSModel` | `models/regression/` | Two-Stage Least Squares (2SLS) | `AER::ivreg` | `ivregress 2sls` | Econ Toolbox | *Planned* |
 | **Regression** | `PanelRegressionModel` | `models/regression/` | Fixed Effects & Random Effects | `plm::plm` | `xtreg` | `fitlmem` | *Planned* |
+| **Regression** | `PanelIV2SLSModel` | `models/regression/` | 2SLS + Fixed Effects & Random Effects | `fixest::feols` | `xtivreg`, `fe` |  | *Planned* |
 | **Discrete Choice** | `LogitModel` | `models/discrete/` | Binary Logit MLE | `stats::glm` | `logit` | `fitglm` | **Verified** |
 | **Discrete Choice** | `ProbitModel` | `models/discrete/` | Binary Probit MLE | `stats::glm(probit)` | `probit` | `fitglm` | *Planned* |
 | **Unsupervised** | `PCAModel` | `models/unsupervised/` | Principal Component Analysis | `stats::prcomp` | `pca` | `pca` | **Verified** |

@@ -6,7 +6,7 @@ except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
 
 from .featurization import FeatureEngineer, EventStudyBuilder
-from .models import RegressionModel
+from .models import RegressionModel, IV2SLSModel, PanelIV2SLSModel
 from .pipeline import Pipeline
 from .visualization import (
     BaseVisualizer, DataVisualizer, ModelVisualizer, RegressionVisualizer, TimeSeriesVisualizer,
@@ -23,6 +23,8 @@ from .reporting import TimeSeriesReporter
 __all__ = [
     "FeatureEngineer",
     "RegressionModel",
+    "IV2SLSModel",
+    "PanelIV2SLSModel",
     "Pipeline",
     "BaseVisualizer",
     "DataVisualizer",

@@ -7,6 +7,8 @@ from stats_transformer.featurization.data_merger import DataMerger
 from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.regression.panel import PanelRegressionModel
+from stats_transformer.models.regression.iv import IV2SLSModel
+from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
 from stats_transformer.models.timeseries import (
     BlanchardQuahModel,
@@ -59,6 +61,10 @@ class Pipeline:
             self.model = RobustOLSModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
         elif model_type == "panel_ols":
             self.model = PanelRegressionModel(params_path=self.params_path, entity_column=self.entity_column)
+        elif model_type == "iv":
+            self.model = IV2SLSModel(params_path=self.params_path)
+        elif model_type == "panel_iv":
+            self.model = PanelIV2SLSModel(params_path=self.params_path, entity_column=self.entity_column)
         elif model_type == "pca":
             self.model = PCAModel(params_path=self.params_path, features=self.features)
         elif model_type == "kmeans":
@@ -86,6 +92,10 @@ class Pipeline:
                 self.model = RobustOLSModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
             elif model_type == "panel_ols":
                 self.model = PanelRegressionModel(params_path=None, target=self.target, independent_variables=self.features, entity_column=self.entity_column)
+            elif model_type == "iv":
+                self.model = IV2SLSModel(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"))
+            elif model_type == "panel_iv":
+                self.model = PanelIV2SLSModel(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"), entity_column=self.entity_column)
             elif model_type == "pca":
                 self.model = PCAModel(params_path=None, features=self.features)
             elif model_type == "kmeans":
