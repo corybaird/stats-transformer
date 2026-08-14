@@ -7,9 +7,10 @@ from stats_transformer.models.regression.regression import RegressionModel
 class IV2SLSModel(RegressionModel):
     def __init__(self, target=None, independent_variables=None, instruments=None, endogenous=None, cov_type="robust", **kwargs):
         super().__init__(target=target, independent_variables=independent_variables, **kwargs)
-        self.instruments = instruments or []
-        self.endogenous = endogenous or []
-        self.cov_type = cov_type
+        model_params = self.params.get("model", {}) if self.params else {}
+        self.instruments = model_params.get("instruments", instruments or [])
+        self.endogenous = model_params.get("endogenous", endogenous or [])
+        self.cov_type = model_params.get("cov_type", cov_type)
 
     def _get_required_columns(self):
         columns = super()._get_required_columns()

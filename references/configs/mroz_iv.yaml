@@ -2,7 +2,7 @@ data:
   raw_data_file: data/examples/regression/mroz.csv
 
 model:
-  model_type: iv_2sls
+  model_type: iv
   target_variable: lwage
   independent_variables:
     - exper
