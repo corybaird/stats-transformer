@@ -1509,7 +1509,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -2285,7 +2285,7 @@ wheels = [
 
 [[package]]
 name = "stats-transformer"
-version = "1.5.0"
+version = "1.5.1"
 source = { editable = "." }
 dependencies = [
     { name = "jupyter" },
@@ -2296,17 +2296,20 @@ dependencies = [
     { name = "pyarrow" },
     { name = "pyreadstat" },
     { name = "pyyaml" },
-    { name = "rpy2" },
     { name = "scikit-learn" },
     { name = "seaborn" },
     { name = "statsmodels" },
     { name = "xarray" },
 ]
 
+[package.optional-dependencies]
+benchmarks = [
+    { name = "rpy2" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
-    { name = "rpy2" },
 ]
 
 [package.metadata]
@@ -2319,18 +2322,16 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=19.0.0" },
     { name = "pyreadstat", specifier = ">=1.3.4" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "rpy2", specifier = ">=3.6.7" },
+    { name = "rpy2", marker = "extra == 'benchmarks'", specifier = ">=3.6.7" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "statsmodels", specifier = ">=0.14.6" },
     { name = "xarray", specifier = ">=2026.7.0" },
 ]
+provides-extras = ["benchmarks"]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=9.0.3" },
-    { name = "rpy2", specifier = ">=3.6.7" },
-]
+dev = [{ name = "pytest", specifier = ">=9.0.3" }]
 
 [[package]]
 name = "statsmodels"
