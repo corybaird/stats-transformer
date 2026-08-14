@@ -2,7 +2,21 @@ import pytest
 import pandas as pd
 import os
 import shutil
+import yaml
+from pathlib import Path
 from stats_transformer.pipeline import Pipeline
+from stats_transformer.models.regression.regression import RegressionModel
+from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from stats_transformer.models.regression.panel import PanelRegressionModel
+from stats_transformer.models.regression.iv import IV2SLSModel
+from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
+from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
+from stats_transformer.models.timeseries import (
+    BlanchardQuahModel,
+    ProxySVARModel,
+    SignZeroSVARModel,
+    LocalProjectionsIVModel,
+)
 
 def test_pipeline_run_regression():
     # Setup
@@ -52,3 +66,87 @@ def test_pipeline_fit_transform_from_constructor_args():
     assert transformed is not None
     assert pipeline.model_results is not None
     assert "metrics" in pipeline.model_results
+
+
+MODEL_TYPE_DISPATCH = [
+    ("ols", RegressionModel),
+    ("robust_ols", RobustOLSModel),
+    ("panel_ols", PanelRegressionModel),
+    ("iv", IV2SLSModel),
+    ("panel_iv", PanelIV2SLSModel),
+    ("pca", PCAModel),
+    ("kmeans", KMeansModel),
+    ("blanchard_quah", BlanchardQuahModel),
+    ("proxy_svar", ProxySVARModel),
+    ("sign_restrictions", SignZeroSVARModel),
+    ("lp_iv", LocalProjectionsIVModel),
+]
+
+
+@pytest.mark.parametrize("model_type,expected_cls", MODEL_TYPE_DISPATCH)
+def test_pipeline_dispatches_model_type_from_params(tmp_path, model_type, expected_cls):
+    config_path = tmp_path / "params.yaml"
+    model_config = {"model_type": model_type, "target_variable": "y", "independent_variables": ["x1"]}
+    data_config = {}
+    if model_type in ("panel_ols", "panel_iv"):
+        data_config = {"featurization": {"entity_column": "country"}}
+    if model_type == "iv":
+        model_config["endogenous"] = ["x2"]
+        model_config["instruments"] = ["z1"]
+    elif model_type == "panel_iv":
+        model_config["panel_iv"] = {"endogenous": ["x2"], "instruments": ["z1"]}
+    config_path.write_text(yaml.dump({"model": model_config, "data": data_config}))
+
+    pipeline = Pipeline(params_path=str(config_path))
+    pipeline._initialize_from_params()
+
+    assert isinstance(pipeline.model, expected_cls)
+
+
+def test_mroz_iv_config_dispatches_iv_with_endogenous_and_instruments():
+    pipeline = Pipeline(params_path="references/configs/mroz_iv.yaml")
+    pipeline._initialize_from_params()
+
+    assert isinstance(pipeline.model, IV2SLSModel)
+    assert pipeline.model.endogenous == ["educ"]
+    assert pipeline.model.instruments == ["motheduc", "fatheduc"]
+
+
+def test_pipeline_raises_on_unknown_model_type(tmp_path):
+    config_path = tmp_path / "params.yaml"
+    config_path.write_text(yaml.dump({"model": {"model_type": "not_a_real_model"}}))
+
+    pipeline = Pipeline(params_path=str(config_path))
+    with pytest.raises(ValueError, match="Unknown model_type"):
+        pipeline._initialize_from_params()
+
+
+def test_pipeline_raises_on_unknown_stage():
+    pipeline = Pipeline(params_path="references/configs/test_pipeline.yaml")
+    with pytest.raises(ValueError, match="Unknown stage"):
+        pipeline.run(stage="regresion")
+
+
+def test_models_star_import_does_not_raise():
+    import stats_transformer.models as models_module
+    for name in models_module.__all__:
+        assert hasattr(models_module, name), f"__all__ entry '{name}' is not importable"
+
+
+@pytest.mark.parametrize("config_path", sorted(Path("references/configs").glob("*.yaml")))
+def test_pipeline_configs_dispatch_to_declared_model_type(config_path):
+    with open(config_path, "r") as f:
+        params = yaml.safe_load(f)
+    model_type = (params or {}).get("model", {}).get("model_type")
+    if model_type is None:
+        pytest.skip(f"{config_path} has no model.model_type (not a Pipeline params file)")
+
+    expected_by_type = dict(MODEL_TYPE_DISPATCH)
+    expected_cls = expected_by_type.get(model_type)
+    if expected_cls is None:
+        pytest.fail(f"{config_path} uses model_type '{model_type}', which is not a recognized dispatch key")
+
+    pipeline = Pipeline(params_path=str(config_path))
+    pipeline._initialize_from_params()
+
+    assert isinstance(pipeline.model, expected_cls), f"{config_path}: model_type '{model_type}' dispatched to {type(pipeline.model).__name__}, expected {expected_cls.__name__}"
