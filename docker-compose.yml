@@ -8,7 +8,7 @@ services:
     environment:
       - R_AVAILABLE=1
     command: >
-      bash -c "uv sync && uv run python -m pytest tests/integration/ -v"
+      bash -c "uv sync --extra benchmarks && uv run python -m pytest tests/integration/ -v"
 
   r-benchmarks:
     build:
@@ -19,4 +19,4 @@ services:
     environment:
       - R_AVAILABLE=1
     command: >
-      bash -c "uv sync && uv run python -m src.examples.software_benchmarks.benchmark_suite"
+      bash -c "uv sync --extra benchmarks && uv run python -m src.examples.software_benchmarks.benchmark_suite"
