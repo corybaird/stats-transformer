@@ -86,12 +86,13 @@ Structural VAR models isolate structural shocks $\epsilon_t$ from reduced-form e
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/svar.py`, `blanchard_quah.py`
 - **Benchmark Target**: R `vars::SVAR` / Blanchard & Quah (1989).
 
-### 3.2 Structural VECM (`SVECModel`)
+### 3.2 Structural VECM (`SVEC`) — *Planned*
 
 - **Description**: Combining cointegration rank restrictions $\beta$ with structural short-run and long-run restrictions.
 - **Identification**: Separates permanent shocks (matching cointegration rank $r$) from transitory shocks.
 - **Module Location**: `src/stats_transformer/models/timeseries/structural/svec.py`
 - **Benchmark Target**: R `vars::SVEC` / King, Plosser, Stock, and Watson (1991).
+- **Status**: the class wrapper and SR/LR restriction API exist, but the ML optimization estimating the free structural parameters is not implemented; constructing `SVEC` raises `NotImplementedError`.
 
 ### 3.3 Sign & Zero Restrictions (`SignZeroSVARModel`)
 

@@ -1,14 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from stats_transformer.visualization.charts.base_chart import BaseChart
 
-class RestrictionHeatmap(BaseChart):
+class RestrictionHeatmap:
     """
     Visualizes the restriction mapping (variables vs shocks).
     """
     def __init__(self, restrictions, variables, shocks):
-        super().__init__()
         self.restrictions = restrictions
         self.variables = variables
         self.shocks = shocks
@@ -42,13 +40,12 @@ class RestrictionHeatmap(BaseChart):
         ax.set_title("Impact Matrix Restrictions (h=0)")
         return ax
 
-class SwathePlot(BaseChart):
+class SwathePlot:
     """
-    Visualizes the distribution of accepted IRFs (pointwise quantiles) 
+    Visualizes the distribution of accepted IRFs (pointwise quantiles)
     overlaid with the representative draw.
     """
     def __init__(self, bootstrap_results, representative_draw, variables, shocks):
-        super().__init__()
         self.bootstrap_results = bootstrap_results
         self.representative_draw = representative_draw
         self.variables = variables

@@ -58,9 +58,8 @@ class StabilityDiagnostics:
         Computes the OLS-CUSUM empirical fluctuation process.
         Returns the process and 95% critical bounds.
         """
-        # A full OLS-CUSUM requires recursive residuals or empirical fluctuation process.
-        # This is a placeholder for the diagnostic output structure.
-        return {
-            "process": np.zeros(self.res.nobs),
-            "bounds": {"lower": -1.0, "upper": 1.0}
-        }
+        # A full OLS-CUSUM requires recursive residuals and the empirical
+        # fluctuation process, which is not implemented. Must fail rather
+        # than silently return a zero process with fixed bounds (see
+        # stats-transformer#47).
+        raise NotImplementedError("OLS-CUSUM is not implemented.")
