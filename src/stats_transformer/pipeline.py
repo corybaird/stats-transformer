@@ -57,7 +57,9 @@ class Pipeline:
         self.feature_engineer = FeatureEngineer(params_path=self.params_path)
         
         model_type = params.get("model", {}).get("model_type", "ols").lower()
-        if model_type == "robust_ols":
+        if model_type == "ols":
+            self.model = RegressionModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
+        elif model_type == "robust_ols":
             self.model = RobustOLSModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
         elif model_type == "panel_ols":
             self.model = PanelRegressionModel(params_path=self.params_path, entity_column=self.entity_column)
@@ -74,11 +76,11 @@ class Pipeline:
         elif model_type == "proxy_svar":
             self.model = ProxySVARModel(params_path=self.params_path)
         elif model_type == "sign_restrictions":
-            self.model = SignRestrictionsSVARModel(params_path=self.params_path)
+            self.model = SignZeroSVARModel(params_path=self.params_path)
         elif model_type == "lp_iv":
             self.model = LocalProjectionsIVModel(params_path=self.params_path)
         else:
-            self.model = RegressionModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
+            raise ValueError(f"Unknown model_type '{model_type}'. Valid values: ols, robust_ols, panel_ols, iv, panel_iv, pca, kmeans, blanchard_quah, proxy_svar, sign_restrictions, lp_iv")
 
     def _initialize_from_args(self):
         if not self.entity_column:
@@ -88,7 +90,9 @@ class Pipeline:
         
         if self.target or self.features:
             model_type = self.kwargs.get("model_type", "ols").lower()
-            if model_type == "robust_ols":
+            if model_type == "ols":
+                self.model = RegressionModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
+            elif model_type == "robust_ols":
                 self.model = RobustOLSModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
             elif model_type == "panel_ols":
                 self.model = PanelRegressionModel(params_path=None, target=self.target, independent_variables=self.features, entity_column=self.entity_column)
@@ -105,11 +109,11 @@ class Pipeline:
             elif model_type == "proxy_svar":
                 self.model = ProxySVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
             elif model_type == "sign_restrictions":
-                self.model = SignRestrictionsSVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
+                self.model = SignZeroSVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
             elif model_type == "lp_iv":
                 self.model = LocalProjectionsIVModel(params_path=None, target_variable=self.target, shock_variable=self.features[0] if self.features else None)
             else:
-                self.model = RegressionModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
+                raise ValueError(f"Unknown model_type '{model_type}'. Valid values: ols, robust_ols, panel_ols, iv, panel_iv, pca, kmeans, blanchard_quah, proxy_svar, sign_restrictions, lp_iv")
 
     def fit_transform(self, data, fit_model=True):
         self.logger.info("Starting pipeline fit_transform")
@@ -244,6 +248,10 @@ class Pipeline:
         else:
             raise ValueError("Pipeline.run() requires a params_path")
 
+        valid_stages = {"resample", "features", "eda", "regression", "visualization"}
+        if stage is not None and stage not in valid_stages:
+            raise ValueError(f"Unknown stage '{stage}'. Valid values: {sorted(valid_stages)}, or None for a full run")
+
         if stage == "resample":
             data_config = params.get("data", {})
             datasets_config = data_config.get("datasets", [])
@@ -305,7 +313,7 @@ class Pipeline:
             return self.create_visualizations(output_dir=viz_output_dir)
         
         else:
-            # Full run
+            # Full run (stage is None)
             data_config = params.get("data", {})
             datasets_config = data_config.get("datasets", [])
             resampled = []
