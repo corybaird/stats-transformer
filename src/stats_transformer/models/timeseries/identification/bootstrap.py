@@ -1,7 +1,10 @@
+import logging
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.api import VAR
 from stats_transformer.models.timeseries.identification.sign_zero import SignZeroSVARModel
+
+logger = logging.getLogger(__name__)
 
 class SVARBootstrap:
     """
@@ -27,8 +30,8 @@ class SVARBootstrap:
         5. Run the restriction sampler to find accepted draws
         6. Store the representative draw (median target) for the bootstrap sample
         """
-        np.random.seed(self.seed)
-        
+        rng = np.random.default_rng(self.seed)
+
         var_res = self.svar_model.var_result
         if var_res is None:
             raise ValueError("The SVAR model must be fitted before running bootstrap.")
@@ -49,7 +52,7 @@ class SVARBootstrap:
         
         for b in range(self.n_bootstrap):
             # Resample residuals with replacement
-            idx = np.random.randint(0, T_res, size=T_res)
+            idx = rng.integers(0, T_res, size=T_res)
             u_star = resid[idx]
             
             # Reconstruct series y_star
@@ -68,14 +71,17 @@ class SVARBootstrap:
             if self.svar_model.date_column:
                 df_star[self.svar_model.date_column] = self.svar_model.df_clean[self.svar_model.date_column].values
                 
-            # Create a new SVAR model instance to evaluate restrictions
+            # Create a new SVAR model instance to evaluate restrictions.
+            # Vary the seed per replicate so the rotation search does not
+            # repeat identical draws across bootstrap samples.
             b_model = SignZeroSVARModel(
                 target_variables=self.svar_model.target_variables,
                 config_path=self.svar_model.config_path,
                 date_column=self.svar_model.date_column,
                 maxlags=self.svar_model.maxlags,
                 max_draws=self.svar_model.max_draws,
-                required_accepts=self.svar_model.required_accepts
+                required_accepts=self.svar_model.required_accepts,
+                seed=self.seed + b + 1
             )
             
             # Fit and evaluate
@@ -86,8 +92,10 @@ class SVARBootstrap:
                     rep_draw = b_model.get_representative_draw()
                     self.bootstrap_results.append(rep_draw)
             except Exception as e:
-                # If a bootstrap sample fails to find a valid draw, we skip it
-                pass
+                # If a bootstrap sample fails to find a valid draw, we skip it,
+                # but log so "every draw failed" is distinguishable from "no
+                # draws accepted" (see stats-transformer#47).
+                logger.warning(f"Bootstrap replicate {b} failed: {e}")
                 
         return self.bootstrap_results
 

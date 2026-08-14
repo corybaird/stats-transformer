@@ -11,7 +11,7 @@ class SignZeroSVARModel(ModelBase):
     SVAR Model with Sign, Zero, and Narrative restrictions.
     Evaluates configurations loaded from a YAML schema.
     """
-    def __init__(self, target_variables=None, config_path=None, date_column=None, maxlags=1, max_draws=10000, required_accepts=100, **kwargs):
+    def __init__(self, target_variables=None, config_path=None, date_column=None, maxlags=1, max_draws=10000, required_accepts=100, seed=42, **kwargs):
         target = target_variables[0] if target_variables else "dummy"
         indep = target_variables[1:] if target_variables and len(target_variables) > 1 else ["dummy"]
         super().__init__(target=target, independent_variables=indep, **kwargs)
@@ -22,6 +22,7 @@ class SignZeroSVARModel(ModelBase):
         self.maxlags = maxlags
         self.max_draws = max_draws
         self.required_accepts = required_accepts
+        self.seed = seed
         
         self.var_result = None
         self.accepted_rotations = []
@@ -104,12 +105,12 @@ class SignZeroSVARModel(ModelBase):
         var_to_idx = {v: i for i, v in enumerate(self.target_variables)}
         shock_to_idx = {s: i for i, s in enumerate(self.shocks)}
         
-        np.random.seed(42) # For reproducibility in the sampling
-        
+        rng = np.random.default_rng(self.seed) # For reproducibility in the sampling
+
         while draws < self.max_draws and accepts < self.required_accepts:
             draws += 1
             # 1. Generate random orthogonal matrix (Haar measure via QR)
-            W = np.random.normal(size=(k, k))
+            W = rng.normal(size=(k, k))
             Q, R = np.linalg.qr(W)
             # Normalize sign of diagonal of R to ensure uniform Haar measure
             Q = Q @ np.diag(np.sign(np.diag(R)))
