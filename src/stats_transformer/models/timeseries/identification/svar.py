@@ -4,8 +4,10 @@ from statsmodels.tsa.vector_ar.svar_model import SVAR
 from stats_transformer.models.base import ModelBase
 
 class SVARModel(ModelBase):
+    _is_multivariate = True
+
     def __init__(self, target_variables=None, date_column=None, svar_type='A', A=None, B=None, maxlags=None, **kwargs):
-        super().__init__(target=target_variables[0] if target_variables else "dummy", independent_variables=["dummy"], **kwargs)
+        super().__init__(**kwargs)
         self.target_variables = target_variables or []
         self.date_column = date_column
         self.svar_type = svar_type

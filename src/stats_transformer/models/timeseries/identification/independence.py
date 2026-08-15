@@ -11,10 +11,10 @@ class IndependenceSVARModel(ModelBase):
     Minimizes the distance covariance between the recovered structural shocks.
     Uses the exact O(T^2) calculation for empirical distance covariance.
     """
+    _is_multivariate = True
+
     def __init__(self, target_variables=None, maxlags=1, n_starts=5, seed=42, **kwargs):
-        target = target_variables[0] if target_variables else "dummy"
-        indep = target_variables[1:] if target_variables and len(target_variables) > 1 else ["dummy"]
-        super().__init__(target=target, independent_variables=indep, **kwargs)
+        super().__init__(**kwargs)
 
         self.target_variables = target_variables or []
         self.maxlags = maxlags

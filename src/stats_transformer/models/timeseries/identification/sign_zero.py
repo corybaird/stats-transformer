@@ -11,10 +11,10 @@ class SignZeroSVARModel(ModelBase):
     SVAR Model with Sign, Zero, and Narrative restrictions.
     Evaluates configurations loaded from a YAML schema.
     """
+    _is_multivariate = True
+
     def __init__(self, target_variables=None, config_path=None, date_column=None, maxlags=1, max_draws=10000, required_accepts=100, seed=42, **kwargs):
-        target = target_variables[0] if target_variables else "dummy"
-        indep = target_variables[1:] if target_variables and len(target_variables) > 1 else ["dummy"]
-        super().__init__(target=target, independent_variables=indep, **kwargs)
+        super().__init__(**kwargs)
         self.target_variables = target_variables or []
         self.config_path = config_path
         self.date_column = date_column

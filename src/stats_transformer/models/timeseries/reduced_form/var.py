@@ -4,8 +4,10 @@ from statsmodels.tsa.api import VAR
 from stats_transformer.models.base import ModelBase
 
 class VARModel(ModelBase):
+    _is_multivariate = True
+
     def __init__(self, target_variables=None, date_column=None, maxlags=None, ic=None, mask=None, **kwargs):
-        super().__init__(target=target_variables[0] if target_variables else "dummy", independent_variables=["dummy"], **kwargs)
+        super().__init__(**kwargs)
         self.target_variables = target_variables or []
         self.date_column = date_column
         self.maxlags = maxlags
