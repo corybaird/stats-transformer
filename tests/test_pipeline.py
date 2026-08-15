@@ -8,40 +8,40 @@ from stats_transformer.pipeline import Pipeline
 from stats_transformer.models.registry import MODEL_REGISTRY
 from stats_transformer.models.regression.iv import IV2SLSModel
 
-def test_pipeline_run_regression():
+def test_pipeline_run_regression(project_root):
     # Setup
-    config_path = "references/configs/test_pipeline.yaml"
-    temp_dir = "data/temp"
-    os.makedirs(temp_dir, exist_ok=True)
-    
-    pipeline = Pipeline(params_path=config_path)
-    
+    config_path = project_root / "references" / "configs" / "test_pipeline.yaml"
+    temp_dir = project_root / "data" / "temp"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
+    pipeline = Pipeline(params_path=str(config_path))
+
     # Run the regression stage
     results = pipeline.run(stage="regression")
-    
+
+    summary_path = temp_dir / "test_summary.json"
     assert results is not None
     assert "metrics" in results
     assert "r_squared" in results["metrics"]
-    assert os.path.exists("data/temp/test_summary.json")
-    
-    # Clean up
-    if os.path.exists("data/temp/test_summary.json"):
-        os.remove("data/temp/test_summary.json")
+    assert summary_path.exists()
 
-def test_pipeline_fit_transform():
-    config_path = "references/configs/test_pipeline.yaml"
-    pipeline = Pipeline(params_path=config_path)
-    
-    df = pd.read_csv("tests/data/test_data.csv")
-    transformed = pipeline.fit_transform(df)
-    
+    # Clean up
+    if summary_path.exists():
+        summary_path.unlink()
+
+def test_pipeline_fit_transform(project_root, test_df):
+    config_path = project_root / "references" / "configs" / "test_pipeline.yaml"
+    pipeline = Pipeline(params_path=str(config_path))
+
+    transformed = pipeline.fit_transform(test_df)
+
     assert transformed is not None
     assert "y" in transformed.columns
     assert "x1" in transformed.columns
     assert pipeline.model_results is not None
     assert "metrics" in pipeline.model_results
 
-def test_pipeline_fit_transform_from_constructor_args():
+def test_pipeline_fit_transform_from_constructor_args(test_df):
     pipeline = Pipeline(
         entity_column="country",
         target="y",
@@ -50,8 +50,7 @@ def test_pipeline_fit_transform_from_constructor_args():
         model_type="ols",
     )
 
-    df = pd.read_csv("tests/data/test_data.csv")
-    transformed = pipeline.fit_transform(df)
+    transformed = pipeline.fit_transform(test_df)
 
     assert transformed is not None
     assert pipeline.model_results is not None
@@ -81,9 +80,9 @@ def test_pipeline_dispatches_model_type_from_params(tmp_path, model_type, expect
     assert isinstance(pipeline.model, expected_cls)
 
 
-def test_pipeline_construction_validates_config_before_dispatch():
-    config_path = "references/configs/mroz_iv.yaml"
-    pipeline = Pipeline(params_path=config_path)
+def test_pipeline_construction_validates_config_before_dispatch(project_root):
+    config_path = project_root / "references" / "configs" / "mroz_iv.yaml"
+    pipeline = Pipeline(params_path=str(config_path))
     # _get_config() runs Config.validate(); a config with an unknown or
     # underspecified model_type must fail here, before any model is built.
     pipeline._get_config()
@@ -100,8 +99,9 @@ def test_pipeline_configs_pass_validation_or_are_not_pipeline_configs(config_pat
     pipeline._get_config()  # must not raise
 
 
-def test_mroz_iv_config_dispatches_iv_with_endogenous_and_instruments():
-    pipeline = Pipeline(params_path="references/configs/mroz_iv.yaml")
+def test_mroz_iv_config_dispatches_iv_with_endogenous_and_instruments(project_root):
+    config_path = project_root / "references" / "configs" / "mroz_iv.yaml"
+    pipeline = Pipeline(params_path=str(config_path))
     pipeline._initialize_from_params()
 
     assert isinstance(pipeline.model, IV2SLSModel)
@@ -118,21 +118,22 @@ def test_pipeline_raises_on_unknown_model_type(tmp_path):
         pipeline._initialize_from_params()
 
 
-def test_pipeline_raises_on_unknown_stage():
-    pipeline = Pipeline(params_path="references/configs/test_pipeline.yaml")
+def test_pipeline_raises_on_unknown_stage(project_root):
+    config_path = project_root / "references" / "configs" / "test_pipeline.yaml"
+    pipeline = Pipeline(params_path=str(config_path))
     with pytest.raises(ValueError, match="Unknown stage"):
         pipeline.run(stage="regresion")
 
 
-def test_pipeline_predict_raises_not_implemented_for_unsupported_model():
+def test_pipeline_predict_raises_not_implemented_for_unsupported_model(project_root, test_df):
     # No model in stats_transformer currently implements predict(); calling
     # Pipeline.predict() must fail explicitly rather than with a confusing
     # AttributeError from inside the model.
-    pipeline = Pipeline(params_path="references/configs/test_pipeline.yaml")
-    df = pd.read_csv("tests/data/test_data.csv")
-    pipeline.fit_transform(df)
+    config_path = project_root / "references" / "configs" / "test_pipeline.yaml"
+    pipeline = Pipeline(params_path=str(config_path))
+    pipeline.fit_transform(test_df)
     with pytest.raises(NotImplementedError, match="does not implement predict"):
-        pipeline.predict(df)
+        pipeline.predict(test_df)
 
 
 def test_models_star_import_does_not_raise():
