@@ -71,6 +71,7 @@ ignore_missing_imports = true
 files = [
     "src/stats_transformer/utils/config.py",
     "src/stats_transformer/models/base.py",
+    "src/stats_transformer/pipeline.py",
 ]
 
 [dependency-groups]
