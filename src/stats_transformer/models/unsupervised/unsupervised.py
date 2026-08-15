@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
@@ -12,17 +13,17 @@ from stats_transformer.models.base import ModelBase
 class UnsupervisedModel(ModelBase):
     # Base class for unsupervised models bypassing some statsmodels assumptions
 
-    def __init__(self, params_path=None, features=None, n_components=2, model_type="pca", **kwargs):
+    def __init__(self, params_path: Optional[str] = None, features: Optional[List[str]] = None, n_components: int = 2, model_type: str = "pca", **kwargs: Any) -> None:
         super().__init__(params_path=params_path, target=features[0] if features else "dummy", independent_variables=features, **kwargs)
         self.features = self.independent_variables
         self.n_components = n_components
         self.model_type = model_type
         self.scaler = StandardScaler()
 
-    def _get_required_columns(self):
+    def _get_required_columns(self) -> List[str]:
         return self.features
 
-    def load_data(self, data):
+    def load_data(self, data: Union[str, pd.DataFrame]) -> pd.DataFrame:
         self.logger.info("Loading data for UnsupervisedModel")
         self.df = pd.read_csv(data) if isinstance(data, str) and data.endswith(".csv") else (pd.read_parquet(data) if isinstance(data, str) else data.copy())
         required = self._get_required_columns()
@@ -34,13 +35,13 @@ class UnsupervisedModel(ModelBase):
         self.X_scaled = self.scaler.fit_transform(self.X)
         return self.df_clean
 
-    def get_summary(self):
+    def get_summary(self) -> str:
         return f"{self.model_type} Model with {self.n_components} components"
 
-    def get_model_metrics(self):
+    def get_model_metrics(self) -> Dict[str, Any]:
         return {}
 
-    def get_model_metadata(self, metrics=None):
+    def get_model_metadata(self, metrics: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         return {
             "model_version": self.model_version,
             "creation_timestamp": datetime.now().isoformat(),
@@ -51,17 +52,18 @@ class UnsupervisedModel(ModelBase):
 class PCAModel(UnsupervisedModel):
     # Principal Component Analysis
 
-    def __init__(self, params_path=None, features=None, n_components=2, **kwargs):
+    def __init__(self, params_path: Optional[str] = None, features: Optional[List[str]] = None, n_components: int = 2, **kwargs: Any) -> None:
         super().__init__(params_path=params_path, features=features, n_components=n_components, model_type="PCA", **kwargs)
 
-    def build_model(self):
+    def build_model(self) -> PCA:
+        assert self.df_clean is not None  # set by load_data, called via fit() before build_model()
         self.model = PCA(n_components=self.n_components)
         self.transformed_X = self.model.fit_transform(self.X_scaled)
         for i in range(self.n_components):
             self.df_clean[f'pca_{i+1}'] = self.transformed_X[:, i]
         return self.model
 
-    def get_model_metrics(self):
+    def get_model_metrics(self) -> Dict[str, Any]:
         if not self.model:
             return {}
         return {
@@ -69,7 +71,7 @@ class PCAModel(UnsupervisedModel):
             "cumulative_variance": float(np.sum(self.model.explained_variance_ratio_))
         }
 
-    def get_summary(self):
+    def get_summary(self) -> str:
         if not self.model:
             return "PCA Model not trained"
         var_ratios = self.model.explained_variance_ratio_
@@ -79,8 +81,9 @@ class PCAModel(UnsupervisedModel):
         res.append(f"Total variance explained: {np.sum(var_ratios):.4f}")
         return "\n".join(res)
 
-    def run(self, data_path=None, output_path=None):
+    def run(self, data_path: Optional[str] = None, output_path: Optional[str] = None) -> pd.DataFrame:
         self.fit(data_path)
+        assert self.df_clean is not None  # set by fit() -> load_data()
         if output_path:
             self.df_clean.to_csv(output_path, index=False)
         return self.df_clean
@@ -88,17 +91,18 @@ class PCAModel(UnsupervisedModel):
 class KMeansModel(UnsupervisedModel):
     # K-Means Clustering
 
-    def __init__(self, params_path=None, features=None, n_clusters=3, **kwargs):
+    def __init__(self, params_path: Optional[str] = None, features: Optional[List[str]] = None, n_clusters: int = 3, **kwargs: Any) -> None:
         super().__init__(params_path=params_path, features=features, n_components=n_clusters, model_type="KMeans", **kwargs)
         self.n_clusters = n_clusters
 
-    def build_model(self):
+    def build_model(self) -> KMeans:
+        assert self.df_clean is not None  # set by load_data, called via fit() before build_model()
         self.model = KMeans(n_clusters=self.n_clusters, random_state=42)
         self.cluster_labels = self.model.fit_predict(self.X_scaled)
         self.df_clean['cluster'] = self.cluster_labels
         return self.model
 
-    def get_model_metrics(self):
+    def get_model_metrics(self) -> Dict[str, Any]:
         if not self.model:
             return {}
         return {
@@ -107,13 +111,14 @@ class KMeansModel(UnsupervisedModel):
             "cluster_centers": self.model.cluster_centers_.tolist()
         }
 
-    def get_summary(self):
+    def get_summary(self) -> str:
         if not self.model:
             return "KMeans Model not trained"
         return f"KMeans Clustering (k={self.n_clusters}) - Inertia: {self.model.inertia_:.2f}"
 
-    def run(self, data_path=None, output_path=None):
+    def run(self, data_path: Optional[str] = None, output_path: Optional[str] = None) -> pd.DataFrame:
         self.fit(data_path)
+        assert self.df_clean is not None  # set by fit() -> load_data()
         if output_path:
             self.df_clean.to_csv(output_path, index=False)
         return self.df_clean
