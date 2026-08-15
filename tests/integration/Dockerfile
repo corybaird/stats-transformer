@@ -17,8 +17,10 @@ RUN apt-get update && apt-get install -y \
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
 
-# Install R packages
-RUN Rscript -e 'options(warn=2); install.packages(c("vars", "svars", "jsonlite", "lmtest", "sandwich", "AER", "plm", "tsDyn"), repos="https://cloud.r-project.org/")'
+# Install R packages. Raise the default download timeout (60s) -- building
+# several of these from source over a non-datacenter connection routinely
+# exceeds it well before the build itself is actually stuck.
+RUN Rscript -e 'options(warn=2, timeout=600); install.packages(c("vars", "svars", "jsonlite", "lmtest", "sandwich", "AER", "plm", "tsDyn"), repos="https://cloud.r-project.org/")'
 
 WORKDIR /app
 
