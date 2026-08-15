@@ -50,9 +50,32 @@ Changelog = "https://github.com/corybaird/stats-transformer/blob/main/CHANGELOG.
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+# Narrow, blocking ruleset: real correctness bugs only (undefined names,
+# undefined __all__ entries, syntax errors) -- exactly the class of bug
+# that let SignRestrictionsSVARModel (a name that didn't exist) reach
+# runtime undetected. Broader style rules are deliberately not enabled
+# here; the repo has ~250 pre-existing violations under ruff's default
+# ruleset that would need a dedicated cleanup pass first.
+select = ["F821", "F822", "E9"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+# Narrow include list, expanded as files gain annotations. See
+# docs/extensions/roadmap.md for the annotation plan.
+files = ["src/stats_transformer/utils/config.py"]
+
 [dependency-groups]
 dev = [
+    "mypy>=1.14",
     "pytest>=9.0.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.9",
 ]
 
 [tool.hatch.build.targets.sdist]

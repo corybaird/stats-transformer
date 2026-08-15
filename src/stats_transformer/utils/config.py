@@ -22,7 +22,7 @@ class Config:
             **kwargs: Additional configuration parameters to override or supplement
         """
         self.logger = logging.getLogger(__name__)
-        self.config = {}
+        self.config: Dict[str, Any] = {}
         
         # Load from file if provided
         if config_path:

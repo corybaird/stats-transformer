@@ -15,4 +15,7 @@ jobs:
       - uses: astral-sh/setup-uv@v3
       - run: uv python install ${{ matrix.python-version }}
       - run: uv sync
-      - run: uv run pytest
+      - run: uv run ruff check src/ tests/
+      - run: uv run pytest --cov=stats_transformer --cov-report=term-missing --cov-fail-under=64
+      - run: uv run mypy
+        continue-on-error: true
