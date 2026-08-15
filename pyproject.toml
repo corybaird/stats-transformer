@@ -19,7 +19,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "jupyter>=1.1.1",
     "linearmodels>=7.0",
     "matplotlib>=3.10.9",
     "openpyxl>=3.1.5",
@@ -36,6 +35,12 @@ dependencies = [
 [project.optional-dependencies]
 benchmarks = [
     "rpy2>=3.6.7",
+]
+notebooks = [
+    "jupyter>=1.1.1",
+]
+all = [
+    "stats-transformer[benchmarks,notebooks]",
 ]
 
 [project.urls]

@@ -2288,7 +2288,6 @@ name = "stats-transformer"
 version = "1.5.1"
 source = { editable = "." }
 dependencies = [
-    { name = "jupyter" },
     { name = "linearmodels" },
     { name = "matplotlib" },
     { name = "openpyxl" },
@@ -2303,8 +2302,15 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+all = [
+    { name = "jupyter" },
+    { name = "rpy2" },
+]
 benchmarks = [
     { name = "rpy2" },
+]
+notebooks = [
+    { name = "jupyter" },
 ]
 
 [package.dev-dependencies]
@@ -2314,7 +2320,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "jupyter", marker = "extra == 'notebooks'", specifier = ">=1.1.1" },
     { name = "linearmodels", specifier = ">=7.0" },
     { name = "matplotlib", specifier = ">=3.10.9" },
     { name = "openpyxl", specifier = ">=3.1.5" },
@@ -2325,10 +2331,11 @@ requires-dist = [
     { name = "rpy2", marker = "extra == 'benchmarks'", specifier = ">=3.6.7" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "stats-transformer", extras = ["benchmarks", "notebooks"], marker = "extra == 'all'" },
     { name = "statsmodels", specifier = ">=0.14.6" },
     { name = "xarray", specifier = ">=2026.7.0" },
 ]
-provides-extras = ["benchmarks"]
+provides-extras = ["benchmarks", "notebooks", "all"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=9.0.3" }]

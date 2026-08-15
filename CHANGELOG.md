@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- `jupyter` is no longer a hard runtime dependency; install `stats-transformer[notebooks]` to run the notebooks under `notebooks/`. `rpy2` remains under `stats-transformer[benchmarks]` (moved in 1.5.1). A new `stats-transformer[all]` extra installs both.
+- Pipeline's `model_type` dispatch now reads from a central registry (`stats_transformer.models.registry.MODEL_REGISTRY`) instead of two duplicated if/elif chains. Six previously-unreachable models are now dispatchable via `Pipeline`: `logit`, `var`, `vecm`, `svar`, `volatility_svar`, `independence_svar`. `LogitModel` and `UnsupervisedModel` are now exported from `stats_transformer.models`.
+- `Pipeline` now validates `params_path` configs (model_type is a known registry key, required fields are present) before building a model, via a revived `Config.validate()`.
+
 ## [1.5.1] - 2026-08-14
 
 ### Fixed
