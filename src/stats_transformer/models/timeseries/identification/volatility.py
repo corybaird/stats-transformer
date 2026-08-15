@@ -22,7 +22,13 @@ class VolatilitySVARModel(ModelBase):
         self.var_result = None
         self.structural_impact = None
         self.lambda_diag = None # Structural variances in regime 2 relative to regime 1
-        
+
+    def _get_required_columns(self):
+        cols = list(self.target_variables)
+        if self.regime_column and self.regime_column not in cols:
+            cols.append(self.regime_column)
+        return cols
+
     def build_model(self):
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
