@@ -6,13 +6,16 @@ import sys
 import yaml
 from datetime import datetime
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Union
 
 class ModelBase(ABC):
 
-    def __init__(self, params_path=None, target=None, independent_variables=None, add_entity_fixed_effects=False, entity_column=None, **kwargs):
+    time_column: Optional[str] = None
+
+    def __init__(self, params_path: Optional[str] = None, target: Optional[str] = None, independent_variables: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, entity_column: Optional[str] = None, **kwargs: Any) -> None:
         self._setup_logging()
-        self.params = {}
-        
+        self.params: Dict[str, Any] = {}
+
         if params_path:
             self.params = self._load_params(params_path)
             self.target = self.params.get("model", {}).get("target_variable", target)
@@ -33,21 +36,21 @@ class ModelBase(ABC):
         if not self.independent_variables:
             raise ValueError("Independent variables must be specified")
             
-        self.df = None
-        self.df_clean = None
-        self.X = None
-        self.y = None
-        self.model = None
+        self.df: Optional[pd.DataFrame] = None
+        self.df_clean: Optional[pd.DataFrame] = None
+        self.X: Optional[pd.DataFrame] = None
+        self.y: Optional[Union[pd.Series, pd.DataFrame]] = None
+        self.model: Optional[Any] = None
         self.model_version = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    def _is_running_in_jupyter(self):
+    def _is_running_in_jupyter(self) -> bool:
         try:
             from IPython import get_ipython
             return get_ipython() is not None
         except ImportError:
             return False
 
-    def _setup_logging(self):
+    def _setup_logging(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         if self._is_running_in_jupyter():
             self.logger.setLevel(logging.CRITICAL + 1)
@@ -62,7 +65,7 @@ class ModelBase(ABC):
                 handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
                 self.logger.addHandler(handler)
 
-    def _load_params(self, params_path):
+    def _load_params(self, params_path: str) -> Dict[str, Any]:
         try:
             with open(params_path, "r") as f:
                 params = yaml.safe_load(f)
@@ -70,9 +73,9 @@ class ModelBase(ABC):
         except FileNotFoundError:
             raise FileNotFoundError(f"Parameter file {params_path} not found.")
 
-    def load_data(self, data):
+    def load_data(self, data: Union[str, pd.DataFrame]) -> pd.DataFrame:
         self.logger.info("Loading data")
-        if type(data) == str:
+        if isinstance(data, str):
             self.df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
         else:
             self.df = data.copy()
@@ -98,7 +101,7 @@ class ModelBase(ABC):
             raise ValueError("DataFrame is empty after dropping NaNs.")
         return self.df_clean
 
-    def _get_required_columns(self):
+    def _get_required_columns(self) -> List[str]:
         columns = list(self.independent_variables) + [self.target]
         if getattr(self, "entity_column", None) and self.entity_column not in columns:
             columns.append(self.entity_column)
@@ -107,18 +110,18 @@ class ModelBase(ABC):
         return columns
 
     @abstractmethod
-    def build_model(self):
+    def build_model(self) -> Any:
         pass
 
     @abstractmethod
-    def get_summary(self):
+    def get_summary(self) -> Any:
         pass
 
     @abstractmethod
-    def get_model_metrics(self):
+    def get_model_metrics(self) -> Dict[str, Any]:
         pass
 
-    def get_model_metadata(self, metrics=None):
+    def get_model_metadata(self, metrics: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if metrics is None:
             metrics = self.get_model_metrics()
 
@@ -159,7 +162,7 @@ class ModelBase(ABC):
         }
         return metadata
 
-    def save_model_metadata(self, metrics, output_dir="models"):
+    def save_model_metadata(self, metrics: Dict[str, Any], output_dir: str = "models") -> str:
         os.makedirs(output_dir, exist_ok=True)
         metadata = self.get_model_metadata(metrics)
         metadata_path = os.path.join(output_dir, f"model_{self.model_version}_metadata.json")
@@ -167,7 +170,7 @@ class ModelBase(ABC):
             json.dump(metadata, f, indent=4)
         return metadata_path
 
-    def fit(self, data):
+    def fit(self, data: Union[str, pd.DataFrame]) -> Dict[str, Any]:
         self.load_data(data)
         if hasattr(self, 'df_clean') and self.df_clean is not None:
             self.df_clean = self.df_clean.dropna()

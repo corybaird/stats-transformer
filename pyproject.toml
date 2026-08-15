@@ -68,7 +68,10 @@ python_version = "3.12"
 ignore_missing_imports = true
 # Narrow include list, expanded as files gain annotations. See
 # docs/extensions/roadmap.md for the annotation plan.
-files = ["src/stats_transformer/utils/config.py"]
+files = [
+    "src/stats_transformer/utils/config.py",
+    "src/stats_transformer/models/base.py",
+]
 
 [dependency-groups]
 dev = [
