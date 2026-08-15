@@ -130,25 +130,58 @@ class ModelBase(ABC):
     def get_model_metrics(self) -> Dict[str, Any]:
         pass
 
+    def _extract_single_equation_coefficients(self) -> Dict[str, Any]:
+        assert self.model is not None  # guarded by the caller
+        conf_int = self.model.conf_int() if hasattr(self.model, "conf_int") else None
+        coefficients = {}
+        for var in self.model.params.index:
+            coefficients[var] = {
+                "value": float(self.model.params[var]),
+                "std_err": float(self.model.bse[var]) if hasattr(self.model, "bse") else None,
+                "t_value": float(self.model.tvalues[var]) if hasattr(self.model, "tvalues") else None,
+                "p_value": float(self.model.pvalues[var]) if hasattr(self.model, "pvalues") else None,
+                "ci_lower": float(conf_int.loc[var, 0]) if isinstance(conf_int, pd.DataFrame) else None,
+                "ci_upper": float(conf_int.loc[var, 1]) if isinstance(conf_int, pd.DataFrame) else None
+            }
+        return coefficients
+
+    def _extract_system_coefficients(self) -> Dict[str, Any]:
+        # System models (VAR/VECM/SVAR) report one column of coefficients per
+        # equation, so params is a DataFrame indexed by term. Mirrors the
+        # accessor pattern in reporting/timeseries/adapters.py.
+        assert self.model is not None  # guarded by the caller
+        params = self.model.params
+        stderr = getattr(self.model, "stderr", None)
+        tvalues = getattr(self.model, "tvalues", None)
+        pvalues = getattr(self.model, "pvalues", None)
+
+        coefficients: Dict[str, Any] = {}
+        for equation in params.columns:
+            terms = {}
+            for term in params.index:
+                terms[term] = {
+                    "value": float(params.loc[term, equation]),
+                    "std_err": float(stderr.loc[term, equation]) if isinstance(stderr, pd.DataFrame) else None,
+                    "t_value": float(tvalues.loc[term, equation]) if isinstance(tvalues, pd.DataFrame) else None,
+                    "p_value": float(pvalues.loc[term, equation]) if isinstance(pvalues, pd.DataFrame) else None
+                }
+            coefficients[str(equation)] = terms
+        return coefficients
+
     def get_model_metadata(self, metrics: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if metrics is None:
             metrics = self.get_model_metrics()
 
-        coefficients = {}
+        coefficients: Dict[str, Any] = {}
         if hasattr(self, "model") and self.model is not None and hasattr(self.model, "params"):
             try:
-                conf_int = self.model.conf_int()
-                for var in self.model.params.index:
-                    coefficients[var] = {
-                        "value": float(self.model.params[var]),
-                        "std_err": float(self.model.bse[var]) if hasattr(self.model, "bse") else None,
-                        "t_value": float(self.model.tvalues[var]) if hasattr(self.model, "tvalues") else None,
-                        "p_value": float(self.model.pvalues[var]) if hasattr(self.model, "pvalues") else None,
-                        "ci_lower": float(conf_int.loc[var, 0]) if type(conf_int) == pd.DataFrame else None,
-                        "ci_upper": float(conf_int.loc[var, 1]) if type(conf_int) == pd.DataFrame else None
-                    }
-            except Exception as e:
+                if isinstance(self.model.params, pd.DataFrame):
+                    coefficients = self._extract_system_coefficients()
+                else:
+                    coefficients = self._extract_single_equation_coefficients()
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
                 self.logger.warning(f"Could not extract coefficients: {e}")
+                coefficients = {"error": f"{type(e).__name__}: {e}"}
 
         summary_stats: Dict[str, Any] = {}
         if hasattr(self, "model") and self.model is not None:
