@@ -9,19 +9,20 @@ import statsmodels.api as sm
 import sys
 import yaml
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 from stats_transformer.models.base import ModelBase
 
 class RegressionResults:
 
-    def __init__(self, model):
+    def __init__(self, model: Any) -> None:
         self.model = model
-        
+
     @property
-    def summary(self):
+    def summary(self) -> str:
         return str(self.model.summary())
-    
+
     @property
-    def metrics(self):
+    def metrics(self) -> Dict[str, Any]:
         return {
             "r_squared": self.model.rsquared,
             "adj_r_squared": self.model.rsquared_adj,
@@ -32,28 +33,28 @@ class RegressionResults:
             "condition_number": self.model.condition_number,
             "num_observations": self.model.nobs,
         }
-    
+
     @property
-    def params(self):
+    def params(self) -> pd.Series:
         return self.model.params
-    
+
     @property
-    def pvalues(self):
+    def pvalues(self) -> pd.Series:
         return self.model.pvalues
-    
+
     @property
-    def conf_int(self):
+    def conf_int(self) -> pd.DataFrame:
         return self.model.conf_int()
 
 class RegressionModel(ModelBase):
 
-    def __init__(self, params_path=None, target=None, independent_variables=None, add_entity_fixed_effects=False, entity_column=None, **kwargs):
+    def __init__(self, params_path: Optional[str] = None, target: Optional[str] = None, independent_variables: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, entity_column: Optional[str] = None, **kwargs: Any) -> None:
         super().__init__(params_path=params_path, target=target, independent_variables=independent_variables, add_entity_fixed_effects=add_entity_fixed_effects, entity_column=entity_column, **kwargs)
         if self.add_entity_fixed_effects and not self.entity_column:
             self.logger.warning("Entity fixed effects requested but entity_column not specified.")
 
 
-    def split_xy(self, drop_na=True):
+    def split_xy(self, drop_na: bool = True) -> Tuple[pd.DataFrame, pd.Series]:
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
 
@@ -76,9 +77,10 @@ class RegressionModel(ModelBase):
 
         return self.X, self.y
 
-    def build_model(self, drop_na=True):
+    def build_model(self, drop_na: bool = True) -> Any:
         if self.X is None or self.y is None:
             self.split_xy(drop_na=drop_na)
+        assert self.X is not None and self.y is not None  # set by split_xy above
 
         x_numeric = self.X.select_dtypes(include=[np.number])
         if np.isnan(x_numeric.values).any() or np.isinf(x_numeric.values).any() or np.isnan(self.y.values).any() or np.isinf(self.y.values).any():
@@ -92,7 +94,7 @@ class RegressionModel(ModelBase):
         self.model = sm.OLS(self.y, self.X).fit()
         return self.model
 
-    def fit(self, df, drop_na=True):
+    def fit(self, df: pd.DataFrame, drop_na: bool = True) -> Dict[str, Any]:
         required_cols = self._get_required_columns()
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -108,12 +110,12 @@ class RegressionModel(ModelBase):
         self.build_model(drop_na=False)
         return self.get_model_metrics()
 
-    def get_summary(self):
+    def get_summary(self) -> str:
         if self.model is None:
             raise ValueError("Model not trained")
         return str(self.model.summary())
 
-    def get_model_metrics(self):
+    def get_model_metrics(self) -> Dict[str, Any]:
         if self.model is None:
             raise ValueError("Model not trained")
         return {
@@ -128,16 +130,16 @@ class RegressionModel(ModelBase):
         }
 
     @property
-    def results(self):
+    def results(self) -> Optional[RegressionResults]:
         return RegressionResults(self.model) if self.model else None
 
-    def summary(self):
+    def summary(self) -> str:
         return self.get_summary()
 
-    def get_results(self):
+    def get_results(self) -> Optional[RegressionResults]:
         return self.results
 
-    def save_summary_to_json(self, output_path="regression_summary.json"):
+    def save_summary_to_json(self, output_path: str = "regression_summary.json") -> None:
         if self.model is None:
             raise ValueError("Model not trained")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -151,7 +153,7 @@ class RegressionModel(ModelBase):
         with open(output_path, "w") as f:
             json.dump(summary_dict, f, indent=4)
 
-    def save_latex_table(self, output_path="regression_table.tex", float_format="%.3f", caption=None, label=None):
+    def save_latex_table(self, output_path: str = "regression_table.tex", float_format: str = "%.3f", caption: Optional[str] = None, label: Optional[str] = None) -> pd.DataFrame:
         if self.model is None:
             raise ValueError("Model not trained")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -168,7 +170,7 @@ class RegressionModel(ModelBase):
             f.write(latex_table)
         return results_df
 
-    def run(self, data_path=None, output_path=None):
+    def run(self, data_path: Optional[str] = None, output_path: Optional[str] = None) -> Dict[str, Any]:
         if not data_path and self.params:
             data_path = self.params.get("data", {}).get("featurization", {}).get("output_path")
         if not output_path and self.params:

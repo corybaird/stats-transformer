@@ -1,32 +1,19 @@
 import logging
 import os
-import yaml
 import pandas as pd
+from typing import Any, Dict, List, Optional, Union
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 from stats_transformer.featurization.data_merger import DataMerger
-from stats_transformer.models.regression.regression import RegressionModel
-from stats_transformer.models.regression.robust_ols import RobustOLSModel
-from stats_transformer.models.regression.panel import PanelRegressionModel
-from stats_transformer.models.regression.iv import IV2SLSModel
-from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
-from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
-from stats_transformer.models.timeseries import (
-    BlanchardQuahModel,
-    LocalProjectionsIVModel,
-    ProxySVARModel,
-    SignZeroSVARModel,
-    VolatilitySVARModel,
-    IndependenceSVARModel,
-    SVARModel,
-    VARModel,
-)
 from stats_transformer.visualization.models.regression_viz import RegressionVisualizer
 from stats_transformer.visualization.eda.data_viz import DataVisualizer
 from stats_transformer.visualization.eda.eda import EDAVisualizer
+from stats_transformer.models.base import ModelBase
+from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
+from stats_transformer.utils.config import Config
 
 class Pipeline:
 
-    def __init__(self, params_path=None, transformations=None, entity_column=None, date_column="date", target=None, features=None, add_entity_fixed_effects=False, **kwargs):
+    def __init__(self, params_path: Optional[str] = None, transformations: Optional[List[Dict[str, Any]]] = None, entity_column: Optional[str] = None, date_column: str = "date", target: Optional[str] = None, features: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, **kwargs: Any) -> None:
         self.logger = logging.getLogger(__name__)
         self.params_path = params_path
         self.entity_column = entity_column
@@ -36,15 +23,21 @@ class Pipeline:
         self.transformations = transformations
         self.add_entity_fixed_effects = add_entity_fixed_effects
         self.kwargs = kwargs
-        self.feature_engineer = None
-        self.model = None
-        self.transformed_data = None
-        self.model_results = None
+        self.feature_engineer: Optional[FeatureEngineer] = None
+        self.model: Optional[ModelBase] = None
+        self.transformed_data: Optional[pd.DataFrame] = None
+        self.model_results: Optional[Dict[str, Any]] = None
+        self._config: Optional[Config] = None
 
-    def _initialize_from_params(self):
-        with open(self.params_path, "r") as f:
-            params = yaml.safe_load(f)
-        
+    def _get_config(self) -> Config:
+        if self._config is None:
+            self._config = Config(config_path=self.params_path)
+            self._config.validate()
+        return self._config
+
+    def _initialize_from_params(self) -> None:
+        params = self._get_config().to_dict()
+
         if not self.target:
             self.target = params.get("model", {}).get("target_variable")
         
@@ -55,141 +48,145 @@ class Pipeline:
             self.entity_column = params.get("data", {}).get("featurization", {}).get("entity_column")
         
         self.feature_engineer = FeatureEngineer(params_path=self.params_path)
-        
-        model_type = params.get("model", {}).get("model_type", "ols").lower()
-        if model_type == "ols":
-            self.model = RegressionModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
-        elif model_type == "robust_ols":
-            self.model = RobustOLSModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
-        elif model_type == "panel_ols":
-            self.model = PanelRegressionModel(params_path=self.params_path, entity_column=self.entity_column)
-        elif model_type == "iv":
-            self.model = IV2SLSModel(params_path=self.params_path)
-        elif model_type == "panel_iv":
-            self.model = PanelIV2SLSModel(params_path=self.params_path, entity_column=self.entity_column)
-        elif model_type == "pca":
-            self.model = PCAModel(params_path=self.params_path, features=self.features)
-        elif model_type == "kmeans":
-            self.model = KMeansModel(params_path=self.params_path, features=self.features)
-        elif model_type == "blanchard_quah":
-            self.model = BlanchardQuahModel(params_path=self.params_path)
-        elif model_type == "proxy_svar":
-            self.model = ProxySVARModel(params_path=self.params_path)
-        elif model_type == "sign_restrictions":
-            self.model = SignZeroSVARModel(params_path=self.params_path)
-        elif model_type == "lp_iv":
-            self.model = LocalProjectionsIVModel(params_path=self.params_path)
-        else:
-            raise ValueError(f"Unknown model_type '{model_type}'. Valid values: ols, robust_ols, panel_ols, iv, panel_iv, pca, kmeans, blanchard_quah, proxy_svar, sign_restrictions, lp_iv")
 
-    def _initialize_from_args(self):
+        model_type = params.get("model", {}).get("model_type", "ols").lower()
+        model_type = MODEL_TYPE_ALIASES.get(model_type, model_type)
+        entry = self._resolve_registry_entry(model_type)
+        self.model = self._build_from_params(entry)
+
+    def _initialize_from_args(self) -> None:
         if not self.entity_column:
             raise ValueError("entity_column must be specified when not using params_path")
-        
+
         self.feature_engineer = FeatureEngineer(params_path=None, transformations=self.transformations, entity_column=self.entity_column, date_column=self.date_column)
-        
+
         if self.target or self.features:
             model_type = self.kwargs.get("model_type", "ols").lower()
-            if model_type == "ols":
-                self.model = RegressionModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
-            elif model_type == "robust_ols":
-                self.model = RobustOLSModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
-            elif model_type == "panel_ols":
-                self.model = PanelRegressionModel(params_path=None, target=self.target, independent_variables=self.features, entity_column=self.entity_column)
-            elif model_type == "iv":
-                self.model = IV2SLSModel(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"))
-            elif model_type == "panel_iv":
-                self.model = PanelIV2SLSModel(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"), entity_column=self.entity_column)
-            elif model_type == "pca":
-                self.model = PCAModel(params_path=None, features=self.features)
-            elif model_type == "kmeans":
-                self.model = KMeansModel(params_path=None, features=self.features)
-            elif model_type == "blanchard_quah":
-                self.model = BlanchardQuahModel(params_path=None, target_variables=[self.target] + (self.features or []))
-            elif model_type == "proxy_svar":
-                self.model = ProxySVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
-            elif model_type == "sign_restrictions":
-                self.model = SignZeroSVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
-            elif model_type == "lp_iv":
-                self.model = LocalProjectionsIVModel(params_path=None, target_variable=self.target, shock_variable=self.features[0] if self.features else None)
-            else:
-                raise ValueError(f"Unknown model_type '{model_type}'. Valid values: ols, robust_ols, panel_ols, iv, panel_iv, pca, kmeans, blanchard_quah, proxy_svar, sign_restrictions, lp_iv")
+            model_type = MODEL_TYPE_ALIASES.get(model_type, model_type)
+            entry = self._resolve_registry_entry(model_type)
+            self.model = self._build_from_args(entry)
 
-    def fit_transform(self, data, fit_model=True):
+    def _resolve_registry_entry(self, model_type: str) -> Dict[str, Any]:
+        entry = MODEL_REGISTRY.get(model_type)
+        if entry is None:
+            valid = ", ".join(sorted(MODEL_REGISTRY))
+            raise ValueError(f"Unknown model_type '{model_type}'. Valid values: {valid}")
+        return entry
+
+    def _build_from_params(self, entry: Dict[str, Any]) -> ModelBase:
+        cls, kind = entry["cls"], entry["kind"]
+        if kind == "single_equation":
+            return cls(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
+        if kind == "panel":
+            return cls(params_path=self.params_path, entity_column=self.entity_column)
+        if kind == "iv":
+            return cls(params_path=self.params_path)
+        if kind == "panel_iv":
+            return cls(params_path=self.params_path, entity_column=self.entity_column)
+        if kind == "unsupervised":
+            return cls(params_path=self.params_path, features=self.features)
+        if kind == "svar_family":
+            return cls(params_path=self.params_path)
+        if kind == "lp_iv":
+            return cls(params_path=self.params_path)
+        raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
+
+    def _build_from_args(self, entry: Dict[str, Any]) -> ModelBase:
+        cls, kind = entry["cls"], entry["kind"]
+        if kind == "single_equation":
+            return cls(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
+        if kind == "panel":
+            return cls(params_path=None, target=self.target, independent_variables=self.features, entity_column=self.entity_column)
+        if kind == "iv":
+            return cls(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"))
+        if kind == "panel_iv":
+            return cls(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"), entity_column=self.entity_column)
+        if kind == "unsupervised":
+            return cls(params_path=None, features=self.features)
+        if kind == "svar_family":
+            return cls(params_path=None, target_variables=[self.target] + (self.features or []))
+        if kind == "lp_iv":
+            return cls(params_path=None, target_variable=self.target, shock_variable=self.features[0] if self.features else None)
+        raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
+
+    def fit_transform(self, data: Union[str, pd.DataFrame], fit_model: bool = True) -> pd.DataFrame:
         self.logger.info("Starting pipeline fit_transform")
         if self.params_path:
             self._initialize_from_params()
         else:
             self._initialize_from_args()
-        
-        if type(data) == str:
+
+        if isinstance(data, str):
             df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
         else:
             df = data.copy()
-        
+
         if self.feature_engineer:
             self.transformed_data = self.feature_engineer.fit_transform(df)
         else:
             raise ValueError("No feature engineering component initialized")
-        
+
         if fit_model and self.model and self.target:
             self.model.fit(self.transformed_data)
             self.model_results = self.model.get_model_metadata()
-        
+
         return self.transformed_data
 
-    def transform(self, data):
+    def transform(self, data: Union[str, pd.DataFrame]) -> Optional[pd.DataFrame]:
         if self.params_path:
             self._initialize_from_params()
         else:
             self._initialize_from_args()
-        
-        if type(data) == str:
+
+        if isinstance(data, str):
             df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
         else:
             df = data.copy()
-        
+
         if self.feature_engineer:
             self.transformed_data = self.feature_engineer.transform(df)
         return self.transformed_data
 
-    def predict(self, data=None):
+    def predict(self, data: Optional[Union[str, pd.DataFrame]] = None) -> Any:
         if not self.model or not hasattr(self.model, 'model') or self.model.model is None:
             raise ValueError("Model must be fitted before making predictions")
-        
+
+        data_to_predict: Optional[pd.DataFrame]
         if data is None:
             data_to_predict = self.transformed_data
-        elif type(data) == str:
+        elif isinstance(data, str):
             data_to_predict = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
         else:
             data_to_predict = data.copy()
-            
+
         if self.feature_engineer:
             data_to_predict = self.feature_engineer.transform(data_to_predict)
-        
+
+        if not hasattr(self.model, "predict"):
+            raise NotImplementedError(f"{type(self.model).__name__} does not implement predict(); no model in stats_transformer currently does.")
         return self.model.predict(data_to_predict)
 
-    def save_results(self, output_dir="reports"):
+    def save_results(self, output_dir: str = "reports") -> Dict[str, str]:
         import json
         from datetime import datetime
         os.makedirs(output_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        results = {}
-        
+        results: Dict[str, str] = {}
+
         if self.transformed_data is not None:
             data_path = os.path.join(output_dir, f"transformed_data_{timestamp}.csv")
             self.transformed_data.to_csv(data_path, index=False)
             results["transformed_data"] = data_path
-        
+
         if self.model_results is not None:
             stable_path = os.path.join(output_dir, "model_summary.json")
             with open(stable_path, "w") as f:
                 json.dump(self.model_results, f, indent=4)
             results["model_summary"] = stable_path
-        
+
         return results
 
-    def save_model_summary(self, output_path):
+    def save_model_summary(self, output_path: str) -> None:
         import json
         if self.model_results is None:
             return
@@ -197,15 +194,13 @@ class Pipeline:
         with open(output_path, "w") as f:
             json.dump(self.model_results, f, indent=4)
 
-    def create_visualizations(self, output_dir="reports/visualizations", visualization_types=None, display_only=False):
+    def create_visualizations(self, output_dir: str = "reports/visualizations", visualization_types: Optional[List[str]] = None, display_only: bool = False) -> Dict[str, Any]:
         if not self.model_results and not self.transformed_data:
             return {}
         
         viz_config = {}
         if self.params_path and os.path.exists(self.params_path):
-            with open(self.params_path, "r") as f:
-                params = yaml.safe_load(f)
-                viz_config = params.get("visualization", {})
+            viz_config = self._get_config().get("visualization", {})
         
         results = {}
         if self.model_results:
@@ -229,12 +224,12 @@ class Pipeline:
                 self.logger.error(f"Error creating data visualization: {e}")
         return results
 
-    def run(self, stage=None):
+    def run(self, stage: Optional[str] = None) -> Any:
         if self.params_path:
             self._initialize_from_params()
-            with open(self.params_path, "r") as f:
-                params = yaml.safe_load(f)
-            
+            assert self.feature_engineer is not None  # set unconditionally by _initialize_from_params
+            params = self._get_config().to_dict()
+
             data_config = params.get("data", {})
             raw_data_file = data_config.get("raw_data_file")
             merged_output_path = data_config.get("merge", {}).get("output_path", "data/pipeline/resampled_merged.parquet")
@@ -291,6 +286,7 @@ class Pipeline:
         
         elif stage == "regression":
             if processed_path and os.path.exists(processed_path):
+                assert self.model is not None  # set unconditionally by _initialize_from_params
                 transformed_data = pd.read_csv(processed_path)
                 self.transformed_data = transformed_data
                 self.model.fit(transformed_data)

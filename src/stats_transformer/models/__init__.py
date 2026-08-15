@@ -4,7 +4,8 @@ from .regression.robust_ols import RobustOLSModel
 from .regression.panel import PanelRegressionModel
 from .regression.iv import IV2SLSModel
 from .regression.panel_iv import PanelIV2SLSModel
-from .unsupervised.unsupervised import PCAModel, KMeansModel
+from .discrete.logit import LogitModel
+from .unsupervised.unsupervised import UnsupervisedModel, PCAModel, KMeansModel
 from .timeseries import (
     BlanchardQuahModel,
     LocalProjectionsModel,
@@ -26,6 +27,8 @@ __all__ = [
     "PanelRegressionModel",
     "IV2SLSModel",
     "PanelIV2SLSModel",
+    "LogitModel",
+    "UnsupervisedModel",
     "PCAModel",
     "KMeansModel",
     "BlanchardQuahModel",

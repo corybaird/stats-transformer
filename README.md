@@ -60,6 +60,12 @@ Or add it with `uv`:
 uv add stats-transformer
 ```
 
+To run the notebooks under `notebooks/`, install the `notebooks` extra:
+
+```bash
+pip install "stats-transformer[notebooks]"
+```
+
 For local development from this repository:
 
 ```bash
