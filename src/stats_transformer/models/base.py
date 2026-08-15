@@ -11,6 +11,11 @@ from typing import Any, Dict, List, Optional, Union
 class ModelBase(ABC):
 
     time_column: Optional[str] = None
+    # Multivariate (system) models have no dependent/independent split: every
+    # variable is endogenous. They set this True to opt out of the
+    # single-equation target/independent_variables contract, and report a
+    # symmetric "variables" list in metadata instead.
+    _is_multivariate: bool = False
 
     def __init__(self, params_path: Optional[str] = None, target: Optional[str] = None, independent_variables: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, entity_column: Optional[str] = None, **kwargs: Any) -> None:
         self._setup_logging()
@@ -31,10 +36,11 @@ class ModelBase(ABC):
             if kwargs:
                 self.params.update(kwargs)
 
-        if not self.target:
-            raise ValueError("Target variable must be specified")
-        if not self.independent_variables:
-            raise ValueError("Independent variables must be specified")
+        if not self._is_multivariate:
+            if not self.target:
+                raise ValueError("Target variable must be specified")
+            if not self.independent_variables:
+                raise ValueError("Independent variables must be specified")
             
         self.df: Optional[pd.DataFrame] = None
         self.df_clean: Optional[pd.DataFrame] = None
@@ -102,7 +108,10 @@ class ModelBase(ABC):
         return self.df_clean
 
     def _get_required_columns(self) -> List[str]:
-        columns = list(self.independent_variables) + [self.target]
+        if self._is_multivariate:
+            columns = list(getattr(self, "target_variables", []) or [])
+        else:
+            columns = list(self.independent_variables) + [self.target]
         if getattr(self, "entity_column", None) and self.entity_column not in columns:
             columns.append(self.entity_column)
         if getattr(self, "time_column", None) and self.time_column not in columns:
@@ -141,13 +150,19 @@ class ModelBase(ABC):
             except Exception as e:
                 self.logger.warning(f"Could not extract coefficients: {e}")
 
-        summary_stats = {}
+        summary_stats: Dict[str, Any] = {}
         if hasattr(self, "model") and self.model is not None:
-            summary_stats = {
-                "dependent_variable": self.target,
-                "independent_variables": self.independent_variables,
-                "model_type": type(self.model).__name__
-            }
+            if self._is_multivariate:
+                summary_stats = {
+                    "variables": list(getattr(self, "target_variables", []) or []),
+                    "model_type": type(self.model).__name__
+                }
+            else:
+                summary_stats = {
+                    "dependent_variable": self.target,
+                    "independent_variables": self.independent_variables,
+                    "model_type": type(self.model).__name__
+                }
             for attr in ["rsquared", "rsquared_adj", "fvalue", "f_pvalue", "llf", "aic", "bic", "nobs", "df_resid"]:
                 if hasattr(self.model, attr):
                     summary_stats[attr] = float(getattr(self.model, attr)) if attr not in ["nobs", "df_resid"] else int(getattr(self.model, attr))
