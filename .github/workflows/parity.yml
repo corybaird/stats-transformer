@@ -1,0 +1,14 @@
+name: R Parity Suite
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build R-provisioned test image
+        run: docker build -t stats-transformer-parity -f tests/integration/Dockerfile .
+      - name: Run R parity suite
+        run: docker run --rm -v ${{ github.workspace }}:/app -e R_AVAILABLE=1 stats-transformer-parity uv run python -m pytest tests/integration/ -v
