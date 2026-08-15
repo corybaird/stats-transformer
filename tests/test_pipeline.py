@@ -81,6 +81,25 @@ def test_pipeline_dispatches_model_type_from_params(tmp_path, model_type, expect
     assert isinstance(pipeline.model, expected_cls)
 
 
+def test_pipeline_construction_validates_config_before_dispatch():
+    config_path = "references/configs/mroz_iv.yaml"
+    pipeline = Pipeline(params_path=config_path)
+    # _get_config() runs Config.validate(); a config with an unknown or
+    # underspecified model_type must fail here, before any model is built.
+    pipeline._get_config()
+
+
+@pytest.mark.parametrize("config_path", sorted(Path("references/configs").glob("*.yaml")))
+def test_pipeline_configs_pass_validation_or_are_not_pipeline_configs(config_path):
+    with open(config_path, "r") as f:
+        params = yaml.safe_load(f)
+    if (params or {}).get("model", {}).get("target_variable") is None and (params or {}).get("model", {}).get("model_type") not in MODEL_REGISTRY:
+        pytest.skip(f"{config_path} is not a Pipeline params file")
+
+    pipeline = Pipeline(params_path=str(config_path))
+    pipeline._get_config()  # must not raise
+
+
 def test_mroz_iv_config_dispatches_iv_with_endogenous_and_instruments():
     pipeline = Pipeline(params_path="references/configs/mroz_iv.yaml")
     pipeline._initialize_from_params()

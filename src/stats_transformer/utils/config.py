@@ -115,11 +115,11 @@ class Config:
     def get_featurization_config(self) -> Dict[str, Any]:
         """
         Get featurization configuration.
-        
+
         Returns:
             Dictionary with featurization settings
         """
-        return self.get("featurization", {})
+        return self.get("data.featurization", {})
     
     def get_model_config(self) -> Dict[str, Any]:
         """
@@ -148,6 +148,39 @@ class Config:
         """
         return self.config.copy()
     
+    def validate(self) -> None:
+        """
+        Validate the loaded configuration against the model registry.
+
+        Checks that model.model_type (after alias resolution) is a known
+        registry key, and that models requiring target_variable /
+        independent_variables have them set. Raises ValueError on the
+        first problem found.
+        """
+        from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
+
+        model_config = self.get_model_config()
+        model_type = model_config.get("model_type", "ols").lower()
+        model_type = MODEL_TYPE_ALIASES.get(model_type, model_type)
+
+        entry = MODEL_REGISTRY.get(model_type)
+        if entry is None:
+            valid = ", ".join(sorted(MODEL_REGISTRY))
+            raise ValueError(f"Unknown model_type '{model_type}'. Valid values: {valid}")
+
+        kind = entry["kind"]
+        if kind in ("single_equation", "panel", "iv", "panel_iv"):
+            if not model_config.get("target_variable"):
+                raise ValueError(f"model_type '{model_type}' requires model.target_variable")
+            if not model_config.get("independent_variables"):
+                raise ValueError(f"model_type '{model_type}' requires model.independent_variables")
+        if kind in ("iv", "panel_iv"):
+            iv_config = model_config if kind == "iv" else model_config.get("panel_iv", {})
+            if not iv_config.get("endogenous"):
+                raise ValueError(f"model_type '{model_type}' requires endogenous variables")
+            if not iv_config.get("instruments"):
+                raise ValueError(f"model_type '{model_type}' requires instruments")
+
     def save_to_file(self, config_path: str) -> None:
         """
         Save configuration to YAML file.

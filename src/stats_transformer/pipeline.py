@@ -1,6 +1,5 @@
 import logging
 import os
-import yaml
 import pandas as pd
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 from stats_transformer.featurization.data_merger import DataMerger
@@ -8,6 +7,7 @@ from stats_transformer.visualization.models.regression_viz import RegressionVisu
 from stats_transformer.visualization.eda.data_viz import DataVisualizer
 from stats_transformer.visualization.eda.eda import EDAVisualizer
 from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
+from stats_transformer.utils.config import Config
 
 class Pipeline:
 
@@ -25,11 +25,17 @@ class Pipeline:
         self.model = None
         self.transformed_data = None
         self.model_results = None
+        self._config = None
+
+    def _get_config(self):
+        if self._config is None:
+            self._config = Config(config_path=self.params_path)
+            self._config.validate()
+        return self._config
 
     def _initialize_from_params(self):
-        with open(self.params_path, "r") as f:
-            params = yaml.safe_load(f)
-        
+        params = self._get_config().to_dict()
+
         if not self.target:
             self.target = params.get("model", {}).get("target_variable")
         
@@ -189,9 +195,7 @@ class Pipeline:
         
         viz_config = {}
         if self.params_path and os.path.exists(self.params_path):
-            with open(self.params_path, "r") as f:
-                params = yaml.safe_load(f)
-                viz_config = params.get("visualization", {})
+            viz_config = self._get_config().get("visualization", {})
         
         results = {}
         if self.model_results:
@@ -218,9 +222,8 @@ class Pipeline:
     def run(self, stage=None):
         if self.params_path:
             self._initialize_from_params()
-            with open(self.params_path, "r") as f:
-                params = yaml.safe_load(f)
-            
+            params = self._get_config().to_dict()
+
             data_config = params.get("data", {})
             raw_data_file = data_config.get("raw_data_file")
             merged_output_path = data_config.get("merge", {}).get("output_path", "data/pipeline/resampled_merged.parquet")
