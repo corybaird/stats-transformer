@@ -23,17 +23,18 @@ class BaseFeatureEngineer(ABC):
             params_path: Optional path to YAML configuration file
             **kwargs: Additional configuration parameters
         """
+        # Initialize logger first: _load_params logs on failure, so it must
+        # exist before params_path is loaded, not after.
+        self.logger = logging.getLogger(self.__class__.__name__)
+
         self.params = {}
         if params_path:
             self.params = self._load_params(params_path)
-        
+
         # Apply any kwargs to override params
         for key, value in kwargs.items():
             if key in self.params:
                 self.params[key] = value
-        
-        # Initialize logger
-        self.logger = logging.getLogger(self.__class__.__name__)
         
     def _load_params(self, params_path: str) -> Dict:
         """
