@@ -108,7 +108,7 @@ class SpecificationRunner:
                         'coef': kv_coef_data.get('value'),
                         'se': kv_coef_data.get('std_err'),
                         'pval': kv_coef_data.get('p_value'),
-                        'n_obs': metrics.get('nobs'),
+                        'n_obs': metrics.get('nobs', metrics.get('num_observations')),
                         'r2_within': metrics.get('rsquared_within', metrics.get('rsquared'))
                     }
                     
