@@ -4,25 +4,10 @@ import yaml
 import pandas as pd
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 from stats_transformer.featurization.data_merger import DataMerger
-from stats_transformer.models.regression.regression import RegressionModel
-from stats_transformer.models.regression.robust_ols import RobustOLSModel
-from stats_transformer.models.regression.panel import PanelRegressionModel
-from stats_transformer.models.regression.iv import IV2SLSModel
-from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
-from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
-from stats_transformer.models.timeseries import (
-    BlanchardQuahModel,
-    LocalProjectionsIVModel,
-    ProxySVARModel,
-    SignZeroSVARModel,
-    VolatilitySVARModel,
-    IndependenceSVARModel,
-    SVARModel,
-    VARModel,
-)
 from stats_transformer.visualization.models.regression_viz import RegressionVisualizer
 from stats_transformer.visualization.eda.data_viz import DataVisualizer
 from stats_transformer.visualization.eda.eda import EDAVisualizer
+from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
 
 class Pipeline:
 
@@ -55,65 +40,66 @@ class Pipeline:
             self.entity_column = params.get("data", {}).get("featurization", {}).get("entity_column")
         
         self.feature_engineer = FeatureEngineer(params_path=self.params_path)
-        
+
         model_type = params.get("model", {}).get("model_type", "ols").lower()
-        if model_type == "ols":
-            self.model = RegressionModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
-        elif model_type == "robust_ols":
-            self.model = RobustOLSModel(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
-        elif model_type == "panel_ols":
-            self.model = PanelRegressionModel(params_path=self.params_path, entity_column=self.entity_column)
-        elif model_type == "iv":
-            self.model = IV2SLSModel(params_path=self.params_path)
-        elif model_type == "panel_iv":
-            self.model = PanelIV2SLSModel(params_path=self.params_path, entity_column=self.entity_column)
-        elif model_type == "pca":
-            self.model = PCAModel(params_path=self.params_path, features=self.features)
-        elif model_type == "kmeans":
-            self.model = KMeansModel(params_path=self.params_path, features=self.features)
-        elif model_type == "blanchard_quah":
-            self.model = BlanchardQuahModel(params_path=self.params_path)
-        elif model_type == "proxy_svar":
-            self.model = ProxySVARModel(params_path=self.params_path)
-        elif model_type == "sign_restrictions":
-            self.model = SignZeroSVARModel(params_path=self.params_path)
-        elif model_type == "lp_iv":
-            self.model = LocalProjectionsIVModel(params_path=self.params_path)
-        else:
-            raise ValueError(f"Unknown model_type '{model_type}'. Valid values: ols, robust_ols, panel_ols, iv, panel_iv, pca, kmeans, blanchard_quah, proxy_svar, sign_restrictions, lp_iv")
+        model_type = MODEL_TYPE_ALIASES.get(model_type, model_type)
+        entry = self._resolve_registry_entry(model_type)
+        self.model = self._build_from_params(entry)
 
     def _initialize_from_args(self):
         if not self.entity_column:
             raise ValueError("entity_column must be specified when not using params_path")
-        
+
         self.feature_engineer = FeatureEngineer(params_path=None, transformations=self.transformations, entity_column=self.entity_column, date_column=self.date_column)
-        
+
         if self.target or self.features:
             model_type = self.kwargs.get("model_type", "ols").lower()
-            if model_type == "ols":
-                self.model = RegressionModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
-            elif model_type == "robust_ols":
-                self.model = RobustOLSModel(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
-            elif model_type == "panel_ols":
-                self.model = PanelRegressionModel(params_path=None, target=self.target, independent_variables=self.features, entity_column=self.entity_column)
-            elif model_type == "iv":
-                self.model = IV2SLSModel(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"))
-            elif model_type == "panel_iv":
-                self.model = PanelIV2SLSModel(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"), entity_column=self.entity_column)
-            elif model_type == "pca":
-                self.model = PCAModel(params_path=None, features=self.features)
-            elif model_type == "kmeans":
-                self.model = KMeansModel(params_path=None, features=self.features)
-            elif model_type == "blanchard_quah":
-                self.model = BlanchardQuahModel(params_path=None, target_variables=[self.target] + (self.features or []))
-            elif model_type == "proxy_svar":
-                self.model = ProxySVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
-            elif model_type == "sign_restrictions":
-                self.model = SignZeroSVARModel(params_path=None, target_variables=[self.target] + (self.features or []))
-            elif model_type == "lp_iv":
-                self.model = LocalProjectionsIVModel(params_path=None, target_variable=self.target, shock_variable=self.features[0] if self.features else None)
-            else:
-                raise ValueError(f"Unknown model_type '{model_type}'. Valid values: ols, robust_ols, panel_ols, iv, panel_iv, pca, kmeans, blanchard_quah, proxy_svar, sign_restrictions, lp_iv")
+            model_type = MODEL_TYPE_ALIASES.get(model_type, model_type)
+            entry = self._resolve_registry_entry(model_type)
+            self.model = self._build_from_args(entry)
+
+    def _resolve_registry_entry(self, model_type):
+        entry = MODEL_REGISTRY.get(model_type)
+        if entry is None:
+            valid = ", ".join(sorted(MODEL_REGISTRY))
+            raise ValueError(f"Unknown model_type '{model_type}'. Valid values: {valid}")
+        return entry
+
+    def _build_from_params(self, entry):
+        cls, kind = entry["cls"], entry["kind"]
+        if kind == "single_equation":
+            return cls(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
+        if kind == "panel":
+            return cls(params_path=self.params_path, entity_column=self.entity_column)
+        if kind == "iv":
+            return cls(params_path=self.params_path)
+        if kind == "panel_iv":
+            return cls(params_path=self.params_path, entity_column=self.entity_column)
+        if kind == "unsupervised":
+            return cls(params_path=self.params_path, features=self.features)
+        if kind == "svar_family":
+            return cls(params_path=self.params_path)
+        if kind == "lp_iv":
+            return cls(params_path=self.params_path)
+        raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
+
+    def _build_from_args(self, entry):
+        cls, kind = entry["cls"], entry["kind"]
+        if kind == "single_equation":
+            return cls(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
+        if kind == "panel":
+            return cls(params_path=None, target=self.target, independent_variables=self.features, entity_column=self.entity_column)
+        if kind == "iv":
+            return cls(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"))
+        if kind == "panel_iv":
+            return cls(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"), entity_column=self.entity_column)
+        if kind == "unsupervised":
+            return cls(params_path=None, features=self.features)
+        if kind == "svar_family":
+            return cls(params_path=None, target_variables=[self.target] + (self.features or []))
+        if kind == "lp_iv":
+            return cls(params_path=None, target_variable=self.target, shock_variable=self.features[0] if self.features else None)
+        raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
 
     def fit_transform(self, data, fit_model=True):
         self.logger.info("Starting pipeline fit_transform")

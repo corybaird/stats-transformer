@@ -5,18 +5,8 @@ import shutil
 import yaml
 from pathlib import Path
 from stats_transformer.pipeline import Pipeline
-from stats_transformer.models.regression.regression import RegressionModel
-from stats_transformer.models.regression.robust_ols import RobustOLSModel
-from stats_transformer.models.regression.panel import PanelRegressionModel
+from stats_transformer.models.registry import MODEL_REGISTRY
 from stats_transformer.models.regression.iv import IV2SLSModel
-from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
-from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
-from stats_transformer.models.timeseries import (
-    BlanchardQuahModel,
-    ProxySVARModel,
-    SignZeroSVARModel,
-    LocalProjectionsIVModel,
-)
 
 def test_pipeline_run_regression():
     # Setup
@@ -68,19 +58,7 @@ def test_pipeline_fit_transform_from_constructor_args():
     assert "metrics" in pipeline.model_results
 
 
-MODEL_TYPE_DISPATCH = [
-    ("ols", RegressionModel),
-    ("robust_ols", RobustOLSModel),
-    ("panel_ols", PanelRegressionModel),
-    ("iv", IV2SLSModel),
-    ("panel_iv", PanelIV2SLSModel),
-    ("pca", PCAModel),
-    ("kmeans", KMeansModel),
-    ("blanchard_quah", BlanchardQuahModel),
-    ("proxy_svar", ProxySVARModel),
-    ("sign_restrictions", SignZeroSVARModel),
-    ("lp_iv", LocalProjectionsIVModel),
-]
+MODEL_TYPE_DISPATCH = [(model_type, entry["cls"]) for model_type, entry in MODEL_REGISTRY.items()]
 
 
 @pytest.mark.parametrize("model_type,expected_cls", MODEL_TYPE_DISPATCH)
