@@ -43,6 +43,40 @@ def test_volatility_svar_model():
     lambdas = metrics['lambda_diag']
     assert len(lambdas) == 2
     
+def test_volatility_svar_fit_keeps_regime_column():
+    # Regression test: fit() must work through the public entry point.
+    # test_volatility_svar_model above assigns model.df_clean directly, which
+    # bypasses ModelBase.load_data -- that is why this bug went unnoticed.
+    np.random.seed(42)
+    T = 200
+
+    e1 = np.random.randn(T)
+    e2 = np.random.randn(T)
+    e1[100:] *= 2.0
+    e2[100:] *= 0.5
+
+    B = np.array([[1.0, 0.5], [0.3, 1.0]])
+    u = B @ np.vstack([e1, e2])
+
+    y = np.zeros((T, 2))
+    for t in range(1, T):
+        y[t] = 0.5 * y[t-1] + u[:, t]
+
+    regime = np.concatenate([np.zeros(100), np.ones(100)])
+    df = pd.DataFrame({'y1': y[:, 0], 'y2': y[:, 1], 'regime': regime})
+
+    model = VolatilitySVARModel(target_variables=['y1', 'y2'], regime_column='regime', maxlags=1)
+    metrics = model.fit(df)
+
+    assert 'lambda_diag' in metrics
+    assert len(metrics['lambda_diag']) == 2
+
+
+def test_volatility_svar_required_columns_include_regime():
+    model = VolatilitySVARModel(target_variables=['y1', 'y2'], regime_column='regime', maxlags=1)
+    assert 'regime' in model._get_required_columns()
+
+
 def test_independence_svar_model():
     np.random.seed(42)
     T = 100
