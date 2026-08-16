@@ -221,9 +221,15 @@ class RegressionVisualizer(ModelVisualizer):
         saved_files = []
         if type(X) != pd.DataFrame:
             X = pd.DataFrame(X, columns=[f"X{i+1}" for i in range(X.shape[1])])
+        # Resolve each column against the fitted model's exog names rather than
+        # by position in X: a fitted model with an intercept carries "const" at
+        # index 0, so positional indexing raises on the constant and silently
+        # skips the last regressor.
+        exog_names = list(getattr(getattr(model, "model", None), "exog_names", []) or [])
         for i, col in enumerate(X.columns):
+            exog_index = exog_names.index(col) if col in exog_names else i
             fig, ax = plt.subplots(figsize=(8, 6))
-            sm.graphics.plot_ccpr(model, i, ax=ax)
+            sm.graphics.plot_ccpr(model, exog_index, ax=ax)
             ax.set_title(f"Component-Plus-Residual Plot: {get_readable_label(col)}", fontsize=12, fontweight='bold')
             ax.grid(True, linestyle='--', alpha=0.7)
             saved_files.append(self.save_figure(fig, f"ccpr_{col}", subdir))
