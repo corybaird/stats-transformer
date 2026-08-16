@@ -6,10 +6,10 @@ from stats_transformer.models.base import ModelBase
 
 class ProxySVARModel(ModelBase):
 
+    _is_multivariate = True
+
     def __init__(self, target_variables=None, instrument_variable=None, date_column=None, maxlags=1, **kwargs):
-        target = target_variables[0] if target_variables else "dummy"
-        indep = target_variables[1:] if target_variables and len(target_variables) > 1 else ["dummy"]
-        super().__init__(target=target, independent_variables=indep, **kwargs)
+        super().__init__(**kwargs)
         self.target_variables = target_variables or []
         self.instrument_variable = instrument_variable
         self.date_column = date_column

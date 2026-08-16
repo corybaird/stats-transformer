@@ -4,8 +4,10 @@ from statsmodels.tsa.vector_ar.vecm import VECM
 from stats_transformer.models.base import ModelBase
 
 class VECMModel(ModelBase):
+    _is_multivariate = True
+
     def __init__(self, target_variables=None, date_column=None, k_ar_diff=1, deterministic='n', **kwargs):
-        super().__init__(target=target_variables[0] if target_variables else "dummy", independent_variables=["dummy"], **kwargs)
+        super().__init__(**kwargs)
         self.target_variables = target_variables or []
         self.date_column = date_column
         self.k_ar_diff = k_ar_diff
