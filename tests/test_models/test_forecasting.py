@@ -24,7 +24,7 @@ def test_var_forecaster_matches_statsmodels():
     np.testing.assert_allclose(upper_fc, sm_upper, rtol=1e-5)
 
 def test_forecast_evaluator_metrics():
-    from stats_transformer.models.timeseries.analysis.forecast_evaluation import ForecastEvaluator
+    from stats_transformer.models.timeseries.analysis.forecast_evaluation import RollingOriginEvaluator
     
     # Hand calculated data
     actual = np.array([[1.0, 2.0], [3.0, 4.0]])
@@ -36,23 +36,23 @@ def test_forecast_evaluator_metrics():
     # MAE:
     # col 0: (| -0.5 | + | 0.5 |) / 2 = 0.5
     # col 1: (| 0.5 | + | -0.5 |) / 2 = 0.5
-    mae = ForecastEvaluator.calculate_mae(actual, predicted)
+    mae = RollingOriginEvaluator.calculate_mae(actual, predicted)
     np.testing.assert_allclose(mae, [0.5, 0.5])
     
     # RMSE:
     # col 0: sqrt(((-0.5)^2 + 0.5^2)/2) = sqrt((0.25+0.25)/2) = sqrt(0.25) = 0.5
     # col 1: sqrt(((0.5)^2 + (-0.5)^2)/2) = 0.5
-    rmse = ForecastEvaluator.calculate_rmse(actual, predicted)
+    rmse = RollingOriginEvaluator.calculate_rmse(actual, predicted)
     np.testing.assert_allclose(rmse, [0.5, 0.5])
 
 def test_forecast_evaluator_rolling_origin():
-    from stats_transformer.models.timeseries.analysis.forecast_evaluation import ForecastEvaluator
+    from stats_transformer.models.timeseries.analysis.forecast_evaluation import RollingOriginEvaluator
     from stats_transformer.models.timeseries.reduced_form.var import VARModel
     
     np.random.seed(42)
     data = pd.DataFrame(np.random.randn(30, 2), columns=["y1", "y2"])
     
-    rmse = ForecastEvaluator.evaluate_rolling_origin(
+    rmse = RollingOriginEvaluator.evaluate_rolling_origin(
         model_class=VARModel,
         df=data,
         initial_train_size=25,
