@@ -2,8 +2,11 @@ import logging
 import os
 import pandas as pd
 import yaml
+from stats_transformer.utils.dict_country_converter import dict_country
 
-ISO2_TO_ISO3 = {}
+# Was an empty dict, so standardize_entity silently mapped every code to
+# itself and the bundled converter was never actually used.
+ISO2_TO_ISO3 = dict_country["iso2_to_iso3"]
 
 class DataMerger:
 
