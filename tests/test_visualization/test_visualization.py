@@ -33,9 +33,11 @@ def test_regression_visualizer():
     assert "coefficient_plot" in results_with_files
     assert "model_summary" in results_with_files
     
-    # Verify files exist
-    assert os.path.exists(results_with_files["coefficient_plot"])
-    assert os.path.exists(results_with_files["model_summary"])
+    # save_figure always returns a list of written paths
+    assert results_with_files["coefficient_plot"]
+    assert results_with_files["model_summary"]
+    assert all(os.path.exists(path) for path in results_with_files["coefficient_plot"])
+    assert all(os.path.exists(path) for path in results_with_files["model_summary"])
 
     # Clean up
     if os.path.exists(viz_dir):
@@ -58,8 +60,10 @@ def test_eda_visualizer():
     
     assert "missingness" in results
     assert "distributions" in results
-    assert os.path.exists(results["missingness"])
-    assert os.path.exists(results["distributions"])
+    assert results["missingness"]
+    assert results["distributions"]
+    assert all(os.path.exists(path) for path in results["missingness"])
+    assert all(os.path.exists(path) for path in results["distributions"])
     
     # Clean up
     if os.path.exists(viz_dir):
@@ -83,12 +87,14 @@ def test_data_visualizer():
     assert os.path.exists(hist_files[0])
     
     # Test correlation
-    corr_file = viz.create_visualization(df, feature_list=["x", "y"], viz_type="correlation", display_only=False)
-    assert os.path.exists(corr_file)
-    
+    corr_files = viz.create_visualization(df, feature_list=["x", "y"], viz_type="correlation", display_only=False)
+    assert corr_files
+    assert all(os.path.exists(path) for path in corr_files)
+
     # Test time series
-    ts_file = viz.create_time_series_plot(df, date_column="date", display_only=False)
-    assert os.path.exists(ts_file)
+    ts_files = viz.create_time_series_plot(df, date_column="date", display_only=False)
+    assert ts_files
+    assert all(os.path.exists(path) for path in ts_files)
     
     # Clean up
     if os.path.exists(viz_dir):
@@ -107,8 +113,9 @@ def test_model_visualizer():
     os.makedirs(viz_dir, exist_ok=True)
     viz = ModelVisualizer(output_dir=viz_dir)
     
-    coef_plot = viz.create_visualization(model_summary, visualization_type="coefficient", display_only=False)
-    assert os.path.exists(coef_plot)
+    coef_plots = viz.create_visualization(model_summary, visualization_type="coefficient", display_only=False)
+    assert coef_plots
+    assert all(os.path.exists(path) for path in coef_plots)
     
     # Clean up
     if os.path.exists(viz_dir):

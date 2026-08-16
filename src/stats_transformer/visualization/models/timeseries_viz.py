@@ -24,7 +24,7 @@ class TimeSeriesVisualizer(BaseVisualizer):
         for shock in data["shock"].drop_duplicates().tolist():
             figure, _ = chart.plot(data, shock=shock, labels=labels)
             filename = f"irf_{self._safe_name(shock)}"
-            paths.append(self.save_figure(figure, filename, subdir="timeseries/irfs", display_only=display_only))
+            paths.extend(self.save_figure(figure, filename, subdir="timeseries/irfs", display_only=display_only))
         return paths
 
     def plot_fevd(self, data, labels=None, display_only=False):

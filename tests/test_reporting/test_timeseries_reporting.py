@@ -86,7 +86,10 @@ def test_reporter_exports_var_figures_and_tables(tmp_path):
     result = reporter.run(figure_outputs=["irfs", "fevd", "historical_decomposition"], table_formats=["csv"])
 
     assert len(result.figures["irfs"]) == 2
-    assert Path(result.figures["fevd"]).exists()
-    assert Path(result.figures["historical_decomposition"]).exists()
+    assert all(Path(path).exists() for path in result.figures["irfs"])
+    assert result.figures["fevd"]
+    assert all(Path(path).exists() for path in result.figures["fevd"])
+    assert result.figures["historical_decomposition"]
+    assert all(Path(path).exists() for path in result.figures["historical_decomposition"])
     assert result.tables["irfs"]["csv"].exists()
     assert result.tables["fevd"]["csv"].exists()
