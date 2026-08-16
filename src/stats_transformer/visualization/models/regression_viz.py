@@ -10,13 +10,8 @@ from stats_transformer.visualization.defaults.labels import get_readable_label
 
 class RegressionVisualizer(ModelVisualizer):
 
-    def __init__(self, params_path=None, output_dir="reports/visualizations", file_format="png", dpi=300, style="default"):
-        if params_path is None:
-            ModelVisualizer.__init__(self, params_path=None, output_dir=output_dir, file_format=file_format, dpi=dpi, style=style)
-        else:
-            super().__init__(params_path)
-            if output_dir != "reports/visualizations" or file_format != "png" or dpi != 300 or style != "default":
-                self.viz_params.update({"output_dir": output_dir, "file_format": file_format, "dpi": dpi, "style": style})
+    def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
+        super().__init__(params_path=params_path, output_dir=output_dir, file_format=file_format, dpi=dpi, style=style)
     
     def visualize_from_json(self, json_path=None, model_summary=None, subdir="regression", **kwargs):
         if json_path is None and model_summary is None:
@@ -170,7 +165,7 @@ class RegressionVisualizer(ModelVisualizer):
 
         return self.save_figure(fig, "model_summary_table", subdir, display_only=display_only)
     
-    def create_variance_decomposition(self, model, X, subdir="regression"):
+    def create_variance_decomposition(self, model, X, subdir="regression", display_only=False):
         self.logger.info("Creating variance decomposition plot")
         if type(X) != pd.DataFrame:
             X = pd.DataFrame(X, columns=[f"X{i+1}" for i in range(X.shape[1])])
@@ -197,10 +192,10 @@ class RegressionVisualizer(ModelVisualizer):
             plt.xticks(rotation=45, ha='right')
             plt.ylim(0, min(1, max(var_df['Explained Variance']) * 1.2))
             plt.tight_layout()
-            return self.save_figure(fig, "variance_decomposition", subdir)
+            return self.save_figure(fig, "variance_decomposition", subdir, display_only=display_only)
         return None
     
-    def create_partial_regression_plots(self, model, X, y, subdir="regression"):
+    def create_partial_regression_plots(self, model, X, y, subdir="regression", display_only=False):
         self.logger.info("Creating partial regression plots")
         saved_files = []
         if type(X) != pd.DataFrame:
@@ -213,10 +208,10 @@ class RegressionVisualizer(ModelVisualizer):
             ax.set_xlabel(readable_col)
             ax.set_title(f"Partial Regression Plot: {readable_col}", fontsize=12, fontweight='bold')
             ax.grid(True, linestyle='--', alpha=0.7)
-            saved_files.append(self.save_figure(fig, f"partial_regress_{col}", subdir))
+            saved_files.extend(self.save_figure(fig, f"partial_regress_{col}", subdir, display_only=display_only))
         return saved_files
     
-    def create_component_plus_residual_plots(self, model, X, subdir="regression"):
+    def create_component_plus_residual_plots(self, model, X, subdir="regression", display_only=False):
         self.logger.info("Creating component-plus-residual plots")
         saved_files = []
         if type(X) != pd.DataFrame:
@@ -232,10 +227,10 @@ class RegressionVisualizer(ModelVisualizer):
             sm.graphics.plot_ccpr(model, exog_index, ax=ax)
             ax.set_title(f"Component-Plus-Residual Plot: {get_readable_label(col)}", fontsize=12, fontweight='bold')
             ax.grid(True, linestyle='--', alpha=0.7)
-            saved_files.append(self.save_figure(fig, f"ccpr_{col}", subdir))
+            saved_files.extend(self.save_figure(fig, f"ccpr_{col}", subdir, display_only=display_only))
         return saved_files
     
-    def create_prediction_intervals(self, model, X, y, alpha=0.05, subdir="regression"):
+    def create_prediction_intervals(self, model, X, y, alpha=0.05, subdir="regression", display_only=False):
         if not hasattr(model, 'get_prediction'):
             return None
         try:
@@ -265,7 +260,7 @@ class RegressionVisualizer(ModelVisualizer):
             ax.legend(loc='best')
             ax.grid(True, linestyle='--', alpha=0.7)
             plt.tight_layout()
-            return self.save_figure(fig, "prediction_intervals", subdir)
+            return self.save_figure(fig, "prediction_intervals", subdir, display_only=display_only)
         except Exception as e:
             self.logger.error(f"Error creating prediction intervals plot: {e}")
             return None
