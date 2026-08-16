@@ -32,7 +32,7 @@ def test_every_model_base_subclass_is_registered_or_explicitly_excluded():
 
 def test_registry_kinds_are_all_handled():
     from stats_transformer.pipeline import Pipeline
-    handled_kinds = {"single_equation", "panel", "iv", "panel_iv", "unsupervised", "svar_family", "lp_iv"}
+    handled_kinds = {"single_equation", "panel", "iv", "panel_iv", "unsupervised", "svar_family", "lp", "lp_iv"}
     registry_kinds = {entry["kind"] for entry in MODEL_REGISTRY.values()}
     assert registry_kinds <= handled_kinds, f"Registry uses kinds not handled by Pipeline: {registry_kinds - handled_kinds}"
 
