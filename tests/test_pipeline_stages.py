@@ -8,7 +8,7 @@ from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.iv import IV2SLSModel
 from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel
-from stats_transformer.models.timeseries import BlanchardQuahModel, LocalProjectionsIVModel
+from stats_transformer.models.timeseries import BlanchardQuahModel, LocalProjectionsModel, LocalProjectionsIVModel
 
 
 def _write_config(tmp_path, model, data=None, visualization=None):
@@ -61,6 +61,26 @@ def test_initialize_from_args_lp_iv():
     pipeline = Pipeline(entity_column="country", target="y", features=["x1"], transformations=[], model_type="lp_iv")
     pipeline._initialize_from_args()
     assert isinstance(pipeline.model, LocalProjectionsIVModel)
+
+
+def test_initialize_from_args_local_projections():
+    pipeline = Pipeline(entity_column="country", target="y", features=["x1", "x2"], transformations=[], model_type="local_projections", horizon=4)
+    pipeline._initialize_from_args()
+    assert isinstance(pipeline.model, LocalProjectionsModel)
+    assert pipeline.model.shock_var == "x1"
+    assert pipeline.model.controls == ["x2"]
+    assert pipeline.model.horizon == 4
+
+
+def test_initialize_from_params_local_projections(tmp_path):
+    config_path = _write_config(tmp_path, {"model_type": "local_projections", "target_variable": "y", "shock_variable": "x2", "independent_variables": ["x1", "x2"], "horizon": 3, "date_column": "date"})
+    pipeline = Pipeline(params_path=str(config_path))
+    pipeline._initialize_from_params()
+    assert isinstance(pipeline.model, LocalProjectionsModel)
+    assert pipeline.model.shock_var == "x2"
+    assert pipeline.model.controls == ["x1"]
+    assert pipeline.model.horizon == 3
+    assert pipeline.model.date_column == "date"
 
 
 def test_initialize_from_args_requires_entity_column():

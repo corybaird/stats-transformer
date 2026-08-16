@@ -3,6 +3,7 @@ import pandas as pd
 from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
 from stats_transformer.models.timeseries.identification.proxy_svar import ProxySVARModel
 from stats_transformer.models.timeseries.identification.sign_zero import SignZeroSVARModel
+from stats_transformer.models.timeseries.reduced_form.local_projections import LocalProjectionsModel
 from stats_transformer.models.timeseries.reduced_form.local_projections_iv import LocalProjectionsIVModel
 from stats_transformer.models.timeseries.decompositions import TimeSeriesDecompositions
 from examples.academic.var.stock_watson_2001 import StockWatson2001Replication
@@ -47,6 +48,46 @@ def test_local_projections_iv_model():
     metrics = model.fit(df)
     assert metrics["horizons"] == 3
     assert len(model.irf_coefficients) == 4
+
+def test_local_projections_model():
+    df = create_synthetic_data()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", controls=["z"], horizon=3, date_column="date")
+    metrics = model.fit(df)
+    assert metrics["horizon"] == 3
+    assert metrics["shock_var"] == "y2"
+    irf = model.compute_irf()
+    assert len(irf) == 4
+    assert list(irf.columns) == ["horizon", "effect", "stderr", "lower_ci", "upper_ci", "pvalue"]
+    assert irf["horizon"].tolist() == [0, 1, 2, 3]
+
+def test_local_projections_model_keeps_date_column():
+    df = create_synthetic_data()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, date_column="date")
+    model.fit(df)
+    assert "date" in model.df_clean.columns
+    assert model.df_clean["date"].is_monotonic_increasing
+
+def test_local_projections_model_without_date_column_indexes_date():
+    df = create_synthetic_data()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2)
+    model.fit(df)
+    assert "date" not in model.df_clean.columns
+    assert model.df_clean.index.name == "date"
+
+def test_local_projections_variance_decomposition():
+    df = create_synthetic_data()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", controls=["z"], horizon=3)
+    model.fit(df)
+    vd = model.compute_vd()
+    assert len(vd) == 4
+    assert (vd["variance_explained"] >= 0).all()
+
+def test_local_projections_run_returns_metadata():
+    df = create_synthetic_data()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, date_column="date")
+    metadata = model.run(df)
+    assert "metrics" in metadata
+    assert metadata["metrics"]["horizon"] == 2
 
 def test_decompositions():
     df = create_synthetic_data()

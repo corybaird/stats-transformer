@@ -148,7 +148,7 @@ flowchart TD
 | **Time Series** | `VolatilitySVARModel` | Changes-in-volatility heteroskedastic structural VAR | Direct API |
 | **Time Series** | `IndependenceSVARModel` | Distance covariance / ICA data-driven structural VAR | Direct API |
 | **Time Series** | `SVEC` | Structural VECM combining cointegration with restrictions | Direct API — *Planned* (ML estimation not yet implemented) |
-| **Time Series** | `LocalProjectionsModel` | Jordà (2005) horizon-by-horizon local projections | Direct API |
+| **Time Series** | `LocalProjectionsModel` | Jordà (2005) horizon-by-horizon local projections | Pipeline: `local_projections`; Direct API |
 | **Time Series** | `LocalProjectionsIVModel` | Instrumented local projections (Stock & Watson 2018) | Pipeline: `lp_iv`; Direct API |
 | **Discrete** | `LogitModel` | Binary logit maximum-likelihood classification | Pipeline: `logit`; Direct API |
 | **Discrete** | `ProbitModel` | Binary probit maximum-likelihood classification | Pipeline: `probit`; Direct API |
@@ -165,7 +165,7 @@ flowchart TD
 
 #### Access Modes: Pipeline Supported vs Direct API
 
-- **Pipeline Supported (YAML Dispatcher)**: The automated `Pipeline` orchestrator reads a `params.yaml` configuration file and routes the execution via `model.model_type` (e.g. `model_type: ols`, `robust_ols`, `panel_ols`, `pca`, `kmeans`, `blanchard_quah`, `proxy_svar`, `sign_restrictions`, `lp_iv`). This allows non-programmatic, reproducible execution across full pipeline stages (`resample` -> `features` -> `regression` -> `visualization`).
+- **Pipeline Supported (YAML Dispatcher)**: The automated `Pipeline` orchestrator reads a `params.yaml` configuration file and routes the execution via `model.model_type` (e.g. `model_type: ols`, `robust_ols`, `panel_ols`, `pca`, `kmeans`, `blanchard_quah`, `proxy_svar`, `sign_restrictions`, `local_projections`, `lp_iv`). This allows non-programmatic, reproducible execution across full pipeline stages (`resample` -> `features` -> `regression` -> `visualization`).
 - **Direct API Usage**: Specialized estimators and diagnostic utilities (such as `VARModel`, `VECMModel`, `SVARModel`, `VolatilitySVARModel`, `IndependenceSVARModel`, `ARIMAModel`, `IV2SLSModel`, `LogitModel`, `GrangerCausalityTester`) can be instantiated directly as Python classes (`model = VARModel(...)`). Direct API usage provides full control over estimation parameters, custom matrix masks, and advanced structural identification loops.
 
 ---

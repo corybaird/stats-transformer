@@ -89,6 +89,11 @@ class Pipeline:
             return cls(params_path=self.params_path)
         if kind == "lp_iv":
             return cls(params_path=self.params_path)
+        if kind == "lp":
+            model_params = self._get_config().to_dict().get("model", {})
+            shock_var = model_params.get("shock_variable") or (self.features[0] if self.features else None)
+            controls = [f for f in (self.features or []) if f != shock_var]
+            return cls(params_path=self.params_path, target=self.target, shock_var=shock_var, controls=controls, horizon=model_params.get("horizon", 8), date_column=model_params.get("date_column"))
         raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
 
     def _build_from_args(self, entry: Dict[str, Any]) -> ModelBase:
@@ -107,6 +112,10 @@ class Pipeline:
             return cls(params_path=None, target_variables=[self.target] + (self.features or []))
         if kind == "lp_iv":
             return cls(params_path=None, target_variable=self.target, shock_variable=self.features[0] if self.features else None)
+        if kind == "lp":
+            shock_var = self.kwargs.get("shock_variable") or (self.features[0] if self.features else None)
+            controls = [f for f in (self.features or []) if f != shock_var]
+            return cls(params_path=None, target=self.target, shock_var=shock_var, controls=controls, horizon=self.kwargs.get("horizon", 8), date_column=self.kwargs.get("date_column"))
         raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
 
     def fit_transform(self, data: Union[str, pd.DataFrame], fit_model: bool = True) -> pd.DataFrame:

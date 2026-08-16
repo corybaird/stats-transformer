@@ -8,6 +8,7 @@ from stats_transformer.models.discrete.probit import ProbitModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
 from stats_transformer.models.timeseries import (
     BlanchardQuahModel,
+    LocalProjectionsModel,
     LocalProjectionsIVModel,
     ProxySVARModel,
     SignZeroSVARModel,
@@ -36,6 +37,7 @@ MODEL_REGISTRY = {
     "sign_restrictions": {"cls": SignZeroSVARModel, "kind": "svar_family"},
     "volatility_svar": {"cls": VolatilitySVARModel, "kind": "svar_family"},
     "independence_svar": {"cls": IndependenceSVARModel, "kind": "svar_family"},
+    "local_projections": {"cls": LocalProjectionsModel, "kind": "lp"},
     "lp_iv": {"cls": LocalProjectionsIVModel, "kind": "lp_iv"},
 }
 
@@ -51,5 +53,4 @@ MODEL_TYPE_ALIASES = {
 # test so a newly added model is never silently unreachable by omission.
 NOT_PIPELINE_EXPOSED = {
     "UnsupervisedModel",  # abstract base for PCAModel/KMeansModel; not directly instantiable
-    "LocalProjectionsModel",  # non-IV local projections; no pipeline entry point defined yet
 }
