@@ -1,0 +1,11 @@
+data:
+  raw_data_file: data/examples/academic/acosta_brennan_jacobson_2024/sofr_surprises.parquet.gzip
+
+model:
+  model_type: local_projections
+  target_variable: ns
+  shock_variable: gss_target
+  horizon: 6
+  date_column: date
+  independent_variables:
+    - gss_target
