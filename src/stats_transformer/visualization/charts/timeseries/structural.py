@@ -56,14 +56,9 @@ class SwathePlot:
         S = len(self.shocks)
         
         if axes is None:
-            fig, axes = plt.subplots(K, S, figsize=(4 * S, 3 * K), sharex=True)
-            if K == 1 and S == 1:
-                axes = np.array([[axes]])
-            elif K == 1:
-                axes = axes[np.newaxis, :]
-            elif S == 1:
-                axes = axes[:, np.newaxis]
-                
+            fig, axes = plt.subplots(K, S, figsize=(4 * S, 3 * K), sharex=True, squeeze=False)
+
+
         # Extract IRFs
         irfs = np.array([res["irf"] for res in self.bootstrap_results]) # (B, H, K, S)
         # We need (B, H, K_vars, K_shocks)

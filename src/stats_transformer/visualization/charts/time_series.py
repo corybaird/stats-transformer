@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from stats_transformer.visualization.formatters.style import apply_style
 from stats_transformer.visualization.defaults.labels import get_readable_label
@@ -62,14 +61,7 @@ class IRFPlot:
         ncols = 2
         nrows = (n_vars + ncols - 1) // ncols
         
-        fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 5 * nrows), sharex=True)
-        if nrows == 1 and ncols == 1:
-            axes = np.array([[axes]])
-        elif nrows == 1:
-            axes = axes[np.newaxis, :]
-        elif ncols == 1:
-            axes = axes[:, np.newaxis]
-            
+        fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 5 * nrows), sharex=True, squeeze=False)
         axes = axes.flatten()
 
         if colors is None:
@@ -127,14 +119,7 @@ class FacetedTimeSeries:
         
         nrows = (n_facets + ncols - 1) // ncols
         
-        fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 4 * nrows), sharex=True)
-        if nrows == 1 and ncols == 1:
-            axes = np.array([[axes]])
-        elif nrows == 1:
-            axes = axes[np.newaxis, :]
-        elif ncols == 1:
-            axes = axes[:, np.newaxis]
-            
+        fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 4 * nrows), sharex=True, squeeze=False)
         axes = axes.flatten()
 
         if colors is None:
