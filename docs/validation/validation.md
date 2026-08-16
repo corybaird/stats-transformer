@@ -63,6 +63,10 @@ The table below catalogs all 24 example modules in `src/examples/`, detailing th
 | **Applied Regression** | `src.examples.regression.ghysels_chap1` | Ghysels & Marcellino (2018) Chapter 1 | `data/examples/regression/` | **Textbook Replication Example** | Linear trend & seasonal dummy regression models |
 | **Applied Regression** | `src.examples.regression.ghysels_chap2` | Ghysels & Marcellino (2018) Chapter 2 | `data/examples/regression/` | **Textbook Replication Example** | Autoregressive distributed lag (ARDL) forecasting |
 | **Binary Discrete Choice** | `src.examples.discrete.spector_logit` | Spector & Mazzeo (1980) | `data/examples/discrete/spector.csv` | **Direct Python Verified (`statsmodels`)** | Binary Logit educational choice estimation |
+| **High-Frequency SOFR** | `src.examples.academic.acosta_brennan_jacobson_2024` | Acosta, Brennan, & Jacobson (2024) | `data/examples/academic/acosta_brennan_jacobson_2024/` | **Paper Replication Example** | SOFR futures surprise VAR & Robust OLS estimation |
+| **Policy Uncertainty** | `src.examples.academic.cieslak_hansen_mcmahon_xiao_2024` | Cieslak, Hansen, McMahon, & Xiao (2024) | `data/examples/academic/cieslak_hansen_mcmahon_xiao_2024/` | **Paper Replication Example** | Policymakers' Uncertainty OLS & VAR estimation |
+| **News Sentiment** | `src.examples.academic.shapiro_sudhof_wilson_2022` | Shapiro, Sudhof, & Wilson (2022) | `data/examples/academic/shapiro_sudhof_wilson_2022/` | **Paper Replication Example** | Daily news sentiment featurization & Robust OLS |
+| **Industrial Policy** | `src.examples.academic.lane_2025` | Lane (2025) | `data/examples/academic/lane_2025/` | **Paper Replication Example** | Targeted policy lending Robust OLS regression |
 | **Provider Pipeline** | `src.examples.featurization.fred` | St. Louis Fed FRED API | Remote FRED API / Local cache | **Data & Feature Pipeline Demo** | Automated multi-series FRED data download & alignment |
 | **Provider Pipeline** | `src.examples.featurization.monetary` | Federal Reserve Macro Series | `data/raw/` | **Data & Feature Pipeline Demo** | Monetary policy indicator featurization pipeline |
 
