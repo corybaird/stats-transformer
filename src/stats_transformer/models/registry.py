@@ -4,6 +4,7 @@ from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.iv import IV2SLSModel
 from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
 from stats_transformer.models.discrete.logit import LogitModel
+from stats_transformer.models.discrete.probit import ProbitModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
 from stats_transformer.models.timeseries import (
     BlanchardQuahModel,
@@ -21,6 +22,7 @@ MODEL_REGISTRY = {
     "ols": {"cls": RegressionModel, "kind": "single_equation"},
     "robust_ols": {"cls": RobustOLSModel, "kind": "single_equation"},
     "logit": {"cls": LogitModel, "kind": "single_equation"},
+    "probit": {"cls": ProbitModel, "kind": "single_equation"},
     "panel_ols": {"cls": PanelRegressionModel, "kind": "panel"},
     "iv": {"cls": IV2SLSModel, "kind": "iv"},
     "panel_iv": {"cls": PanelIV2SLSModel, "kind": "panel_iv"},
