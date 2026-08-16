@@ -150,7 +150,8 @@ flowchart TD
 | **Time Series** | `SVEC` | Structural VECM combining cointegration with restrictions | Direct API — *Planned* (ML estimation not yet implemented) |
 | **Time Series** | `LocalProjectionsModel` | Jordà (2005) horizon-by-horizon local projections | Direct API |
 | **Time Series** | `LocalProjectionsIVModel` | Instrumented local projections (Stock & Watson 2018) | Pipeline: `lp_iv`; Direct API |
-| **Discrete** | `LogitModel` | Binary logit maximum-likelihood classification | Direct API |
+| **Discrete** | `LogitModel` | Binary logit maximum-likelihood classification | Pipeline: `logit`; Direct API |
+| **Discrete** | `ProbitModel` | Binary probit maximum-likelihood classification | Pipeline: `probit`; Direct API |
 | **Unsupervised** | `PCAModel` | Principal Component Analysis feature extraction | Pipeline: `pca`; Direct API |
 | **Unsupervised** | `KMeansModel` | K-means clustering algorithm | Pipeline: `kmeans`; Direct API |
 | **Diagnostics & Utils** | `GrangerCausalityTester` | Pairwise & system Granger causality testing | Direct Utility API |
