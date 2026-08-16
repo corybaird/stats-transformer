@@ -43,8 +43,13 @@ The `data/examples/` directory contains all datasets necessary for running libra
 
 ### 2.2 Academic Replication Datasets (`data/examples/academic/`)
 
+- **Acosta, Brennan, & Jacobson (2024)**: High-frequency SOFR futures surprises and policy path indicators in `data/examples/academic/acosta_brennan_jacobson_2024/sofr_surprises.parquet.gzip`. Used in `src/examples/academic/acosta_brennan_jacobson_2024.py`.
+- **Cieslak, Hansen, McMahon, & Xiao (2024)**: Policymakers' Uncertainty (PMU) text and market indicators in `data/examples/academic/cieslak_hansen_mcmahon_xiao_2024/pmu_data.parquet.gzip`. Used in `src/examples/academic/cieslak_hansen_mcmahon_xiao_2024.py`.
+- **Shapiro, Sudhof, & Wilson (2022)**: High-frequency daily news sentiment series in `data/examples/academic/shapiro_sudhof_wilson_2022/news_sentiment.parquet.gzip`. Used in `src/examples/academic/shapiro_sudhof_wilson_2022.py`.
+- **Lane (2025)**: Industrial policy loans and tariff data in `data/examples/academic/lane_2025/policy_loans.parquet.gzip`. Used in `src/examples/academic/lane_2025.py`.
 - **Nakamura & Steinsson (2018)**: High-frequency monetary policy surprise series used in `src/examples/academic/nakamura_steinsson.py` and `nakamura_steinsson_pca.py`.
 - **Bauer & Swanson (2023)**: Orthogonalized monetary surprise dataset used in `src/examples/academic/bauer_swanson.py`.
+- **Bauer, Bernanke, & Milstein (2023)**: Yield curve dataset in `data/examples/academic/bbm_2023/` used in `src/examples/academic/bauer_bernanke_milstein.py`.
 
 ### 2.3 Time-Series Textbook Datasets (`data/examples/timeseries/`)
 
