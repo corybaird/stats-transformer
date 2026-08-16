@@ -4,15 +4,19 @@ import statsmodels.api as sm
 from stats_transformer.models.base import ModelBase
 
 class LocalProjectionsModel(ModelBase):
-    def __init__(self, target, shock_var, horizon=8, controls=None, **kwargs):
+    def __init__(self, target, shock_var, horizon=8, controls=None, date_column=None, **kwargs):
         super().__init__(target=target, independent_variables=[shock_var] + (controls or []), **kwargs)
         self.shock_var = shock_var
         self.horizon = horizon
         self.controls = controls or []
+        self.date_column = date_column
+        self.time_column = date_column
         self.irf_results = []
-        
+
     def build_model(self):
         self.irf_results = []
+        if self.date_column and self.date_column in self.df_clean.columns:
+            self.df_clean = self.df_clean.sort_values(self.date_column)
         y = self.df_clean[self.target]
         x = self.df_clean[self.independent_variables]
         x = sm.add_constant(x)
@@ -83,4 +87,14 @@ class LocalProjectionsModel(ModelBase):
         return self.summary_df().to_string()
 
     def get_model_metrics(self):
-        return {"horizon": self.horizon, "shock_var": self.shock_var}
+        irf = self.compute_irf()
+        return {
+            "horizon": self.horizon,
+            "shock_var": self.shock_var,
+            "irf_h0": float(irf["effect"].iloc[0]) if not irf.empty else None,
+            "irf_h_max": float(irf["effect"].iloc[-1]) if not irf.empty else None
+        }
+
+    def run(self, data):
+        self.fit(data)
+        return self.get_model_metadata()
