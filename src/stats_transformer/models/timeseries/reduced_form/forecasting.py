@@ -2,6 +2,30 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+def compute_ma_rep(params, k_ar, k_trend, neqs, steps):
+    """
+    Computes the Wold MA representation matrices (Phi_s) of a VAR.
+    Phi_0 = I
+    Phi_s = sum_{j=1}^s Phi_{s-j} A_j  (where A_j are the VAR coefficient matrices)
+
+    Shared by VARForecaster and RestrictedVARResults.ma_rep so both slice the
+    lag coefficients identically. params is (k_trend + p*K, K), with the
+    deterministic rows first.
+    """
+    lag_params = np.asarray(params)[k_trend:] if k_trend > 0 else np.asarray(params)
+
+    # A_j is (K, K); in lag_params the blocks are stacked vertically by lag.
+    A = [lag_params[i * neqs:(i + 1) * neqs].T for i in range(k_ar)]
+
+    phis = np.zeros((steps, neqs, neqs))
+    phis[0] = np.eye(neqs)
+    for s in range(1, steps):
+        phi_s = np.zeros((neqs, neqs))
+        for j in range(1, min(s + 1, k_ar + 1)):
+            phi_s += phis[s - j] @ A[j - 1]
+        phis[s] = phi_s
+    return phis
+
 class VARForecaster:
     """
     Forecasting engine for VAR models.
@@ -99,26 +123,4 @@ class VARForecaster:
         Phi_0 = I
         Phi_s = sum_{j=1}^s Phi_{s-j} A_j  (where A_j are the VAR coefficient matrices)
         """
-        neqs = len(self.names)
-        
-        if self.k_trend > 0:
-            lag_params = self.params[self.k_trend:]
-        else:
-            lag_params = self.params
-            
-        # Extract A_j matrices. lag_params is (p*K, K)
-        # A_j is (K, K), but in lag_params it's block-wise stacked vertically
-        A = []
-        for i in range(self.k_ar):
-            A.append(lag_params[i*neqs:(i+1)*neqs].T)
-            
-        phis = np.zeros((steps, neqs, neqs))
-        phis[0] = np.eye(neqs)
-        
-        for s in range(1, steps):
-            phi_s = np.zeros((neqs, neqs))
-            for j in range(1, min(s + 1, self.k_ar + 1)):
-                phi_s += phis[s - j] @ A[j - 1]
-            phis[s] = phi_s
-            
-        return phis
+        return compute_ma_rep(self.params, k_ar=self.k_ar, k_trend=self.k_trend, neqs=len(self.names), steps=steps)
