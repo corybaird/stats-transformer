@@ -85,15 +85,21 @@ class ModelBase(ABC):
         if missing_columns:
             raise ValueError(f"Required columns missing: {missing_columns}")
 
-        if self.entity_column and self.entity_column in self.df.columns and 'date' in self.df.columns:
+        # Models that declare a time_column keep it as a column: they sort and
+        # index by it themselves, and some (e.g. narrative restrictions) read
+        # it back by name. Everything else preserves the historical behavior of
+        # consuming a column literally named "date" into the index.
+        index_col = None if getattr(self, "time_column", None) else ('date' if 'date' in self.df.columns else None)
+
+        if self.entity_column and self.entity_column in self.df.columns and index_col:
             if self.add_entity_fixed_effects and self.entity_column in required_columns:
                 self.df_clean = self.df[required_columns].dropna()
             else:
-                cols = [c for c in required_columns if c not in [self.entity_column, 'date']]
-                self.df_clean = self.df.set_index([self.entity_column, 'date'])[cols].dropna()
-        elif 'date' in self.df.columns:
-            cols = [c for c in required_columns if c != 'date']
-            self.df_clean = self.df.set_index(['date'])[cols].dropna()
+                cols = [c for c in required_columns if c not in [self.entity_column, index_col]]
+                self.df_clean = self.df.set_index([self.entity_column, index_col])[cols].dropna()
+        elif index_col:
+            cols = [c for c in required_columns if c != index_col]
+            self.df_clean = self.df.set_index([index_col])[cols].dropna()
         else:
             self.df_clean = self.df[required_columns].dropna()
             
