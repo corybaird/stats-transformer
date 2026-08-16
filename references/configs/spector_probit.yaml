@@ -1,0 +1,10 @@
+data:
+  raw_data_file: data/examples/discrete/spector.csv
+
+model:
+  model_type: probit
+  target_variable: GRADE
+  independent_variables:
+    - GPA
+    - TUCE
+    - PSI
