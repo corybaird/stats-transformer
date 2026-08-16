@@ -16,7 +16,7 @@ The table below provides a complete index of all models, target source folder lo
 | **Regression** | `PanelRegressionModel` | `models/regression/` | Fixed Effects & Random Effects | `plm::plm` | `xtreg` | `fitlmem` | *Planned* |
 | **Regression** | `PanelIV2SLSModel` | `models/regression/` | 2SLS + Fixed Effects & Random Effects | `fixest::feols` | `xtivreg`, `fe` |  | *Planned* |
 | **Discrete Choice** | `LogitModel` | `models/discrete/` | Binary Logit MLE | `stats::glm` | `logit` | `fitglm` | **Verified** |
-| **Discrete Choice** | `ProbitModel` | `models/discrete/` | Binary Probit MLE | `stats::glm(probit)` | `probit` | `fitglm` | *Planned* |
+| **Discrete Choice** | `ProbitModel` | `models/discrete/` | Binary Probit MLE | `stats::glm(probit)` | `probit` | `fitglm` | **Implemented** |
 | **Unsupervised** | `PCAModel` | `models/unsupervised/` | Principal Component Analysis | `stats::prcomp` | `pca` | `pca` | **Verified** |
 | **Unsupervised** | `KMeansModel` | `models/unsupervised/` | K-Means Clustering | `stats::kmeans` | `cluster kmeans` | `kmeans` | *Planned* |
 | **Time Series (RF)** | `VARModel` | `models/timeseries/reduced_form/` | Reduced-Form VAR ($p$) | `vars::VAR` | `var` | `varm` | *Planned* |
