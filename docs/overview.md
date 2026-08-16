@@ -40,7 +40,7 @@ The pages should remain separate. Architecture and file layout are stable refere
 
 ## 3. Library model inventory
 
-The table distinguishes direct-use models from the smaller set currently exposed by the YAML `Pipeline`. “Direct” means instantiate the Python class and call its documented methods. “Pipeline” means the current dispatcher can select it with `model.model_type`.
+The table distinguishes direct-use models from the smaller set currently exposed by the YAML `Pipeline`. “Direct” means instantiate the Python class and call its documented methods. “Pipeline” means the current dispatcher can select it with `model.model_type`. See the [model reference](library/models.md) for detailed configuration and examples organized by model family.
 
 | Family | Model or utility | Primary use | Access |
 | --- | --- | --- | --- |
@@ -48,6 +48,7 @@ The table distinguishes direct-use models from the smaller set currently exposed
 | Regression | Robust OLS (`RobustOLSModel`) | OLS with HC or HAC covariance estimation. | Pipeline: `robust_ols`; direct |
 | Regression | Panel OLS (`PanelRegressionModel`) | Entity and optional time fixed-effects panel regression. | Pipeline: `panel_ols`; direct |
 | Regression | IV 2SLS (`IV2SLSModel`) | Instrumental-variables estimation with `linearmodels`. | Direct |
+| Regression | Panel IV 2SLS (`PanelIV2SLSModel`) | Instrumental-variables estimation with entity and optional time fixed effects. | Direct |
 | Discrete | Logit (`LogitModel`) | Binary-outcome maximum-likelihood model. | Direct |
 | Unsupervised | PCA (`PCAModel`) | Standardized principal components and explained variance. | Pipeline: `pca`; direct |
 | Unsupervised | K-means (`KMeansModel`) | Standardized clustering. | Pipeline: `kmeans`; direct |

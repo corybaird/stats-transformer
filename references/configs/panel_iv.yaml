@@ -1,0 +1,40 @@
+# Panel IV / 2SLS example
+
+data:
+  raw_data_file: data/examples/regression/panel_iv.csv
+
+  featurization:
+    entity_column: entity
+    date_column: time
+    period: annual
+    transformations: []
+
+model:
+  model_type: panel_iv
+
+  # dependent variable
+  target_variable: y
+
+  # exogenous control variables
+  independent_variables:
+    - w
+
+  panel_iv:
+    # endogenous variables
+    endogenous:
+      - x
+
+    # instrumental variables
+    instruments:
+      - z
+
+    # panel setting
+    time_column: time
+    entity_effects: true
+    time_effects: true
+
+    # SE
+    cov_type: clustered
+    cluster_by: entity
+
+  summary_output_path: reports/tables/panel_iv_summary.json

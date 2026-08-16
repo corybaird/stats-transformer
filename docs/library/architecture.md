@@ -136,6 +136,7 @@ flowchart TD
 | **Regression** | `RobustOLSModel` | Heteroskedasticity/autocorrelation robust OLS (HC/HAC) | Pipeline: `robust_ols`; Direct API |
 | **Regression** | `PanelRegressionModel` | Entity & time fixed effects panel regression | Pipeline: `panel_ols`; Direct API |
 | **Regression** | `IV2SLSModel` | 2-Stage Least Squares instrumental variables regression | Direct API |
+| **Regression** | `PanelIV2SLSModel` | Entity & time fixed effects panel regression + 2-Stage Least Squares instrumental variables regression | Direct API |
 | **Regression** | `SpecificationRunner` | Multi-specification regression runner utility | Direct API |
 | **Time Series** | `VARModel` | Reduced-form OLS Vector Autoregression | Direct API |
 | **Time Series** | `VECMModel` | Johansen Cointegrated Vector Error Correction Model | Direct API |
@@ -215,6 +216,7 @@ The repository includes an agent skill at `.agents/skills/stats-transformer-arch
 
 ## 6. Related documentation
 
+- [Model reference](models.md)
 - [Repository structure](file_structure.md)
 - [Data directory guide](data.md)
 - [Academic Citations](citations.md)
