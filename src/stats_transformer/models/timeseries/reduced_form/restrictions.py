@@ -3,12 +3,13 @@ import pandas as pd
 import statsmodels.api as sm
 from statsmodels.tsa.tsatools import lagmat
 from statsmodels.tsa.vector_ar.var_model import VAR, VARResultsWrapper
+from stats_transformer.models.timeseries.reduced_form.forecasting import compute_ma_rep
 
 class RestrictedVARResults:
     """
     Mock VARResults wrapper to maintain compatibility with downstream reporting.
     """
-    def __init__(self, params, sigma_u, resid, endog, exog, k_ar, names):
+    def __init__(self, params, sigma_u, resid, endog, exog, k_ar, names, exog_names=None, trend="c"):
         self.params = params
         self.sigma_u = sigma_u
         self.resid = resid
@@ -16,20 +17,24 @@ class RestrictedVARResults:
         self.exog = exog
         self.k_ar = k_ar
         self.names = names
-        
+        self.trend = trend
+
+        # Real regressor names are built by RestrictedVAR.fit and passed in.
+        # Falling back to placeholders would make k_trend wrong, which silently
+        # misaligns every lag-coefficient slice downstream.
+        self._exog_names = list(exog_names) if exog_names is not None else [f"x{i}" for i in range(exog.shape[1])]
+
         # Additional attributes required by downstream
-        self.k_trend = 1 if "const" in self.exog_names else 0
+        self.k_trend = 1 if "const" in self._exog_names else 0
         self.nobs = len(endog)
         self.neqs = len(names)
 
     @property
     def exog_names(self):
-        # We assume standard naming: const, L1.y1, L1.y2 ...
-        cols = []
-        if self.exog.shape[1] == self.params.shape[0]:
-            # This is a very rough mock, we might need real names
-            cols = [f"x{i}" for i in range(self.exog.shape[1])]
-        return cols
+        return self._exog_names
+
+    def ma_rep(self, maxn=10):
+        return compute_ma_rep(self.params, k_ar=self.k_ar, k_trend=self.k_trend, neqs=self.neqs, steps=maxn + 1)
 
 class RestrictedVAR:
     """
@@ -97,11 +102,13 @@ class RestrictedVAR:
         sigma_u = np.dot(resid.T, resid) / (len(y_dep) - num_regressors) # simplified df correction
         
         return RestrictedVARResults(
-            params=params, 
-            sigma_u=sigma_u, 
-            resid=resid, 
-            endog=y_dep, 
-            exog=x, 
-            k_ar=self.maxlags, 
-            names=names
+            params=params,
+            sigma_u=sigma_u,
+            resid=resid,
+            endog=y_dep,
+            exog=x,
+            k_ar=self.maxlags,
+            names=names,
+            exog_names=exog_names,
+            trend=self.trend
         )
