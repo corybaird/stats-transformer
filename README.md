@@ -30,6 +30,7 @@
 - **Core Guides (`docs/`)**
   - **[Overview](docs/overview.md):** Documentation map, model inventory, and example index.
   - **[Architecture & Design](docs/library/architecture.md):** Pipeline stages, object hierarchy, and data flow.
+  - **[Model Reference](docs/library/models.md):** Configuration and usage organized by model family.
   - **[Numerical Validation](docs/validation/validation.md):** Cross-language R, Stata, and MATLAB verification matrix.
   - **[Testing Suite](docs/validation/testing_suite.md):** Automated unit, integration, and verification test guide.
   - **[Academic Citations](docs/library/citations.md):** Literature sources, paper datasets, and reference software.
