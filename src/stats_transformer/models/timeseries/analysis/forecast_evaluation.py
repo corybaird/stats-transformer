@@ -1,10 +1,14 @@
 import numpy as np
 import pandas as pd
 
-class ForecastEvaluator:
+class RollingOriginEvaluator:
     """
     Evaluates forecast accuracy using metrics such as RMSE and MAE.
     Supports rolling-origin evaluations.
+
+    Distinct from timeseries.utilities.ForecastEvaluator, which is
+    instance-based and scores two columns of an existing DataFrame. This one
+    is static and re-fits a model across expanding windows.
     """
     @staticmethod
     def calculate_rmse(actual, predicted):
