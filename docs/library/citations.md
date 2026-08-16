@@ -192,3 +192,38 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- `https://github.com/ambropo/VAR-Toolbox`.
 - **Python `statsmodels`**: Seabold, S., & Perktold, J. (2010). Statsmodels: econometric and statistical modeling with python. _scipy_, _7_(1), 92-96.
 - **Python `linearmodels`**: Kevin Sheppard, Snyk bot, Joon Ro, Brian Lewis, Christian Clauss, Guangyi, Jeff, Jerry Qinghui Yu, Jiageng, Kevin Wilson, LGTM Migrator, Thrasibule, WilliamRoyNelson, Xavier RENE-CORAIL& vikjam. (2025).
+
+---
+
+## 4. Citations for Review
+
+### 4.1 Macroeconomics Replication Catalog Literature
+
+- **Acosta, M., Brennan, K., & Jacobson, M. (2024)**. *High-Frequency Identification of Monetary Policy Shocks with SOFR Futures*. Federal Reserve Board Finance and Economics Discussion Series (FEDS 2024-034).
+- **Aruoba, S. B., & Drechsel, T. (2024)**. *Identifying Monetary Policy Shocks: A Natural Language Approach*. National Bureau of Economic Research (NBER Working Paper No. 32252).
+- **Bauer, M. D., Bernanke, B. S., & Milstein, E. (2023)**. *Risk Appetite and the Transmission of Monetary Policy*. Federal Reserve Bank of San Francisco Working Paper 2023-22.
+- **Bauer, M. D., & Swanson, E. T. (2023)**. A reassessment of monetary policy surprises and high-frequency identification. *NBER Macroeconomics Annual*, 37(1), 87–155.
+- **Choi, S., Willems, T., & Yoo, J. (2024)**. *Revisiting the Monetary Transmission Mechanism Through the Lens of High-Frequency Identification*. International Monetary Fund Working Paper.
+- **Christiano, L. J., Motto, R., & Trabandt, M. (2014)**. Risk shocks. *American Economic Review*, 104(1), 27–65.
+- **Cieslak, A., Hansen, S., McMahon, M., & Xiao, S. (2024)**. *Policymakers' Uncertainty*. Becker Friedman Institute for Economics Working Paper.
+- **Coibion, O., & Gorodnichenko, Y. (2012)**. What can survey forecasts tell us about information rigidities? *Journal of Political Economy*, 120(1), 116–159.
+- **Cormun, B., & De Leo, P. (2024)**. *Exchange Rate Dynamics and Monetary Policy in Open Economies*. Working Paper.
+- **Erik, B., Lombardi, M. J., Mihaljek, D., & Shin, H. S. (2020)**. *The Dollar, Bank Leverage and Real Economic Activity: An Evolving Relationship*. BIS Working Papers No. 847.
+- **Federal Reserve Bank of San Francisco (2025)**. *Monetary Policy Surprises and Macroeconomic Dynamics Data Series*. Economic Research Data Releases.
+- **Fukui, M., Nakamura, E., & Steinsson, J. (2025)**. *The Empirical Trilemma*. National Bureau of Economic Research Working Paper.
+- **di Giovanni, J., Levchenko, A. A., & Mejean, I. (2017)**. Large firms and international business cycle comovement. *American Economic Review*, 107(5), 598–602.
+- **Jacobson, M., Matthes, C., & Walker, T. (2026)**. *Comparing High-Frequency Shock Identification and Empirical DSGE Models*. Working Paper.
+- **Jarociński, M. (2024)**. *Central Bank Information Shocks and the Zero Lower Bound*. European Central Bank Working Paper.
+- **Jarociński, M., & Karadi, P. (2020)**. Deconstructing monetary policy surprises: The role of information shocks. *American Economic Journal: Macroeconomics*, 12(2), 1–43.
+- **Karadi, P., Schönle, R., & Wursten, J. (2024)**. *Price Setting in a Micro-to-Macro Menu Cost Model*. European Central Bank Working Paper.
+- **Kerssenfischer, M., & Schmeling, M. (2024)**. What moves markets? *Journal of Financial Economics*, 156, 103844.
+- **Lane, N. (2025)**. *Manufacturing Revolutions: Industrial Policy and Industrialization in South Korea*. Quarterly Journal of Economics (forthcoming).
+- **Morrison, J. (2025)**. *The Distributional Effects of Monetary Policy Across Occupations and Skill Groups*. Working Paper.
+- **Nakamura, E., & Steinsson, J. (2018)**. High-frequency identification of monetary non-neutrality: the information effect. *The Quarterly Journal of Economics*, 133(3), 1283–1330.
+- **Nakamura, E., & Steinsson, J. (2018b)**. Identification in macroeconomics. *Journal of Economic Perspectives*, 32(3), 59–86.
+- **Patterson, C., Del Negro, M., & Giannoni, M. P. (2023)**. *The Forward Guidance Puzzle and Survey Expectations*. Federal Reserve Bank of New York Staff Reports.
+- **Reis, R. (2009)**. A sticky-information general-equilibrium model for policy analysis. In *Central Banking, Analysis, and Economic Policies Book Series* (Vol. 13, pp. 227–283). Central Bank of Chile.
+- **Renault, T. (2017)**. Intraday online investor sentiment and return predictability in the financial markets. *Journal of Banking & Finance*, 84, 25–40.
+- **Miranda-Agrippino, S., & Rey, H. (2020)**. US monetary policy and the global financial cycle. *The Review of Economic Studies*, 87(6), 2754–2776.
+- **Shapiro, A. H., Sudhof, M., & Wilson, D. J. (2022)**. Measuring news sentiment. *Journal of Econometrics*, 228(2), 221–243.
+- **Zhou, X. (2024)**. *Monetary Policy and the Banking System: Micro Evidence from Call Reports*. Working Paper.
