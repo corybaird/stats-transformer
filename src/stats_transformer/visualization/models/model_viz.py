@@ -8,7 +8,7 @@ from stats_transformer.visualization.charts.bar import CoefficientBarChart
 
 class ModelVisualizer(BaseVisualizer):
 
-    def __init__(self, params_path=None, output_dir="reports/visualizations", file_format="png", dpi=300, style="default"):
+    def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
         super().__init__(params_path, output_dir, file_format, dpi, style)
     
     def load_model_from_json(self, json_path):

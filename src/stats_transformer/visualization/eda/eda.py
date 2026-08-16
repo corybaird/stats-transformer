@@ -8,7 +8,7 @@ from stats_transformer.visualization.base import BaseVisualizer
 class EDAVisualizer(BaseVisualizer):
     # Automates initial data inspection sequence (missingness, distributions)
 
-    def __init__(self, params_path=None, output_dir="reports/visualizations", file_format="png", dpi=300, style="default"):
+    def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
         super().__init__(params_path=params_path, output_dir=output_dir, file_format=file_format, dpi=dpi, style=style)
 
     def _get_numeric_cols(self, df):
@@ -44,11 +44,8 @@ class EDAVisualizer(BaseVisualizer):
             
         n_cols = 3
         n_rows = int(np.ceil(len(numeric_cols) / n_cols))
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 4 * n_rows))
-        if n_rows * n_cols > 1:
-            axes = axes.flatten()
-        else:
-            axes = [axes]
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 4 * n_rows), squeeze=False)
+        axes = axes.flatten()
         
         for i, col in enumerate(numeric_cols):
             if i < len(axes):
