@@ -38,7 +38,10 @@ class BlanchardQuahModel(ModelBase):
         k = self.y.shape[1]
         p = self.var_result.k_ar
         params = self.var_result.params
-        intercept_offset = 1 if 'const' in params.index else 0
+        # k_trend counts every deterministic row (2 for trend="ct"), unlike
+        # checking for 'const', which undercounts and slices the trend row as
+        # if it were a lag coefficient.
+        intercept_offset = self.var_result.k_trend
         sum_A = np.zeros((k, k))
         for lag in range(p):
             A_lag = params.iloc[intercept_offset + lag * k : intercept_offset + (lag + 1) * k, :].values.T
