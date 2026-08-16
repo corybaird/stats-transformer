@@ -38,7 +38,20 @@ def test_data_merger_standardize_entity(mock_load_config):
     # Needs to match ISO2 to ISO3 mapping present in dict_country_converter
     with patch("stats_transformer.featurization.data_merger.ISO2_TO_ISO3", {"US": "USA", "GB": "GBR", "AF": "AFG"}):
         standardized = merger.standardize_entity(df, "iso2")
-        
+
         assert "country" in standardized.columns
         assert standardized["country"].iloc[0] == "USA"
         assert standardized["country"].iloc[1] == "GBR"
+
+
+@patch("stats_transformer.featurization.data_merger.DataMerger._load_config", return_value={})
+def test_standardize_entity_uses_the_real_iso_mapping(mock_load_config):
+    # The test above patches ISO2_TO_ISO3 with a fake dict, which is why it
+    # passed while the real module-level mapping was an empty {} and every
+    # code silently passed through unconverted. This exercises the real one.
+    merger = DataMerger("dummy.yaml")
+    df = pd.DataFrame({"iso2": ["US", "GB", "EL", "ZZ"], "val": [1, 2, 3, 4]})
+
+    standardized = merger.standardize_entity(df, "iso2")
+
+    assert standardized["country"].tolist() == ["USA", "GBR", "GRC", "ZZ"]
