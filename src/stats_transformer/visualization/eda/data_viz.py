@@ -10,7 +10,7 @@ from stats_transformer.visualization.formatters.style import apply_style
 
 class DataVisualizer(BaseVisualizer):
     
-    def __init__(self, params_path=None, output_dir="reports/visualizations", file_format="png", dpi=300, style="default"):
+    def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
         super().__init__(params_path, output_dir, file_format, dpi, style)
         
     def create_visualization(self, data, feature_list=None, viz_type="histogram", display_only=False, **kwargs):
@@ -96,7 +96,7 @@ class DataVisualizer(BaseVisualizer):
             ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, fontsize=9, verticalalignment="top", bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
             filepath = self.save_figure(fig, f"histogram_{feature}", subdir, display_only=display_only)
             if not display_only:
-                saved_files.append(filepath)
+                saved_files.extend(filepath)
         return None if display_only else saved_files
     
     def create_scatter_plots(self, data, feature_list, target=None, hue=None, subdir="scatter_plots", display_only=False):
@@ -117,7 +117,7 @@ class DataVisualizer(BaseVisualizer):
                 
                 filepath = self.save_figure(fig, f"scatter_{feature}_vs_{target}", subdir, display_only=display_only)
                 if not display_only:
-                    saved_files.append(filepath)
+                    saved_files.extend(filepath)
         return None if display_only else saved_files
     
     def create_distribution_plots(self, data, feature_list, by_group=None, subdir="distributions", display_only=False):
@@ -143,7 +143,7 @@ class DataVisualizer(BaseVisualizer):
             
             filepath = self.save_figure(fig, f"distribution_{feature}", subdir, display_only=display_only)
             if not display_only:
-                saved_files.append(filepath)
+                saved_files.extend(filepath)
         return None if display_only else saved_files
     
     def create_correlation_matrix(self, data, feature_list, method="pearson", subdir="correlations", display_only=False):
@@ -166,7 +166,7 @@ class DataVisualizer(BaseVisualizer):
             plt.tight_layout()
             filepath = self.save_figure(fig, f"boxplot_{feature}", subdir, display_only=display_only)
             if not display_only:
-                saved_files.append(filepath)
+                saved_files.extend(filepath)
         return None if display_only else saved_files
     
     def test_normality(self, data, feature_list, test_type="shapiro", subdir="normality_tests", display_only=False):
