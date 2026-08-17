@@ -38,7 +38,7 @@ To avoid confusion, every example script and model implementation in `stats-tran
 
 ## 2. Master Comparison & Example Catalog
 
-The table below catalogs all 25 example modules in `src/examples/`, detailing their academic citations, script paths, data sources, intuitive verification statuses, and benchmark targets.
+The table below catalogs all 26 example modules in `src/examples/`, detailing their academic citations, script paths, data sources, intuitive verification statuses, and benchmark targets.
 
 | Domain / Method | Script Module Path | Academic Paper / Benchmark Target | Data Source / Location | Intuitive Verification Status | Target Verification / Compared Object |
 | --- | --- | --- | --- | --- | --- |
@@ -69,6 +69,7 @@ The table below catalogs all 25 example modules in `src/examples/`, detailing th
 | **News Sentiment** | `src.examples.academic.shapiro_sudhof_wilson_2022` | Shapiro, Sudhof, & Wilson (2022) | `data/examples/academic/shapiro_sudhof_wilson_2022/` | **Paper Replication Example** | Daily news sentiment featurization & Robust OLS |
 | **Industrial Policy** | `src.examples.academic.lane_2025` | Lane (2025) | `data/examples/academic/lane_2025/` | **Paper Replication Example** | Targeted policy lending Robust OLS regression |
 | **Dynamic Factor Model** | `src.examples.academic.miranda_agrippino_rey_2020` | Miranda-Agrippino & Rey (2020) | `data/examples/academic/miranda_agrippino_rey_2020/` (published factor series only; no asset-price input panel available) | **Illustrative Method Demo (Synthetic Input)** | EM-estimated dynamic factor extraction from a synthetic risky-asset panel |
+| **Survey Forecast Rigidity** | `src.examples.academic.coibion_gorodnichenko_2012` | Coibion & Gorodnichenko (2012) | `data/examples/academic/coibion_gorodnichenko_2012/` (Greenbook extract; simplified single-series specification) | **Paper Replication Example** | Two-step GMM forecast-error / revision orthogonality test |
 | **Provider Pipeline** | `src.examples.featurization.fred` | St. Louis Fed FRED API | Remote FRED API / Local cache | **Data & Feature Pipeline Demo** | Automated multi-series FRED data download & alignment |
 | **Provider Pipeline** | `src.examples.featurization.monetary` | Federal Reserve Macro Series | `data/raw/` | **Data & Feature Pipeline Demo** | Monetary policy indicator featurization pipeline |
 

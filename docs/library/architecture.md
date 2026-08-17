@@ -135,7 +135,8 @@ flowchart TD
 | **Regression** | `RegressionModel` | OLS regression with intercept or entity fixed effects | Pipeline: `ols`; Direct API |
 | **Regression** | `RobustOLSModel` | Heteroskedasticity/autocorrelation robust OLS (HC/HAC) | Pipeline: `robust_ols`; Direct API |
 | **Regression** | `PanelRegressionModel` | Entity & time fixed effects panel regression | Pipeline: `panel_ols`; Direct API |
-| **Regression** | `IV2SLSModel` | 2-Stage Least Squares instrumental variables regression | Direct API |
+| **Regression** | `IV2SLSModel` | 2-Stage Least Squares instrumental variables regression | Pipeline: `iv`; Direct API |
+| **Regression** | `GMMModel` | Generalized Method of Moments (one-step, two-step, iterated, CUE; HAC weighting; J-test) | Pipeline: `gmm`; Direct API |
 | **Regression** | `SpecificationRunner` | Multi-specification regression runner utility | Direct API |
 | **Time Series** | `VARModel` | Reduced-form OLS Vector Autoregression | Direct API |
 | **Time Series** | `VECMModel` | Johansen Cointegrated Vector Error Correction Model | Direct API |
@@ -166,7 +167,7 @@ flowchart TD
 
 #### Access Modes: Pipeline Supported vs Direct API
 
-- **Pipeline Supported (YAML Dispatcher)**: The automated `Pipeline` orchestrator reads a `params.yaml` configuration file and routes the execution via `model.model_type` (e.g. `model_type: ols`, `robust_ols`, `panel_ols`, `pca`, `kmeans`, `blanchard_quah`, `proxy_svar`, `sign_restrictions`, `local_projections`, `lp_iv`, `dynamic_factor`). This allows non-programmatic, reproducible execution across full pipeline stages (`resample` -> `features` -> `regression` -> `visualization`).
+- **Pipeline Supported (YAML Dispatcher)**: The automated `Pipeline` orchestrator reads a `params.yaml` configuration file and routes the execution via `model.model_type` (e.g. `model_type: ols`, `robust_ols`, `panel_ols`, `pca`, `kmeans`, `blanchard_quah`, `proxy_svar`, `sign_restrictions`, `local_projections`, `lp_iv`, `dynamic_factor`, `gmm`). This allows non-programmatic, reproducible execution across full pipeline stages (`resample` -> `features` -> `regression` -> `visualization`).
 - **Direct API Usage**: Specialized estimators and diagnostic utilities (such as `VARModel`, `VECMModel`, `SVARModel`, `VolatilitySVARModel`, `IndependenceSVARModel`, `ARIMAModel`, `IV2SLSModel`, `LogitModel`, `GrangerCausalityTester`) can be instantiated directly as Python classes (`model = VARModel(...)`). Direct API usage provides full control over estimation parameters, custom matrix masks, and advanced structural identification loops.
 
 ---
