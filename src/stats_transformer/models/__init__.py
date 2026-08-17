@@ -4,6 +4,7 @@ from .regression.robust_ols import RobustOLSModel
 from .regression.panel import PanelRegressionModel
 from .regression.iv import IV2SLSModel
 from .regression.panel_iv import PanelIV2SLSModel
+from .regression.gmm import GMMModel
 from .discrete.logit import LogitModel
 from .discrete.probit import ProbitModel
 from .unsupervised.unsupervised import UnsupervisedModel, PCAModel, KMeansModel
@@ -35,6 +36,7 @@ __all__ = [
     "PanelRegressionModel",
     "IV2SLSModel",
     "PanelIV2SLSModel",
+    "GMMModel",
     "LogitModel",
     "ProbitModel",
     "UnsupervisedModel",
