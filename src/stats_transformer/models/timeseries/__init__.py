@@ -5,6 +5,7 @@ from .arima import ARIMAModel
 from .granger import GrangerCausalityTester
 from .reduced_form.local_projections import LocalProjectionsModel
 from .reduced_form.local_projections_iv import LocalProjectionsIVModel
+from .reduced_form.dynamic_factor import DynamicFactorModel
 from .identification.proxy_svar import ProxySVARModel
 from .identification.sign_zero import SignZeroSVARModel
 from .identification.volatility import VolatilitySVARModel
@@ -16,6 +17,7 @@ from .reduced_form.vecm import VECMModel
 
 __all__ = [
     "BlanchardQuahModel",
+    "DynamicFactorModel",
     "ForecastEvaluator",
     "ARIMAModel",
     "GrangerCausalityTester",
