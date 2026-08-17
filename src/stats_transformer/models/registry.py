@@ -18,9 +18,15 @@ from stats_transformer.models.timeseries import (
     SignZeroSVARModel,
     VolatilitySVARModel,
     IndependenceSVARModel,
+    CVMSVARModel,
+    NonGaussianSVARModel,
     SVARModel,
     VARModel,
     VECMModel,
+    SVECModel,
+    TVARModel,
+    TVECMModel,
+    STVARModel,
 )
 
 MODEL_REGISTRY = {
@@ -37,14 +43,20 @@ MODEL_REGISTRY = {
     "kmeans": {"cls": KMeansModel, "kind": "unsupervised"},
     "var": {"cls": VARModel, "kind": "svar_family"},
     "vecm": {"cls": VECMModel, "kind": "svar_family"},
+    "svec": {"cls": SVECModel, "kind": "svar_family"},
     "svar": {"cls": SVARModel, "kind": "svar_family"},
     "blanchard_quah": {"cls": BlanchardQuahModel, "kind": "svar_family"},
     "proxy_svar": {"cls": ProxySVARModel, "kind": "svar_family"},
     "sign_restrictions": {"cls": SignZeroSVARModel, "kind": "svar_family"},
     "volatility_svar": {"cls": VolatilitySVARModel, "kind": "svar_family"},
     "independence_svar": {"cls": IndependenceSVARModel, "kind": "svar_family"},
+    "cvm_svar": {"cls": CVMSVARModel, "kind": "svar_family"},
+    "non_gaussian_svar": {"cls": NonGaussianSVARModel, "kind": "svar_family"},
     "dynamic_factor": {"cls": DynamicFactorModel, "kind": "svar_family"},
     "bvar": {"cls": BVARModel, "kind": "svar_family"},
+    "tvar": {"cls": TVARModel, "kind": "svar_family"},
+    "tvecm": {"cls": TVECMModel, "kind": "svar_family"},
+    "stvar": {"cls": STVARModel, "kind": "svar_family"},
     "local_projections": {"cls": LocalProjectionsModel, "kind": "lp"},
     "lp_iv": {"cls": LocalProjectionsIVModel, "kind": "lp_iv"},
 }
@@ -53,6 +65,8 @@ MODEL_TYPE_ALIASES = {
     "iv_2sls": "iv",
     "2sls": "iv",
     "sign_zero": "sign_restrictions",
+    "cvm": "cvm_svar",
+    "non_gaussian": "non_gaussian_svar",
 }
 
 # ModelBase subclasses that are intentionally not reachable via Pipeline's

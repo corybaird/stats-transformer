@@ -107,3 +107,45 @@ def test_independence_svar_model():
     assert 'opt_success' in metrics
     assert model.structural_impact is not None
     assert model.structural_impact.shape == (2, 2)
+
+
+def test_cvm_svar_model():
+    from stats_transformer.models.timeseries.identification.cvm import CVMSVARModel
+    np.random.seed(42)
+    T = 80
+    e1 = np.random.laplace(size=T)
+    e2 = np.random.laplace(size=T)
+    B = np.array([[1.0, 0.5], [0.2, 1.0]])
+    u = B @ np.vstack([e1, e2])
+    y = np.zeros((T, 2))
+    for t in range(1, T):
+        y[t] = 0.4 * y[t - 1] + u[:, t]
+    df = pd.DataFrame({"y1": y[:, 0], "y2": y[:, 1]})
+
+    model = CVMSVARModel(target_variables=["y1", "y2"], maxlags=1, n_starts=1)
+    metrics = model.fit(df)
+    assert "opt_success" in metrics
+    assert model.B_0.shape == (2, 2)
+    assert "Cramér-von Mises" in model.get_summary()
+
+
+def test_non_gaussian_svar_model():
+    from stats_transformer.models.timeseries.identification.non_gaussian import NonGaussianSVARModel
+    np.random.seed(42)
+    T = 80
+    e1 = np.random.standard_t(df=4, size=T)
+    e2 = np.random.standard_t(df=4, size=T)
+    B = np.array([[1.0, 0.4], [0.3, 1.0]])
+    u = B @ np.vstack([e1, e2])
+    y = np.zeros((T, 2))
+    for t in range(1, T):
+        y[t] = 0.4 * y[t - 1] + u[:, t]
+    df = pd.DataFrame({"y1": y[:, 0], "y2": y[:, 1]})
+
+    model = NonGaussianSVARModel(target_variables=["y1", "y2"], maxlags=1, n_starts=1)
+    metrics = model.fit(df)
+    assert "log_likelihood" in metrics
+    assert model.B_0.shape == (2, 2)
+    assert model.df_nu is not None
+    assert len(model.df_nu) == 2
+    assert "Non-Gaussian" in model.get_summary()

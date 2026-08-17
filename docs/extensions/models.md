@@ -24,9 +24,9 @@ The model extensions are organized into four implementation tiers based on algor
 | Triage Tier | Complexity | Primary Benchmarks | Target Models & Tools | Status |
 | --- | --- | --- | --- | --- |
 | **Tier 1: Linear Reduced-Form** | Low / Baseline | R `vars`, `statsmodels` | OLS VAR, VECM, Restricted VAR, Lag Selection (`VARselect`), Residual Diagnostics, Companion Stability | **Implemented** |
-| **Tier 2: Structural Identification** | Medium | R `vars`, VAR-Toolbox | Short/Long-Run SVAR, Blanchard-Quah, SVEC, Sign & Zero Restrictions, Narrative Restrictions, Bootstrap Bounds | **Implemented**, except SVEC (*Planned*) |
-| **Tier 3: Data-Driven SVAR** | Medium / High | R `svars` | Changes in Volatility (Rigobon), Distance Covariance (ICA), Cramér-von Mises (CVM), Non-Gaussian ML, Permutation/Sign Alignment | Volatility, ICA, sign alignment **Implemented**; CVM, Non-Gaussian ML, permutation matching *Planned* |
-| **Tier 4: Non-Linear & Regime-Switching** | High | R `tsDyn`, R `sstvars` | Threshold VAR (TVAR), Threshold VECM (TVECM), Smooth Transition VAR (STVAR), Generalized IRF (GIRF) | *Planned* — `models/timeseries/nonlinear/` does not exist yet |
+| **Tier 2: Structural Identification** | Medium | R `vars`, VAR-Toolbox | Short/Long-Run SVAR, Blanchard-Quah, SVEC, Sign & Zero Restrictions, Narrative Restrictions, Bootstrap Bounds | **Implemented** |
+| **Tier 3: Data-Driven SVAR** | Medium / High | R `svars` | Changes in Volatility (Rigobon), Distance Covariance (ICA), Cramér-von Mises (CVM), Non-Gaussian ML, Permutation/Sign Alignment | **Implemented**; permutation matching *Planned* |
+| **Tier 4: Non-Linear & Regime-Switching** | High | R `tsDyn`, R `sstvars` | Threshold VAR (TVAR), Threshold VECM (TVECM), Smooth Transition VAR (STVAR), Generalized IRF (GIRF) | **Implemented** |
 
 Per-model status is given in each section heading below. **Implemented** means the class exists and is importable; *Planned* means it is described here but not yet in the codebase.
 
@@ -97,13 +97,12 @@ Structural VAR models isolate structural shocks $\epsilon_t$ from reduced-form e
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/svar.py`, `blanchard_quah.py`
 - **Benchmark Target**: R `vars::SVAR` / Blanchard & Quah (1989).
 
-### 3.2 Structural VECM (`SVEC`) — *Planned*
+### 3.2 Structural VECM (`SVEC`) — **Implemented**
 
 - **Description**: Combining cointegration rank restrictions $\beta$ with structural short-run and long-run restrictions.
 - **Identification**: Separates permanent shocks (matching cointegration rank $r$) from transitory shocks.
 - **Module Location**: `src/stats_transformer/models/timeseries/structural/svec.py`
 - **Benchmark Target**: R `vars::SVEC` / King, Plosser, Stock, and Watson (1991).
-- **Status**: the class wrapper and SR/LR restriction API exist, but the ML optimization estimating the free structural parameters is not implemented; constructing `SVEC` raises `NotImplementedError`.
 
 ### 3.3 Sign & Zero Restrictions (`SignZeroSVARModel`) — **Implemented**
 
@@ -145,16 +144,18 @@ Data-driven structural identification methods leverage statistical properties of
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/independence.py`
 - **Benchmark Target**: Matteson & Tsay (2017) / R `svars::id.dc`.
 
-### 4.3 Cramér-von Mises Distance (`CVMSVARModel`) — *Planned*
+### 4.3 Cramér-von Mises Distance (`CVMSVARModel`) — **Implemented**
 
 - **Description**: Identification by testing mutual independence using the Cramér-von Mises distance metric.
-- **Optimization**: Fast $O(T \log T)$ approximation (Huo & Székely 2016) for sample sizes where $O(T^2)$ calculation is computationally intensive.
+- **Optimization**: Multi-start optimization over orthogonal rotation angles.
+- **Module Location**: `src/stats_transformer/models/timeseries/identification/cvm.py`
 - **Benchmark Target**: R `svars::id.cvm`.
 
-### 4.4 Non-Gaussian Maximum Likelihood (`NonGaussianSVARModel`) — *Planned*
+### 4.4 Non-Gaussian Maximum Likelihood (`NonGaussianSVARModel`) — **Implemented**
 
-- **Description**: Identification assuming structural shocks follow non-Gaussian distributions (e.g. Student-t, Mixture of Normals).
-- **Estimation**: Direct Maximum Likelihood estimation over the unconstrained mixing matrix $B$.
+- **Description**: Identification assuming structural shocks follow non-Gaussian distributions (Student-t).
+- **Estimation**: Direct Maximum Likelihood estimation over unconstrained mixing matrices and degrees of freedom parameters.
+- **Module Location**: `src/stats_transformer/models/timeseries/identification/non_gaussian.py`
 - **Benchmark Target**: Lanne, Meitz, & Saikkonen (2010) / R `svars::id.ng`.
 
 ### 4.5 Permutation & Sign Alignment (module functions) — **Implemented** (partial)
@@ -170,7 +171,7 @@ Data-driven structural identification methods leverage statistical properties of
 
 Nonlinear multivariate models relax the assumption of linear, state-invariant dynamics to capture asymmetric responses, financial stress regimes, or business cycle threshold shifts.
 
-### 5.1 Threshold VAR (`TVARModel`) — *Planned*
+### 5.1 Threshold VAR (`TVARModel`) — **Implemented**
 
 - **Description**: Two-regime Threshold VAR model where system dynamics switch based on an observed threshold variable $y_{t-d}$ relative to threshold value $\gamma$.
 - **Specification**: 
@@ -179,21 +180,21 @@ Nonlinear multivariate models relax the assumption of linear, state-invariant dy
 - **Module Location**: `src/stats_transformer/models/timeseries/nonlinear/tvar.py`
 - **Benchmark Target**: R `tsDyn::TVAR`.
 
-### 5.2 Threshold VECM (`TVECMModel`) — *Planned*
+### 5.2 Threshold VECM (`TVECMModel`) — **Implemented**
 
 - **Description**: Combining threshold regime-switching behavior with long-run cointegrated Vector Error Correction dynamics.
 - **Specification**: Threshold search applied to error correction term $z_{t-1} = \beta' Y_{t-1}$.
 - **Module Location**: `src/stats_transformer/models/timeseries/nonlinear/tvecm.py`
 - **Benchmark Target**: R `tsDyn::TVECM`.
 
-### 5.3 Smooth Transition VAR (`STVARModel`) — *Planned*
+### 5.3 Smooth Transition VAR (`STVARModel`) — **Implemented**
 
 - **Description**: Continuous regime-switching model with smooth transition weights defined by a logistic or exponential function $G(y_{t-d}; \gamma, c)$.
 - **Transition Function**: $G(y_{t-d}; \gamma, c) = (1 + \exp(-\gamma (y_{t-d} - c)))^{-1}$.
 - **Module Location**: `src/stats_transformer/models/timeseries/nonlinear/stvar.py`
 - **Benchmark Target**: R `sstvars::STVAR`.
 
-### 5.4 Generalized Impulse Response Functions (`GIRFEngine`) — *Planned*
+### 5.4 Generalized Impulse Response Functions (`GIRFEngine`) — **Implemented**
 
 - **Description**: History-dependent, state-conditional impulse responses for non-linear models where responses depend on shock sign, magnitude, and initial state.
 - **Simulation**: Monte Carlo history-based simulation comparing shocked trajectories against baseline trajectories (Koop, Pesaran, & Potter 1996).

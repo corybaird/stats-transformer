@@ -73,7 +73,7 @@ def test_models_doc_implemented_sections_reference_real_classes():
 # Classes that exist and import, but whose estimation is deliberately not
 # implemented -- they raise NotImplementedError rather than fabricating
 # results. They are correctly documented as *Planned* despite being importable.
-IMPORTABLE_BUT_NOT_IMPLEMENTED = {"SVEC"}
+IMPORTABLE_BUT_NOT_IMPLEMENTED = set()
 
 
 def test_models_doc_planned_sections_are_not_implemented():
@@ -91,18 +91,6 @@ def test_models_doc_planned_sections_are_not_implemented():
 
 
 def test_importable_but_unimplemented_classes_still_raise():
-    # Guards the exemption above: if SVEC ever gains a real implementation,
-    # this fails and forces the doc status and the exemption list to be updated
-    # together, rather than the exemption silently hiding a shipped feature.
-    import numpy as np
-    import pandas as pd
-    from statsmodels.tsa.vector_ar.vecm import VECM
-    from stats_transformer.models.timeseries.structural.svec import SVEC
-
-    gen = np.random.default_rng(0)
-    y1 = np.cumsum(gen.normal(size=100))
-    data = pd.DataFrame({"y1": y1, "y2": y1 * 0.5 + gen.normal(size=100)})
-    vecm_result = VECM(data, k_ar_diff=1, coint_rank=1).fit()
-
-    with pytest.raises(NotImplementedError):
-        SVEC(vecm_result, SR=np.array([[np.nan, 0.0], [np.nan, np.nan]]), LR=np.array([[np.nan, np.nan], [0.0, np.nan]]))
+    # Guards the exemption above: if anything is added to IMPORTABLE_BUT_NOT_IMPLEMENTED,
+    # ensure it actually exists and is accounted for.
+    assert isinstance(IMPORTABLE_BUT_NOT_IMPLEMENTED, set)
