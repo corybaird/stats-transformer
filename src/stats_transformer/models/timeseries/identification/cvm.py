@@ -25,10 +25,11 @@ class CVMSVARModel(ModelBase):
         else:
             self.target_variables = []
 
-        self.date_column = date_column
-        self.maxlags = maxlags
-        self.n_starts = n_starts
-        self.seed = seed
+        model_params = self.params.get("model", {})
+        self.date_column = date_column or model_params.get("date_column")
+        self.maxlags = model_params.get("maxlags", maxlags)
+        self.n_starts = model_params.get("n_starts", n_starts)
+        self.seed = model_params.get("seed", seed)
 
         self.var_result = None
         self.structural_impact = None

@@ -23,13 +23,14 @@ class TVARModel(ModelBase):
         else:
             self.target_variables = []
 
-        self.date_column = date_column
-        self.threshold_variable = threshold_variable
-        self.lags = lags
-        self.delay = delay
-        self.trim = trim
-        self.gamma = gamma
-        self.intercept = intercept
+        model_params = self.params.get("model", {})
+        self.date_column = date_column or model_params.get("date_column")
+        self.threshold_variable = threshold_variable or model_params.get("threshold_variable")
+        self.lags = model_params.get("lags", lags)
+        self.delay = model_params.get("delay", delay)
+        self.trim = model_params.get("trim", trim)
+        self.gamma = model_params.get("gamma", gamma)
+        self.intercept = model_params.get("intercept", intercept)
 
         self.regime_1_params = None
         self.regime_2_params = None
