@@ -94,6 +94,9 @@ class Pipeline:
             shock_var = model_params.get("shock_variable") or (self.features[0] if self.features else None)
             controls = [f for f in (self.features or []) if f != shock_var]
             return cls(params_path=self.params_path, target=self.target, shock_var=shock_var, controls=controls, horizon=model_params.get("horizon", 8), date_column=model_params.get("date_column"))
+        if kind == "did":
+            model_params = self._get_config().to_dict().get("model", {})
+            return cls(entity_column=self.entity_column, time_column=model_params.get("time_column", self.date_column), cohort_column=model_params.get("cohort_column"), outcome_column=model_params.get("target_variable", self.target), control_variables=model_params.get("independent_variables", self.features), control_group=model_params.get("control_group", "never_treated"))
         raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
 
     def _build_from_args(self, entry: Dict[str, Any]) -> ModelBase:
@@ -116,6 +119,8 @@ class Pipeline:
             shock_var = self.kwargs.get("shock_variable") or (self.features[0] if self.features else None)
             controls = [f for f in (self.features or []) if f != shock_var]
             return cls(params_path=None, target=self.target, shock_var=shock_var, controls=controls, horizon=self.kwargs.get("horizon", 8), date_column=self.kwargs.get("date_column"))
+        if kind == "did":
+            return cls(entity_column=self.entity_column, time_column=self.kwargs.get("time_column", self.date_column), cohort_column=self.kwargs.get("cohort_column"), outcome_column=self.target, control_variables=self.features, control_group=self.kwargs.get("control_group", "never_treated"))
         raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
 
     def fit_transform(self, data: Union[str, pd.DataFrame], fit_model: bool = True) -> pd.DataFrame:
