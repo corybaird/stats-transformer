@@ -114,6 +114,20 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- *Usage*: Illustrative `DiDModel` fit on a tariff-liberalization cohort derived from the available extract (not the paper's own treatment definition), in
 		- `src/examples/academic/lane_2025.py`
 
+### 1.4d Conjugate Bayesian VAR
+
+- **Kadiyala, K. R., & Karlsson, S. (1997)**.
+	- Kadiyala, K. R., & Karlsson, S. (1997). Numerical methods for estimation and inference in Bayesian VAR-models. _Journal of Applied Econometrics_, _12_(2), 99-132.
+	- *Usage*: Natural-conjugate Normal-Inverse-Wishart posterior implemented in `BVARModel`
+		- `src/stats_transformer/models/timeseries/reduced_form/bvar.py`
+- **Litterman, R. B. (1986)**.
+	- Litterman, R. B. (1986). Forecasting with Bayesian vector autoregressions: Five years of experience. _Journal of Business & Economic Statistics_, _4_(1), 25-38.
+	- *Usage*: Minnesota prior moments (own-lag random-walk mean, lag-decay tightness, cross-variable shrinkage).
+- **Jarociński, M., & Karadi, P. (2020)**.
+	- Jarociński, M., & Karadi, P. (2020). Deconstructing monetary policy surprises: The role of information shocks. _American Economic Journal: Macroeconomics_, _12_(2), 1-43.
+	- *Usage*: Poor man's sign-restriction classification of monetary policy vs. information shocks on top of a fitted `BVARModel`, benchmarked in
+		- `src/examples/academic/jarocinski_karadi_2020.py`
+
 ### 1.5 Data-Driven SVAR Identification
 
 - **Rigobon, R. (2003)**. 

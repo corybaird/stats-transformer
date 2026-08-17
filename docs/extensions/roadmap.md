@@ -28,6 +28,7 @@ The table below provides a complete index of all models, target source folder lo
 | **Time Series (RF)** | `LocalProjectionsModel` | `models/timeseries/reduced_form/` | Local Projections (Jordà 2005) | `lpirfs::lp_lin` | `jorda` / `lproj` | Custom | *Planned* |
 | **Time Series (RF)** | `LocalProjectionsIVModel` | `models/timeseries/reduced_form/` | LP Instrumental Variables (Stock & Watson 2018) | `lpirfs::lp_lin_iv` | `lproj (iv)` | Custom | *Planned* |
 | **Time Series (RF)** | `DynamicFactorModel` | `models/timeseries/reduced_form/` | Dynamic Factor Model (Kalman Filter/Smoother, EM) | `MARSS` / `dfms` | `dfactor` | Custom | *Planned* |
+| **Time Series (Bayesian)** | `BVARModel` | `models/timeseries/reduced_form/` | Conjugate Normal-Inverse-Wishart BVAR (Minnesota prior) | `BVAR::bvar` | `bayes: var` | Custom | *Planned* |
 | **SVAR** | `SVARModel` | `models/timeseries/identification/` | Short-Run Cholesky / AB Restrictions | `vars::SVAR` | `svar` | VAR-Toolbox | *Planned* |
 | **SVAR** | `BlanchardQuahModel` | `models/timeseries/identification/` | Long-Run Impact Restrictions $C(1)$ | `vars::BQ` | `svar, lreq` | `VARmodel.m` (VAR-Toolbox) | **Verified** |
 | **SVAR** | `ProxySVARModel` | `models/timeseries/identification/` | External Instrument SVAR-IV | `svars` | SVAR-IV | VAR-Toolbox | *Planned* |
@@ -91,4 +92,5 @@ Every model implementation must enforce deterministic failure modes rather than 
 - **Tier 2 (Structural Identification)**: Short-Run SVAR, Long-Run Blanchard-Quah, SVEC, Sign/Zero Restrictions, and frequentist bootstrap confidence bounds.
 - **Tier 3 (Data-Driven Identification)**: Rigobon Changes in Volatility, Non-Gaussian ICA independence, and distance covariance.
 - **Tier 4 (Non-Linear Dynamics)**: Threshold VAR (TVAR), Threshold VECM (TVECM), Smooth Transition VAR (STVAR), and Generalized IRFs (GIRFs).
-- **Deferred Scope**: Bayesian VAR (BVAR), MCMC samplers, and posterior priors are intentionally deferred to maintain lightweight core dependencies.
+- **Tier 5 (Analytical Bayesian VAR)**: Conjugate Normal-Inverse-Wishart BVAR with a Minnesota prior (`BVARModel`), estimated via a closed-form posterior and direct posterior draws for IRF credible bands.
+- **Deferred Scope**: MCMC samplers (Gibbs sampling, Metropolis-Hastings), hierarchical/non-conjugate priors, and general state-space Bayesian estimation remain intentionally deferred to maintain lightweight core dependencies. Analytical conjugate BVAR is in scope precisely because it requires no sampler and no new dependencies.
