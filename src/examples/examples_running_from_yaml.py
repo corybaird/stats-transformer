@@ -7,12 +7,12 @@ class RunExamplesFromYaml:
     def __init__(self):
         self.config_dir = Path("references/configs")
         self.configs = [
-            "mincer_wage.yaml",
-            "grunfeld_panel.yaml",
-            "okuns_law.yaml",
-            "mroz_iv.yaml",
-            "nakamura_steinsson_pca.yaml",
-            "longley.yaml"
+            "regression/mincer_wage.yaml",
+            "regression/grunfeld_panel.yaml",
+            "regression/okuns_law.yaml",
+            "regression/mroz_iv.yaml",
+            "unsupervised/nakamura_steinsson_pca.yaml",
+            "regression/longley.yaml"
         ]
 
     def run(self):

@@ -1,0 +1,9 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: volatility_svar
+  target_variables:
+    - realgdp
+    - realinv
+  maxlags: 1

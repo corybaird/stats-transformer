@@ -65,7 +65,7 @@ class PaperFigureBuilder:
 
     def _make_mincer_coefficients(self):
         data = pd.read_csv("data/examples/regression/mincer_wage.csv")
-        model = RobustOLSModel(params_path="references/configs/mincer_wage.yaml")
+        model = RobustOLSModel(params_path="references/configs/regression/mincer_wage.yaml")
         model.fit(data)
         variables = ["educ", "exper", "expersq", "tenure"]
         coefficients = model.model.params.loc[variables].tolist()

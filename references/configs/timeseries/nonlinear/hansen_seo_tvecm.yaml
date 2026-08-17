@@ -1,0 +1,12 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: tvecm
+  target_variables:
+    - realgdp
+    - realinv
+  k_ar_diff: 1
+  coint_rank: 1
+  delay: 1
+  trim: 0.15

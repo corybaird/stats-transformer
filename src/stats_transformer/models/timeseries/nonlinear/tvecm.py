@@ -24,13 +24,14 @@ class TVECMModel(ModelBase):
         else:
             self.target_variables = []
 
-        self.date_column = date_column
-        self.k_ar_diff = k_ar_diff
-        self.coint_rank = coint_rank
-        self.delay = delay
-        self.trim = trim
-        self.gamma = gamma
-        self.deterministic = deterministic
+        model_params = self.params.get("model", {})
+        self.date_column = date_column or model_params.get("date_column")
+        self.k_ar_diff = model_params.get("k_ar_diff", k_ar_diff)
+        self.coint_rank = model_params.get("coint_rank", coint_rank)
+        self.delay = model_params.get("delay", delay)
+        self.trim = model_params.get("trim", trim)
+        self.gamma = model_params.get("gamma", gamma)
+        self.deterministic = model_params.get("deterministic", deterministic)
 
         self.beta = None
         self.regime_1_params = None

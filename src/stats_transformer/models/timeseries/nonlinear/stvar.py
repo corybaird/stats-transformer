@@ -24,14 +24,15 @@ class STVARModel(ModelBase):
         else:
             self.target_variables = []
 
-        self.date_column = date_column
-        self.transition_variable = transition_variable
-        self.lags = lags
-        self.delay = delay
-        self.gamma = gamma
-        self.c = c
-        self.intercept = intercept
-        self.max_iter = max_iter
+        model_params = self.params.get("model", {})
+        self.date_column = date_column or model_params.get("date_column")
+        self.transition_variable = transition_variable or model_params.get("transition_variable")
+        self.lags = model_params.get("lags", lags)
+        self.delay = model_params.get("delay", delay)
+        self.gamma = model_params.get("gamma", gamma)
+        self.c = model_params.get("c", c)
+        self.intercept = model_params.get("intercept", intercept)
+        self.max_iter = model_params.get("max_iter", max_iter)
 
         self.regime_1_params = None
         self.regime_2_params = None

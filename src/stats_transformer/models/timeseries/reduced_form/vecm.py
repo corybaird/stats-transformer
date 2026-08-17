@@ -8,10 +8,11 @@ class VECMModel(ModelBase):
 
     def __init__(self, target_variables=None, date_column=None, k_ar_diff=1, deterministic='n', **kwargs):
         super().__init__(**kwargs)
-        self.target_variables = target_variables or []
-        self.date_column = date_column
-        self.k_ar_diff = k_ar_diff
-        self.deterministic = deterministic
+        model_params = self.params.get("model", {})
+        self.target_variables = target_variables or getattr(self, "target_variables", []) or model_params.get("target_variables") or model_params.get("independent_variables", [])
+        self.date_column = date_column or model_params.get("date_column")
+        self.k_ar_diff = model_params.get("k_ar_diff", k_ar_diff)
+        self.deterministic = model_params.get("deterministic", deterministic)
 
     def _get_required_columns(self):
         cols = list(self.target_variables)

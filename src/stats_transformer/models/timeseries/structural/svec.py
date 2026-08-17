@@ -197,13 +197,14 @@ class SVECModel(ModelBase):
         else:
             self.target_variables = []
 
-        self.date_column = date_column
-        self.k_ar_diff = k_ar_diff
-        self.coint_rank = coint_rank
-        self.deterministic = deterministic
-        self.SR = SR
-        self.LR = LR
-        self.max_iter = max_iter
+        model_params = self.params.get("model", {})
+        self.date_column = date_column or model_params.get("date_column")
+        self.k_ar_diff = model_params.get("k_ar_diff", k_ar_diff)
+        self.coint_rank = model_params.get("coint_rank", coint_rank)
+        self.deterministic = model_params.get("deterministic", deterministic)
+        self.SR = SR if SR is not None else model_params.get("SR")
+        self.LR = LR if LR is not None else model_params.get("LR")
+        self.max_iter = model_params.get("max_iter", max_iter)
         self.svec_fit = None
 
     def _get_required_columns(self):

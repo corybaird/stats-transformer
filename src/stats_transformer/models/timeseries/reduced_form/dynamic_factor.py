@@ -9,13 +9,14 @@ class DynamicFactorModel(ModelBase):
 
     def __init__(self, target_variables=None, date_column=None, n_factors=1, factor_lags=1, max_iter=100, tol=1e-6, **kwargs):
         super().__init__(**kwargs)
-        self.target_variables = target_variables or []
-        self.date_column = date_column
-        self.time_column = date_column
-        self.n_factors = n_factors
-        self.factor_lags = factor_lags
-        self.max_iter = max_iter
-        self.tol = tol
+        model_params = self.params.get("model", {})
+        self.target_variables = target_variables or getattr(self, "target_variables", []) or model_params.get("target_variables") or model_params.get("independent_variables", [])
+        self.date_column = date_column or model_params.get("date_column")
+        self.time_column = self.date_column
+        self.n_factors = model_params.get("n_factors", n_factors)
+        self.factor_lags = model_params.get("factor_lags", factor_lags)
+        self.max_iter = model_params.get("max_iter", max_iter)
+        self.tol = float(model_params.get("tol", tol))
         self.scaler = StandardScaler()
         self.loglikelihood_history = []
         self.n_iter_ = 0

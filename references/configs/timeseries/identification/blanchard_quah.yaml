@@ -1,0 +1,9 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: blanchard_quah
+  target_variables:
+    - realgdp
+    - realcons
+  maxlags: 2

@@ -1,0 +1,10 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: independence_svar
+  target_variables:
+    - realgdp
+    - realinv
+  maxlags: 1
+  n_starts: 2

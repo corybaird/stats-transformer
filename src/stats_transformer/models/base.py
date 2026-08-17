@@ -23,9 +23,11 @@ class ModelBase(ABC):
 
         if params_path:
             self.params = self._load_params(params_path)
-            self.target = self.params.get("model", {}).get("target_variable", target)
-            self.independent_variables = self.params.get("model", {}).get("independent_variables", independent_variables or [])
-            self.add_entity_fixed_effects = self.params.get("model", {}).get("ols", {}).get("add_entity_fixed_effects", add_entity_fixed_effects)
+            model_params = self.params.get("model", {})
+            self.target = model_params.get("target_variable", target)
+            self.independent_variables = model_params.get("independent_variables", independent_variables or [])
+            self.target_variables = model_params.get("target_variables") or self.independent_variables or []
+            self.add_entity_fixed_effects = model_params.get("ols", {}).get("add_entity_fixed_effects", add_entity_fixed_effects)
             feat_params = self.params.get("data", {}).get("featurization", self.params.get("featurization", {}))
             self.entity_column = feat_params.get("entity_column", entity_column)
         else:
