@@ -11,34 +11,36 @@ The table below provides a complete index of all models, target source folder lo
 | Domain / Family | Model Class | Target Source Folder | Method / Specification | R Target | Stata Target | MATLAB Target | Verification Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Regression** | `RegressionModel` | `models/regression/` | Ordinary Least Squares (OLS) | `stats::lm` | `regress` | `mldivide` | **Verified** |
-| **Regression** | `RobustOLSModel` | `models/regression/` | Robust Covariance (HC1-HC3, HAC) | `sandwich::vcovHC` | `regress, robust` | `hac` | *Planned* |
-| **Regression** | `IV2SLSModel` | `models/regression/` | Two-Stage Least Squares (2SLS) | `AER::ivreg` | `ivregress 2sls` | Econ Toolbox | *Planned* |
-| **Regression** | `PanelRegressionModel` | `models/regression/` | Fixed Effects & Random Effects | `plm::plm` | `xtreg` | `fitlmem` | *Planned* |
-| **Regression** | `PanelIV2SLSModel` | `models/regression/` | 2SLS + Fixed Effects & Random Effects | `fixest::feols` | `xtivreg`, `fe` |  | *Planned* |
-| **Regression** | `GMMModel` | `models/regression/` | Generalized Method of Moments (2-step, iterated, CUE) | `gmm::gmm` | `gmm` | Econ Toolbox | *Planned* |
-| **Regression** | `DiDModel` | `models/regression/` | Callaway-Sant'Anna Staggered Difference-in-Differences | `did::att_gt` | `csdid` |  | *Planned* |
+| **Regression** | `RobustOLSModel` | `models/regression/` | Robust Covariance (HC1-HC3, HAC) | `sandwich::vcovHC` | `regress, robust` | `hac` | **Implemented** |
+| **Regression** | `IV2SLSModel` | `models/regression/` | Two-Stage Least Squares (2SLS) | `AER::ivreg` | `ivregress 2sls` | Econ Toolbox | **Implemented** |
+| **Regression** | `PanelRegressionModel` | `models/regression/` | Fixed Effects & Random Effects | `plm::plm` | `xtreg` | `fitlmem` | **Implemented** |
+| **Regression** | `PanelIV2SLSModel` | `models/regression/` | 2SLS + Fixed Effects & Random Effects | `fixest::feols` | `xtivreg`, `fe` | Econ Toolbox | **Implemented** |
+| **Regression** | `GMMModel` | `models/regression/` | Generalized Method of Moments (2-step, iterated, CUE) | `gmm::gmm` | `gmm` | Econ Toolbox | **Implemented** |
+| **Regression** | `DiDModel` | `models/regression/` | Callaway-Sant'Anna Staggered Difference-in-Differences | `did::att_gt` | `csdid` | Custom | **Implemented** |
 | **Discrete Choice** | `LogitModel` | `models/discrete/` | Binary Logit MLE | `stats::glm` | `logit` | `fitglm` | **Verified** |
 | **Discrete Choice** | `ProbitModel` | `models/discrete/` | Binary Probit MLE | `stats::glm(probit)` | `probit` | `fitglm` | **Implemented** |
 | **Unsupervised** | `PCAModel` | `models/unsupervised/` | Principal Component Analysis | `stats::prcomp` | `pca` | `pca` | **Verified** |
-| **Unsupervised** | `KMeansModel` | `models/unsupervised/` | K-Means Clustering | `stats::kmeans` | `cluster kmeans` | `kmeans` | *Planned* |
-| **Time Series (RF)** | `VARModel` | `models/timeseries/reduced_form/` | Reduced-Form VAR ($p$) | `vars::VAR` | `var` | `varm` | *Planned* |
-| **Time Series (RF)** | `VECMModel` | `models/timeseries/reduced_form/` | Vector Error Correction Model | `urca::ca.jo` | `vec` | `vecm` | *Planned* |
-| **Time Series (RF)** | `RestrictedVAR` | `models/timeseries/reduced_form/` | Zero-Restricted Coefficient VAR | `vars::restrict` | `var (constrained)` | `varm` | *Planned* |
-| **Time Series (RF)** | `ARIMAModel` | `models/timeseries/reduced_form/` | Autoregressive Integrated Moving Average | `forecast::auto.arima` | `arima` | `arima` | *Planned* |
-| **Time Series (RF)** | `LocalProjectionsModel` | `models/timeseries/reduced_form/` | Local Projections (Jordà 2005) | `lpirfs::lp_lin` | `jorda` / `lproj` | Custom | *Planned* |
-| **Time Series (RF)** | `LocalProjectionsIVModel` | `models/timeseries/reduced_form/` | LP Instrumental Variables (Stock & Watson 2018) | `lpirfs::lp_lin_iv` | `lproj (iv)` | Custom | *Planned* |
-| **Time Series (RF)** | `DynamicFactorModel` | `models/timeseries/reduced_form/` | Dynamic Factor Model (Kalman Filter/Smoother, EM) | `MARSS` / `dfms` | `dfactor` | Custom | *Planned* |
-| **Time Series (Bayesian)** | `BVARModel` | `models/timeseries/reduced_form/` | Conjugate Normal-Inverse-Wishart BVAR (Minnesota prior) | `BVAR::bvar` | `bayes: var` | Custom | *Planned* |
-| **SVAR** | `SVARModel` | `models/timeseries/identification/` | Short-Run Cholesky / AB Restrictions | `vars::SVAR` | `svar` | VAR-Toolbox | *Planned* |
+| **Unsupervised** | `KMeansModel` | `models/unsupervised/` | K-Means Clustering | `stats::kmeans` | `cluster kmeans` | `kmeans` | **Implemented** |
+| **Time Series (RF)** | `VARModel` | `models/timeseries/reduced_form/` | Reduced-Form VAR ($p$) | `vars::VAR` | `var` | `varm` | **Implemented** |
+| **Time Series (RF)** | `VECMModel` | `models/timeseries/reduced_form/` | Vector Error Correction Model | `urca::ca.jo` | `vec` | `vecm` | **Implemented** |
+| **Time Series (RF)** | `RestrictedVAR` | `models/timeseries/reduced_form/` | Zero-Restricted Coefficient VAR | `vars::restrict` | `var (constrained)` | `varm` | **Implemented** |
+| **Time Series (RF)** | `ARIMAModel` | `models/timeseries/reduced_form/` | Autoregressive Integrated Moving Average | `forecast::auto.arima` | `arima` | `arima` | **Implemented** |
+| **Time Series (RF)** | `LocalProjectionsModel` | `models/timeseries/reduced_form/` | Local Projections (Jordà 2005) | `lpirfs::lp_lin` | `jorda` / `lproj` | Custom | **Implemented** |
+| **Time Series (RF)** | `LocalProjectionsIVModel` | `models/timeseries/reduced_form/` | LP Instrumental Variables (Stock & Watson 2018) | `lpirfs::lp_lin_iv` | `lproj (iv)` | Custom | **Implemented** |
+| **Time Series (RF)** | `DynamicFactorModel` | `models/timeseries/reduced_form/` | Dynamic Factor Model (Kalman Filter/Smoother, EM) | `MARSS` / `dfms` | `dfactor` | Custom | **Implemented** |
+| **Time Series (Bayesian)** | `BVARModel` | `models/timeseries/reduced_form/` | Conjugate Normal-Inverse-Wishart BVAR (Minnesota prior) | `BVAR::bvar` | `bayes: var` | Custom | **Implemented** |
+| **SVAR** | `SVARModel` | `models/timeseries/identification/` | Short-Run Cholesky / AB Restrictions | `vars::SVAR` | `svar` | VAR-Toolbox | **Implemented** |
 | **SVAR** | `BlanchardQuahModel` | `models/timeseries/identification/` | Long-Run Impact Restrictions $C(1)$ | `vars::BQ` | `svar, lreq` | `VARmodel.m` (VAR-Toolbox) | **Verified** |
-| **SVAR** | `ProxySVARModel` | `models/timeseries/identification/` | External Instrument SVAR-IV | `svars` | SVAR-IV | VAR-Toolbox | *Planned* |
-| **SVAR** | `SignZeroSVARModel` | `models/timeseries/identification/` | Sign & Zero Restrictions (Rubio-Ramírez et al.) | `BMR` / `VARsignR` | Custom | VAR-Toolbox | *Planned* |
-| **SVAR** | `VolatilitySVARModel` | `models/timeseries/identification/` | Identification by Volatility Breaks | `svars` | Custom | Custom | *Planned* |
-| **SVAR** | `IndependenceSVARModel` | `models/timeseries/identification/` | Non-Gaussian ICA Identification | `svars` | Custom | Custom | *Planned* |
-| **SVAR** | `SVECModel` | `models/timeseries/structural/` | Structural VECM (King et al. 1991) | `vars::SVEC` | `svar` / `vec` | VAR-Toolbox | *Planned* |
-| **Non-Linear** | `TVARModel` | `models/timeseries/nonlinear/` | Two-Regime Threshold VAR | `tsDyn::TVAR` | `tvar` | Custom | *Planned* |
-| **Non-Linear** | `TVECMModel` | `models/timeseries/nonlinear/` | Threshold VECM | `tsDyn::TVECM` | `tvecm` | Custom | *Planned* |
-| **Non-Linear** | `STVARModel` | `models/timeseries/nonlinear/` | Smooth Transition VAR & GIRFs | `sstvars` | Custom | Custom | *Planned* |
+| **SVAR** | `ProxySVARModel` | `models/timeseries/identification/` | External Instrument SVAR-IV | `svars` | SVAR-IV | VAR-Toolbox | **Implemented** |
+| **SVAR** | `SignZeroSVARModel` | `models/timeseries/identification/` | Sign & Zero Restrictions (Rubio-Ramírez et al.) | `BMR` / `VARsignR` | Custom | VAR-Toolbox | **Implemented** |
+| **SVAR** | `VolatilitySVARModel` | `models/timeseries/identification/` | Identification by Volatility Breaks | `svars` | Custom | Custom | **Implemented** |
+| **SVAR** | `IndependenceSVARModel` | `models/timeseries/identification/` | Non-Gaussian ICA Identification | `svars` | Custom | Custom | **Implemented** |
+| **SVAR** | `CVMSVARModel` | `models/timeseries/identification/` | Cramér-von Mises Distance SVAR | `svars::id.cvm` | Custom | Custom | **Implemented** |
+| **SVAR** | `NonGaussianSVARModel` | `models/timeseries/identification/` | Non-Gaussian Maximum Likelihood SVAR | `svars::id.ng` | Custom | Custom | **Implemented** |
+| **SVAR** | `SVECModel` | `models/timeseries/structural/` | Structural VECM (King et al. 1991) | `vars::SVEC` | `svar` / `vec` | VAR-Toolbox | **Implemented** |
+| **Non-Linear** | `TVARModel` | `models/timeseries/nonlinear/` | Two-Regime Threshold VAR | `tsDyn::TVAR` | `tvar` | Custom | **Implemented** |
+| **Non-Linear** | `TVECMModel` | `models/timeseries/nonlinear/` | Threshold VECM | `tsDyn::TVECM` | `tvecm` | Custom | **Implemented** |
+| **Non-Linear** | `STVARModel` | `models/timeseries/nonlinear/` | Smooth Transition VAR & GIRFs | `sstvars` | Custom | Custom | **Implemented** |
 
 ---
 

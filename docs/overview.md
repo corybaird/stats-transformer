@@ -40,25 +40,40 @@ The pages should remain separate. Architecture and file layout are stable refere
 
 ## 3. Library model inventory
 
-The table distinguishes direct-use models from the smaller set currently exposed by the YAML `Pipeline`. “Direct” means instantiate the Python class and call its documented methods. “Pipeline” means the current dispatcher can select it with `model.model_type`.
+Every model listed below can be instantiated directly as a Python class or configured in YAML and dispatched through `Pipeline` using `model.model_type`.
 
 | Family | Model or utility | Primary use | Access |
 | --- | --- | --- | --- |
 | Regression | OLS (`RegressionModel`) | Linear regression with an intercept or entity dummies. | Pipeline: `ols`; direct |
 | Regression | Robust OLS (`RobustOLSModel`) | OLS with HC or HAC covariance estimation. | Pipeline: `robust_ols`; direct |
 | Regression | Panel OLS (`PanelRegressionModel`) | Entity and optional time fixed-effects panel regression. | Pipeline: `panel_ols`; direct |
-| Regression | IV 2SLS (`IV2SLSModel`) | Instrumental-variables estimation with `linearmodels`. | Direct |
-| Discrete | Logit (`LogitModel`) | Binary-outcome maximum-likelihood model. | Direct |
+| Regression | IV 2SLS (`IV2SLSModel`) | Instrumental-variables estimation with `linearmodels`. | Pipeline: `iv` (aliases: `iv_2sls`, `2sls`); direct |
+| Regression | Panel IV (`PanelIV2SLSModel`) | Panel two-stage least squares with fixed effects. | Pipeline: `panel_iv`; direct |
+| Regression | GMM (`GMMModel`) | Generalized Method of Moments (one-step, two-step, iterated, CUE). | Pipeline: `gmm`; direct |
+| Regression | DiD (`DiDModel`) | Callaway-Sant'Anna staggered difference-in-differences. | Pipeline: `did`; direct |
+| Discrete | Logit (`LogitModel`) | Binary-outcome maximum-likelihood logit model. | Pipeline: `logit`; direct |
+| Discrete | Probit (`ProbitModel`) | Binary-outcome maximum-likelihood probit model. | Pipeline: `probit`; direct |
 | Unsupervised | PCA (`PCAModel`) | Standardized principal components and explained variance. | Pipeline: `pca`; direct |
 | Unsupervised | K-means (`KMeansModel`) | Standardized clustering. | Pipeline: `kmeans`; direct |
-| Time series | VAR (`VARModel`) | Reduced-form multivariate dynamics, forecasts, and IRFs. | Direct |
-| Time series | VECM (`VECMModel`) | Cointegrated multivariate time series. | Direct |
-| Time series | SVAR (`SVARModel`) | Structural VAR under specified short-run restrictions. | Direct |
+| Time series | VAR (`VARModel`) | Reduced-form multivariate dynamics, forecasts, and IRFs. | Pipeline: `var`; direct |
+| Time series | VECM (`VECMModel`) | Cointegrated multivariate time series. | Pipeline: `vecm`; direct |
+| Time series | SVEC (`SVECModel`) | Structural VECM combining cointegration rank with restrictions. | Pipeline: `svec`; direct |
+| Time series | SVAR (`SVARModel`) | Structural VAR under specified short-run restrictions. | Pipeline: `svar`; direct |
 | Time series | Blanchard--Quah (`BlanchardQuahModel`) | Long-run structural identification for a VAR. | Pipeline: `blanchard_quah`; direct |
 | Time series | Proxy SVAR (`ProxySVARModel`) | External-instrument structural identification. | Pipeline: `proxy_svar`; direct |
-| Time series | Sign restrictions (`SignRestrictionsSVARModel`) | Structural identification through sign restrictions. | Pipeline: `sign_restrictions`; direct |
-| Time series | Local projections (`LocalProjectionsModel`) | Horizon-by-horizon impulse-response estimation. | Direct |
+| Time series | Sign & Zero SVAR (`SignZeroSVARModel`) | Structural identification via sign, zero, and narrative restrictions. | Pipeline: `sign_restrictions` (alias: `sign_zero`); direct |
+| Time series | Volatility SVAR (`VolatilitySVARModel`) | Changes-in-volatility structural identification across break regimes. | Pipeline: `volatility_svar`; direct |
+| Time series | Independence SVAR (`IndependenceSVARModel`) | Distance covariance and FastICA structural identification. | Pipeline: `independence_svar`; direct |
+| Time series | Cramér-von Mises SVAR (`CVMSVARModel`) | Distance metric testing mutual independence across rotations. | Pipeline: `cvm_svar` (alias: `cvm`); direct |
+| Time series | Non-Gaussian SVAR (`NonGaussianSVARModel`) | Maximum likelihood structural identification with Student-t shocks. | Pipeline: `non_gaussian_svar` (alias: `non_gaussian`); direct |
+| Time series | Dynamic Factor (`DynamicFactorModel`) | EM-estimated dynamic factor model with Kalman filtering. | Pipeline: `dynamic_factor`; direct |
+| Time series | Bayesian VAR (`BVARModel`) | Conjugate Normal-Inverse-Wishart prior analytical BVAR. | Pipeline: `bvar`; direct |
+| Time series | Threshold VAR (`TVARModel`) | Two-regime threshold vector autoregression. | Pipeline: `tvar`; direct |
+| Time series | Threshold VECM (`TVECMModel`) | Threshold cointegrated vector error correction. | Pipeline: `tvecm`; direct |
+| Time series | Smooth Transition VAR (`STVARModel`) | Smooth transition regime-switching VAR with GIRFs. | Pipeline: `stvar`; direct |
+| Time series | Local projections (`LocalProjectionsModel`) | Horizon-by-horizon impulse-response estimation. | Pipeline: `local_projections`; direct |
 | Time series | LP-IV (`LocalProjectionsIVModel`) | Instrumented local projections. | Pipeline: `lp_iv`; direct |
+| Time series | ARIMA (`ARIMAModel`) | Univariate autoregressive integrated moving average model. | Pipeline: `arima`; direct |
 | Time series | Decompositions (`TimeSeriesDecompositions`) | Historical, forecast-error, and related decompositions. | Direct utility |
 | Time series | Diagnostics and helpers | Stationarity checks, Granger tests, time-series features, and forecast evaluation. | Direct utilities |
 
@@ -104,4 +119,4 @@ Only the last label supports a claim of numerical parity, and only for the data,
 
 ## 6. Extension planning
 
-Future work is separated from documentation of current behavior. The [frequentist multivariate time-series roadmap](extensions/roadmap.md) proposes a phased expansion covering common reporting, fuller linear VAR diagnostics and forecasting, structural restrictions, selected data-driven SVAR methods, and nonlinear threshold models. Bayesian estimation is explicitly deferred to avoid adding a large dependency and maintenance surface before the frequentist foundation is complete.
+Future work is separated from documentation of current behavior. The [model extension roadmap](extensions/roadmap.md) and [planned models catalog](extensions/models.md) detail advanced structural identification, non-linear dynamics, and missing domain extensions. Closed-form conjugate Bayesian VAR (`BVARModel`) is implemented, while general MCMC sampling and hierarchical priors are tracked in the extended research roadmap.
