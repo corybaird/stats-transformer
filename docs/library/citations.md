@@ -100,6 +100,20 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- *Usage*: Simplified single-series forecast-error orthogonality test benchmarked in
 		- `src/examples/academic/coibion_gorodnichenko_2012.py`
 
+### 1.4c Staggered Difference-in-Differences
+
+- **Callaway, B., & Sant'Anna, P. H. (2021)**.
+	- Callaway, B., & Sant'Anna, P. H. (2021). Difference-in-differences with multiple time periods. _Journal of Econometrics_, _225_(2), 200-230.
+	- *Usage*: Implemented in `DiDModel` (group-time ATT(g,t), never-treated / not-yet-treated control groups, event-study and simple aggregation, pre-trend testing)
+		- `src/stats_transformer/models/regression/did.py`
+- **Goodman-Bacon, A. (2021)**.
+	- Goodman-Bacon, A. (2021). Difference-in-differences with variation in treatment timing. _Journal of Econometrics_, _225_(2), 254-277.
+	- *Usage*: Motivates the negative-weighting failure mode of naive two-way fixed effects under dynamic treatment effects, tested against in `tests/test_models/test_did_model.py`.
+- **Lane, N. (2025)**.
+	- Lane, N. (2025). Manufacturing Revolutions: Industrial Policy and Industrialization in South Korea. _Quarterly Journal of Economics_ (forthcoming).
+	- *Usage*: Illustrative `DiDModel` fit on a tariff-liberalization cohort derived from the available extract (not the paper's own treatment definition), in
+		- `src/examples/academic/lane_2025.py`
+
 ### 1.5 Data-Driven SVAR Identification
 
 - **Rigobon, R. (2003)**. 

@@ -16,6 +16,7 @@ The table below provides a complete index of all models, target source folder lo
 | **Regression** | `PanelRegressionModel` | `models/regression/` | Fixed Effects & Random Effects | `plm::plm` | `xtreg` | `fitlmem` | *Planned* |
 | **Regression** | `PanelIV2SLSModel` | `models/regression/` | 2SLS + Fixed Effects & Random Effects | `fixest::feols` | `xtivreg`, `fe` |  | *Planned* |
 | **Regression** | `GMMModel` | `models/regression/` | Generalized Method of Moments (2-step, iterated, CUE) | `gmm::gmm` | `gmm` | Econ Toolbox | *Planned* |
+| **Regression** | `DiDModel` | `models/regression/` | Callaway-Sant'Anna Staggered Difference-in-Differences | `did::att_gt` | `csdid` |  | *Planned* |
 | **Discrete Choice** | `LogitModel` | `models/discrete/` | Binary Logit MLE | `stats::glm` | `logit` | `fitglm` | **Verified** |
 | **Discrete Choice** | `ProbitModel` | `models/discrete/` | Binary Probit MLE | `stats::glm(probit)` | `probit` | `fitglm` | **Implemented** |
 | **Unsupervised** | `PCAModel` | `models/unsupervised/` | Principal Component Analysis | `stats::prcomp` | `pca` | `pca` | **Verified** |
