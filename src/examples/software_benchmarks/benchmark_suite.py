@@ -2,6 +2,9 @@ from src.examples.software_benchmarks.regression.regression_benchmark import Reg
 from src.examples.software_benchmarks.discrete.logit_benchmark import LogitBenchmark
 from src.examples.software_benchmarks.unsupervised.pca_benchmark import PCABenchmark
 from src.examples.software_benchmarks.timeseries.blanchard_quah_benchmark import BlanchardQuahBenchmark
+from src.examples.software_benchmarks.timeseries.var_benchmark import VARBenchmark
+from src.examples.software_benchmarks.timeseries.vecm_benchmark import VECMBenchmark
+from src.examples.software_benchmarks.timeseries.tvar_benchmark import TVARBenchmark
 
 
 class BenchmarkSuite:
@@ -12,13 +15,16 @@ class BenchmarkSuite:
             "LogitModel": LogitBenchmark(),
             "PCAModel": PCABenchmark(),
             "BlanchardQuahModel (SVAR)": BlanchardQuahBenchmark(),
+            "VARModel (Reduced-Form)": VARBenchmark(),
+            "VECMModel (Cointegration)": VECMBenchmark(),
+            "TVARModel (Threshold VAR)": TVARBenchmark(),
         }
 
     def run(self):
         print("==================================================")
         print("  STATS-TRANSFORMER SOFTWARE BENCHMARK SUITE      ")
         print("==================================================")
-        
+
         suite_results = {}
         for name, benchmark in self.benchmarks.items():
             print(f"\n--- Running {name} ---")
