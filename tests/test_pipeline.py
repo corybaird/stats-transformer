@@ -67,7 +67,7 @@ def test_pipeline_dispatches_model_type_from_params(tmp_path, model_type, expect
     data_config = {}
     if model_type in ("panel_ols", "panel_iv"):
         data_config = {"featurization": {"entity_column": "country"}}
-    if model_type == "iv":
+    if MODEL_REGISTRY[model_type]["kind"] == "iv":
         model_config["endogenous"] = ["x2"]
         model_config["instruments"] = ["z1"]
     elif model_type == "panel_iv":

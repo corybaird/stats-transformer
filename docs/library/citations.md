@@ -89,6 +89,17 @@ This document catalogs the academic literature, econometric papers, benchmark da
 		- `src/stats_transformer/models/timeseries/reduced_form/dynamic_factor.py`
 		- `src/examples/academic/miranda_agrippino_rey_2020.py`
 
+### 1.4b Generalized Method of Moments
+
+- **Hansen, L. P. (1982)**.
+	- Hansen, L. P. (1982). Large sample properties of generalized method of moments estimators. _Econometrica_, _50_(4), 1029-1054.
+	- *Usage*: Implemented in `GMMModel` (one-step, two-step, iterated, CUE weighting; overidentification J-test)
+		- `src/stats_transformer/models/regression/gmm.py`
+- **Coibion, O., & Gorodnichenko, Y. (2012)**.
+	- Coibion, O., & Gorodnichenko, Y. (2012). What can survey forecasts tell us about information rigidities? _Journal of Political Economy_, _120_(1), 116-159.
+	- *Usage*: Simplified single-series forecast-error orthogonality test benchmarked in
+		- `src/examples/academic/coibion_gorodnichenko_2012.py`
+
 ### 1.5 Data-Driven SVAR Identification
 
 - **Rigobon, R. (2003)**. 

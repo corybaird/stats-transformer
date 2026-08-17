@@ -6,6 +6,8 @@ from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.iv import IV2SLSModel
 from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
+from stats_transformer.models.regression.gmm import GMMModel
+from examples.academic.coibion_gorodnichenko_2012 import CoibionGorodnichenko2012Replication
 
 def test_robust_ols_model():
     df = pd.DataFrame({
@@ -99,6 +101,75 @@ def test_iv_2sls_model():
     assert "r_squared" in metrics
     assert metrics["num_observations"] == 100
     assert model.model is not None
+
+def _simulate_iv_data(seed=42, n=2000):
+    np.random.seed(seed)
+    z1 = np.random.normal(size=n)
+    z2 = np.random.normal(size=n)
+    u = np.random.normal(size=n)
+    x_exog = np.random.normal(size=n)
+    x_endog = 0.5 * z1 + 0.3 * z2 + 0.4 * u + np.random.normal(scale=0.5, size=n)
+    y = 1.0 + 2.0 * x_exog - 1.5 * x_endog + u + np.random.normal(scale=0.3, size=n)
+    return pd.DataFrame({"y": y, "x_exog": x_exog, "x_endog": x_endog, "z1": z1, "z2": z2})
+
+def test_gmm_model_matches_linearmodels_ivgmm():
+    from linearmodels.iv import IVGMM
+    df = _simulate_iv_data()
+
+    model = GMMModel(target="y", independent_variables=["x_exog"], endogenous=["x_endog"], instruments=["z1", "z2"], method="two_step", weighting="hac", bandwidth=0)
+    metrics = model.fit(df)
+
+    exog = pd.concat([pd.Series(1.0, index=df.index, name="const"), df["x_exog"]], axis=1)
+    reference = IVGMM(dependent=df["y"], exog=exog, endog=df[["x_endog"]], instruments=df[["z1", "z2"]], weight_type="robust").fit(iter_limit=2, cov_type="robust")
+
+    assert metrics["coefficients"]["const"] == pytest.approx(reference.params["const"], abs=1e-3)
+    assert metrics["coefficients"]["x_exog"] == pytest.approx(reference.params["x_exog"], abs=1e-3)
+    assert metrics["coefficients"]["x_endog"] == pytest.approx(reference.params["x_endog"], abs=1e-3)
+    assert metrics["j_statistic"] == pytest.approx(reference.j_stat.stat, abs=0.05)
+
+def test_gmm_model_methods_agree_under_correct_specification():
+    df = _simulate_iv_data()
+    coefficients = {}
+    for method in ["one_step", "two_step", "iterated", "cue"]:
+        model = GMMModel(target="y", independent_variables=["x_exog"], endogenous=["x_endog"], instruments=["z1", "z2"], method=method, weighting="hac", bandwidth=0)
+        metrics = model.fit(df)
+        coefficients[method] = metrics["coefficients"]["x_endog"]
+    for method, coef in coefficients.items():
+        assert coef == pytest.approx(-1.5, abs=0.05), f"{method} diverged: {coef}"
+
+def test_gmm_j_test_does_not_reject_valid_instruments():
+    df = _simulate_iv_data(seed=7)
+    model = GMMModel(target="y", independent_variables=["x_exog"], endogenous=["x_endog"], instruments=["z1", "z2"], method="two_step")
+    metrics = model.fit(df)
+    assert metrics["j_pvalue"] > 0.05
+
+def test_gmm_j_test_rejects_invalid_instrument():
+    np.random.seed(7)
+    n = 2000
+    z1 = np.random.normal(size=n)
+    z2 = np.random.normal(size=n)
+    u = np.random.normal(size=n)
+    x_exog = np.random.normal(size=n)
+    x_endog = 0.5 * z1 + 0.3 * z2 + 0.4 * u + np.random.normal(scale=0.5, size=n)
+    z2_invalid = z2 + 0.6 * u  # violates the exclusion restriction
+    y = 1.0 + 2.0 * x_exog - 1.5 * x_endog + u + np.random.normal(scale=0.3, size=n)
+    df = pd.DataFrame({"y": y, "x_exog": x_exog, "x_endog": x_endog, "z1": z1, "z2": z2_invalid})
+
+    model = GMMModel(target="y", independent_variables=["x_exog"], endogenous=["x_endog"], instruments=["z1", "z2"], method="two_step")
+    metrics = model.fit(df)
+    assert metrics["j_pvalue"] < 0.01
+
+def test_gmm_model_underidentified_raises():
+    df = _simulate_iv_data(n=200)
+    model = GMMModel(target="y", independent_variables=["x_exog"], endogenous=["x_endog", "z2"], instruments=[], method="two_step")
+    with pytest.raises(ValueError, match="underidentified"):
+        model.fit(df)
+
+def test_coibion_gorodnichenko_2012_replication():
+    result = CoibionGorodnichenko2012Replication().run()
+    assert "metrics" in result
+    assert result["metrics"]["num_observations"] > 0
+    assert "forecast_revision" in result["metrics"]["coefficients"]
 
 def test_regression_diagnostics():
     from stats_transformer.models.regression.diagnostics import RegressionDiagnostics
