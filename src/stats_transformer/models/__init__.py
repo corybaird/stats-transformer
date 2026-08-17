@@ -9,6 +9,7 @@ from .discrete.probit import ProbitModel
 from .unsupervised.unsupervised import UnsupervisedModel, PCAModel, KMeansModel
 from .timeseries import (
     BlanchardQuahModel,
+    DynamicFactorModel,
     LocalProjectionsModel,
     LocalProjectionsIVModel,
     ProxySVARModel,
@@ -40,6 +41,7 @@ __all__ = [
     "PCAModel",
     "KMeansModel",
     "BlanchardQuahModel",
+    "DynamicFactorModel",
     "LocalProjectionsModel",
     "LocalProjectionsIVModel",
     "ProxySVARModel",

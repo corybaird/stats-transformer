@@ -81,6 +81,14 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- Plagborg‐Møller, M., & Wolf, C. K. (2021). Local projections and VARs estimate the same impulse responses. _Econometrica_, _89_(2), 955-980.
 	  - *Usage*: Equivalence mapping between Local Projections and VAR impulse response dynamics.
 
+### 1.4a Dynamic Factor Models
+
+- **Miranda-Agrippino, S., & Rey, H. (2020)**.
+	- Miranda-Agrippino, S., & Rey, H. (2020). US monetary policy and the global financial cycle. _The Review of Economic Studies_, _87_(6), 2754-2776.
+	- *Usage*: Illustrative EM-estimated `DynamicFactorModel` extraction, benchmarked against the paper's published Global Factor reference series in
+		- `src/stats_transformer/models/timeseries/reduced_form/dynamic_factor.py`
+		- `src/examples/academic/miranda_agrippino_rey_2020.py`
+
 ### 1.5 Data-Driven SVAR Identification
 
 - **Rigobon, R. (2003)**. 

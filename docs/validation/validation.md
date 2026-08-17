@@ -29,6 +29,7 @@ To avoid confusion, every example script and model implementation in `stats-tran
 2. **Direct Python Verified (`statsmodels` / `linearmodels`)**: The estimated numerical outputs are cross-checked and matched against underlying Python packages on identical input data.
 3. **Paper Replication Example (Pending R/Stata/MATLAB Check)**: An executable Python script translating an academic paper's econometric specification, data transformations, and model structure. It runs end-to-end on real research data, and is queued for formal cross-language numerical comparison against R, Stata, or MATLAB published code.
 4. **Data & Feature Pipeline Demo**: Demonstrates automated data ingestion, frequency resampling, and featurization pipelines without estimating an econometric model.
+5. **Illustrative Method Demo (Synthetic Input)**: Demonstrates a model's estimation mechanics on a synthetic dataset with a known ground truth, because the paper's actual input data is not available in this repository. A published reference series may be loaded and displayed alongside for orientation, but it is not used as model input and is not a formal numerical comparison.
 
 > [!NOTE]
 > A script labeled as a **Paper Replication Example** is a functional Python implementation of a published paper. It becomes **Cross-Language Verified** once its numerical outputs are formally benchmarked against R, Stata, or MATLAB outputs within a documented tolerance.
@@ -37,7 +38,7 @@ To avoid confusion, every example script and model implementation in `stats-tran
 
 ## 2. Master Comparison & Example Catalog
 
-The table below catalogs all 24 example modules in `src/examples/`, detailing their academic citations, script paths, data sources, intuitive verification statuses, and benchmark targets.
+The table below catalogs all 25 example modules in `src/examples/`, detailing their academic citations, script paths, data sources, intuitive verification statuses, and benchmark targets.
 
 | Domain / Method | Script Module Path | Academic Paper / Benchmark Target | Data Source / Location | Intuitive Verification Status | Target Verification / Compared Object |
 | --- | --- | --- | --- | --- | --- |
@@ -67,6 +68,7 @@ The table below catalogs all 24 example modules in `src/examples/`, detailing th
 | **Policy Uncertainty** | `src.examples.academic.cieslak_hansen_mcmahon_xiao_2024` | Cieslak, Hansen, McMahon, & Xiao (2024) | `data/examples/academic/cieslak_hansen_mcmahon_xiao_2024/` | **Paper Replication Example** | Policymakers' Uncertainty OLS & VAR estimation |
 | **News Sentiment** | `src.examples.academic.shapiro_sudhof_wilson_2022` | Shapiro, Sudhof, & Wilson (2022) | `data/examples/academic/shapiro_sudhof_wilson_2022/` | **Paper Replication Example** | Daily news sentiment featurization & Robust OLS |
 | **Industrial Policy** | `src.examples.academic.lane_2025` | Lane (2025) | `data/examples/academic/lane_2025/` | **Paper Replication Example** | Targeted policy lending Robust OLS regression |
+| **Dynamic Factor Model** | `src.examples.academic.miranda_agrippino_rey_2020` | Miranda-Agrippino & Rey (2020) | `data/examples/academic/miranda_agrippino_rey_2020/` (published factor series only; no asset-price input panel available) | **Illustrative Method Demo (Synthetic Input)** | EM-estimated dynamic factor extraction from a synthetic risky-asset panel |
 | **Provider Pipeline** | `src.examples.featurization.fred` | St. Louis Fed FRED API | Remote FRED API / Local cache | **Data & Feature Pipeline Demo** | Automated multi-series FRED data download & alignment |
 | **Provider Pipeline** | `src.examples.featurization.monetary` | Federal Reserve Macro Series | `data/raw/` | **Data & Feature Pipeline Demo** | Monetary policy indicator featurization pipeline |
 

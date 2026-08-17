@@ -8,6 +8,7 @@ from stats_transformer.models.discrete.probit import ProbitModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
 from stats_transformer.models.timeseries import (
     BlanchardQuahModel,
+    DynamicFactorModel,
     LocalProjectionsModel,
     LocalProjectionsIVModel,
     ProxySVARModel,
@@ -37,6 +38,7 @@ MODEL_REGISTRY = {
     "sign_restrictions": {"cls": SignZeroSVARModel, "kind": "svar_family"},
     "volatility_svar": {"cls": VolatilitySVARModel, "kind": "svar_family"},
     "independence_svar": {"cls": IndependenceSVARModel, "kind": "svar_family"},
+    "dynamic_factor": {"cls": DynamicFactorModel, "kind": "svar_family"},
     "local_projections": {"cls": LocalProjectionsModel, "kind": "lp"},
     "lp_iv": {"cls": LocalProjectionsIVModel, "kind": "lp_iv"},
 }
