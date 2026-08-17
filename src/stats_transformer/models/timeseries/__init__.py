@@ -10,11 +10,18 @@ from .identification.proxy_svar import ProxySVARModel
 from .identification.sign_zero import SignZeroSVARModel
 from .identification.volatility import VolatilitySVARModel
 from .identification.independence import IndependenceSVARModel
+from .identification.cvm import CVMSVARModel
+from .identification.non_gaussian import NonGaussianSVARModel
 from .identification.svar import SVARModel
 from .utilities import ForecastEvaluator, TimeSeriesFeatureBuilder
 from .reduced_form.var import VARModel
 from .reduced_form.vecm import VECMModel
 from .reduced_form.bvar import BVARModel
+from .structural.svec import SVEC, SVECModel
+from .nonlinear.tvar import TVARModel
+from .nonlinear.tvecm import TVECMModel
+from .nonlinear.stvar import STVARModel
+from .nonlinear.girf import GIRFEngine
 
 __all__ = [
     "BlanchardQuahModel",
@@ -24,6 +31,8 @@ __all__ = [
     "ARIMAModel",
     "GrangerCausalityTester",
     "IndependenceSVARModel",
+    "CVMSVARModel",
+    "NonGaussianSVARModel",
     "LocalProjectionsModel",
     "LocalProjectionsIVModel",
     "ProxySVARModel",
@@ -35,4 +44,10 @@ __all__ = [
     "TimeSeriesFeatureBuilder",
     "VARModel",
     "VECMModel",
+    "SVEC",
+    "SVECModel",
+    "TVARModel",
+    "TVECMModel",
+    "STVARModel",
+    "GIRFEngine",
 ]
