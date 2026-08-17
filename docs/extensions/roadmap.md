@@ -25,6 +25,7 @@ The table below provides a complete index of all models, target source folder lo
 | **Time Series (RF)** | `ARIMAModel` | `models/timeseries/reduced_form/` | Autoregressive Integrated Moving Average | `forecast::auto.arima` | `arima` | `arima` | *Planned* |
 | **Time Series (RF)** | `LocalProjectionsModel` | `models/timeseries/reduced_form/` | Local Projections (Jordà 2005) | `lpirfs::lp_lin` | `jorda` / `lproj` | Custom | *Planned* |
 | **Time Series (RF)** | `LocalProjectionsIVModel` | `models/timeseries/reduced_form/` | LP Instrumental Variables (Stock & Watson 2018) | `lpirfs::lp_lin_iv` | `lproj (iv)` | Custom | *Planned* |
+| **Time Series (RF)** | `DynamicFactorModel` | `models/timeseries/reduced_form/` | Dynamic Factor Model (Kalman Filter/Smoother, EM) | `MARSS` / `dfms` | `dfactor` | Custom | *Planned* |
 | **SVAR** | `SVARModel` | `models/timeseries/identification/` | Short-Run Cholesky / AB Restrictions | `vars::SVAR` | `svar` | VAR-Toolbox | *Planned* |
 | **SVAR** | `BlanchardQuahModel` | `models/timeseries/identification/` | Long-Run Impact Restrictions $C(1)$ | `vars::BQ` | `svar, lreq` | `VARmodel.m` (VAR-Toolbox) | **Verified** |
 | **SVAR** | `ProxySVARModel` | `models/timeseries/identification/` | External Instrument SVAR-IV | `svars` | SVAR-IV | VAR-Toolbox | *Planned* |
