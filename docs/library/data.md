@@ -52,6 +52,7 @@ The `data/examples/` directory contains all datasets necessary for running libra
 - **Nakamura & Steinsson (2018)**: High-frequency monetary policy surprise series used in `src/examples/academic/nakamura_steinsson.py` and `nakamura_steinsson_pca.py`.
 - **Bauer & Swanson (2023)**: Orthogonalized monetary surprise dataset used in `src/examples/academic/bauer_swanson.py`.
 - **Bauer, Bernanke, & Milstein (2023)**: Yield curve dataset in `data/examples/academic/bbm_2023/` used in `src/examples/academic/bauer_bernanke_milstein.py`.
+- **Jarociński & Karadi (2020)**: FOMC-day fed funds futures, Treasury yield, and equity surprises (Jarociński 2024 extract) in `data/examples/academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip`. Used in `src/examples/academic/jarocinski_karadi_2020.py` for a conjugate `BVARModel` fit with poor man's sign classification of monetary policy vs. information shocks.
 
 ### 2.3 Time-Series Textbook Datasets (`data/examples/timeseries/`)
 

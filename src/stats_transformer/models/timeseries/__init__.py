@@ -14,10 +14,12 @@ from .identification.svar import SVARModel
 from .utilities import ForecastEvaluator, TimeSeriesFeatureBuilder
 from .reduced_form.var import VARModel
 from .reduced_form.vecm import VECMModel
+from .reduced_form.bvar import BVARModel
 
 __all__ = [
     "BlanchardQuahModel",
     "DynamicFactorModel",
+    "BVARModel",
     "ForecastEvaluator",
     "ARIMAModel",
     "GrangerCausalityTester",

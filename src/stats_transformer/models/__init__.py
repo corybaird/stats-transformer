@@ -12,6 +12,7 @@ from .unsupervised.unsupervised import UnsupervisedModel, PCAModel, KMeansModel
 from .timeseries import (
     BlanchardQuahModel,
     DynamicFactorModel,
+    BVARModel,
     LocalProjectionsModel,
     LocalProjectionsIVModel,
     ProxySVARModel,
@@ -46,6 +47,7 @@ __all__ = [
     "KMeansModel",
     "BlanchardQuahModel",
     "DynamicFactorModel",
+    "BVARModel",
     "LocalProjectionsModel",
     "LocalProjectionsIVModel",
     "ProxySVARModel",

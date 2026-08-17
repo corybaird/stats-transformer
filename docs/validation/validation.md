@@ -38,7 +38,7 @@ To avoid confusion, every example script and model implementation in `stats-tran
 
 ## 2. Master Comparison & Example Catalog
 
-The table below catalogs all 26 example modules in `src/examples/`, detailing their academic citations, script paths, data sources, intuitive verification statuses, and benchmark targets.
+The table below catalogs all 27 example modules in `src/examples/`, detailing their academic citations, script paths, data sources, intuitive verification statuses, and benchmark targets.
 
 | Domain / Method | Script Module Path | Academic Paper / Benchmark Target | Data Source / Location | Intuitive Verification Status | Target Verification / Compared Object |
 | --- | --- | --- | --- | --- | --- |
@@ -56,6 +56,7 @@ The table below catalogs all 26 example modules in `src/examples/`, detailing th
 | **PCA Shock Extraction** | `src.examples.academic.nakamura_steinsson_pca` | Nakamura & Steinsson (2018) | Supplied Stata `master.dta` | **Paper Replication Example** (Pending Stata check) | First principal component extraction from monetary futures |
 | **High-Frequency Shock** | `src.examples.academic.bauer_swanson` | Bauer & Swanson (2023) | MATLAB reference dataset | **Paper Replication Example** (MATLAB parity check) | Monthly orthogonalized monetary surprise transformations |
 | **High-Frequency Shock** | `src.examples.academic.bauer_bernanke_milstein` | Bauer, Bernanke, & Milstein (2023) | Daily financial series | **Paper Replication Example** (Python reference check) | Daily difference and percentage-change transformation logic |
+| **Bayesian VAR / Sign Identification** | `src.examples.academic.jarocinski_karadi_2020` | Jarociński & Karadi (2020) | `data/examples/academic/jarocinski_karadi_2020/` | **Paper Replication Example** | Conjugate BVAR with poor man's sign-restriction shock classification |
 | **Collinear OLS** | `src.examples.regression.longley` | Longley (1967) | `data/examples/regression/longley.csv` | **Direct Python Verified (`statsmodels`)** | OLS & Robust OLS numerical stability under collinearity |
 | **Panel Regression** | `src.examples.regression.grunfeld` | Grunfeld (1958) | `data/examples/regression/grunfeld.csv` | **Direct Python Verified (`linearmodels`)** | Fixed-effects corporate investment panel regression |
 | **Instrumental Variables** | `src.examples.regression.mroz_iv` | Mroz (1987) | `data/examples/regression/mroz.csv` | **Direct Python Verified (`linearmodels`)** | 2SLS female labor supply hours equation |

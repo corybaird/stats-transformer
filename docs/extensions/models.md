@@ -75,6 +75,15 @@ These models represent the foundational estimation engine. All subsequent struct
 - **Stationarity & Roots**: Modulus of eigenvalues of the companion matrix $A_c$.
 - **Module Location**: `src/stats_transformer/models/timeseries/diagnostics/`
 
+### 2.6 Conjugate Bayesian VAR (`BVARModel`) — **Implemented**
+
+- **Description**: VAR under a natural-conjugate Normal-Inverse-Wishart prior with Minnesota prior moments, estimated analytically rather than by MCMC.
+- **Specification**: $B | \Sigma \sim \mathcal{MN}(\bar B, \Sigma \otimes \bar V)$, $\Sigma \sim \mathcal{IW}(\bar S, \bar\nu)$, with closed-form posterior moments $(\bar B, \bar V, \bar S, \bar\nu)$ updated from the Minnesota prior and the data.
+- **Minnesota Prior**: `lambda1` (overall tightness), `lambda2` (cross-variable tightness), `lambda3` (lag decay), `lambda4` (constant term looseness); own-lag-1 prior mean is a random walk.
+- **Inference**: Posterior draws of $(\Sigma, B)$ for IRF credible bands; no Gibbs sampler required since the joint posterior is available in closed form.
+- **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/bvar.py`
+- **Benchmark Target**: R `BVAR::bvar` / Kadiyala & Karlsson (1997) natural-conjugate prior.
+
 ---
 
 ## 3. Tier 2: Structural Identification & SVEC
@@ -210,7 +219,7 @@ Nonlinear multivariate models relax the assumption of linear, state-invariant dy
 
 ### 7.1 Explicitly Deferred Scope
 
-- **Bayesian VAR & SVAR**: Bayesian estimation (BVAR, Gibbs sampling, MCMC, priors) is explicitly deferred to preserve a lightweight, frequentist codebase.
+- **Bayesian MCMC & Hierarchical Estimation**: Gibbs sampling, Metropolis-Hastings, hierarchical/non-conjugate priors, and general Bayesian state-space estimation are explicitly deferred to preserve a lightweight codebase without a sampler dependency. Analytical conjugate BVAR (see §2.6) is in scope, since its Normal-Inverse-Wishart posterior is closed-form and requires no MCMC.
 - **High-Dimensional Regularization**: Penalized VARs (LASSO, Ridge) are deferred to a future high-dimensional proposal.
 
 ### 7.2 Technical Backlog & Implementation Scope
