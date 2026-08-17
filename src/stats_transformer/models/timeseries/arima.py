@@ -1,41 +1,48 @@
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
+from stats_transformer.models.base import ModelBase
 
 
-class ARIMAModel:
+class ARIMAModel(ModelBase):
     """Fit univariate ARIMA models and expose tidy forecast metadata."""
 
-    def __init__(self, target, order=(1, 0, 0), date_column="date", trend=None, **kwargs):
-        self.target = target
-        self.order = order
-        self.date_column = date_column
-        self.trend = trend
+    _is_multivariate = True
+
+    def __init__(self, target=None, order=(1, 0, 0), date_column="date", trend=None, **kwargs):
+        super().__init__(**kwargs)
+        model_params = self.params.get("model", {})
+        self.target = target or model_params.get("target_variable") or getattr(self, "target", None)
+        if not self.target and model_params.get("target_variables"):
+            self.target = model_params.get("target_variables")[0]
+        self.target_variables = [self.target] if self.target else []
+        self.independent_variables = []
+        self.order = tuple(model_params.get("order", order))
+        self.date_column = date_column or model_params.get("date_column")
+        self.time_column = self.date_column
+        self.trend = trend or model_params.get("trend")
         self.kwargs = kwargs
-        self.df_clean = None
         self.model_spec = None
         self.model = None
 
-    def fit(self, df, drop_na=True):
-        """Fit the ARIMA model and return scalar fit metrics."""
-        self._validate_columns(df)
-        work = df.copy()
+    def build_model(self):
+        if self.df_clean is None:
+            raise ValueError("No cleaned data available")
+        work = self.df_clean.copy()
         if self.date_column and self.date_column in work.columns:
             work = work.sort_values(self.date_column)
-        work[self.target] = work[self.target].replace([np.inf, -np.inf], np.nan)
-        if drop_na:
-            work = work.dropna(subset=[self.target])
-        if work.empty:
-            raise ValueError("DataFrame is empty after dropping missing target values")
-
-        self.df_clean = work
         self.model_spec = ARIMA(
             work[self.target],
             order=self.order,
             trend=self.trend,
-            **self.kwargs,
         )
         self.model = self.model_spec.fit()
+        return self.model
+
+    def fit(self, df, drop_na=True):
+        """Fit the ARIMA model and return scalar fit metrics."""
+        self.load_data(df)
+        self.build_model()
         return self.get_model_metrics()
 
     def forecast(self, steps=1, alpha=0.05):

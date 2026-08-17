@@ -27,11 +27,13 @@ from stats_transformer.models.timeseries import (
     TVARModel,
     TVECMModel,
     STVARModel,
+    ARIMAModel,
 )
 
 MODEL_REGISTRY = {
     "ols": {"cls": RegressionModel, "kind": "single_equation"},
     "robust_ols": {"cls": RobustOLSModel, "kind": "single_equation"},
+    "arima": {"cls": ARIMAModel, "kind": "svar_family"},
     "logit": {"cls": LogitModel, "kind": "single_equation"},
     "probit": {"cls": ProbitModel, "kind": "single_equation"},
     "panel_ols": {"cls": PanelRegressionModel, "kind": "panel"},
