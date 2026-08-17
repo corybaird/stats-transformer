@@ -8,16 +8,17 @@ class BVARModel(ModelBase):
 
     def __init__(self, target_variables=None, date_column=None, lags=1, lambda1=0.2, lambda2=0.5, lambda3=1.0, lambda4=100.0, n_draws=1000, seed=42, **kwargs):
         super().__init__(**kwargs)
-        self.target_variables = target_variables or []
-        self.date_column = date_column
-        self.time_column = date_column
-        self.lags = lags
-        self.lambda1 = lambda1
-        self.lambda2 = lambda2
-        self.lambda3 = lambda3
-        self.lambda4 = lambda4
-        self.n_draws = n_draws
-        self.seed = seed
+        model_params = self.params.get("model", {})
+        self.target_variables = target_variables or getattr(self, "target_variables", []) or model_params.get("target_variables") or model_params.get("independent_variables", [])
+        self.date_column = date_column or model_params.get("date_column")
+        self.time_column = self.date_column
+        self.lags = model_params.get("lags", lags)
+        self.lambda1 = model_params.get("lambda1", lambda1)
+        self.lambda2 = model_params.get("lambda2", lambda2)
+        self.lambda3 = model_params.get("lambda3", lambda3)
+        self.lambda4 = model_params.get("lambda4", lambda4)
+        self.n_draws = model_params.get("n_draws", n_draws)
+        self.seed = model_params.get("seed", seed)
         self.posterior_B_mean = None
         self.posterior_V = None
         self.posterior_S = None

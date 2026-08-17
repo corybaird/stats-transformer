@@ -8,11 +8,12 @@ class VARModel(ModelBase):
 
     def __init__(self, target_variables=None, date_column=None, maxlags=None, ic=None, mask=None, **kwargs):
         super().__init__(**kwargs)
-        self.target_variables = target_variables or []
-        self.date_column = date_column
-        self.maxlags = maxlags
-        self.ic = ic  # e.g., 'aic', 'bic', 'hqic', 'fpe'
-        self.mask = mask
+        model_params = self.params.get("model", {})
+        self.target_variables = target_variables or getattr(self, "target_variables", []) or model_params.get("target_variables") or model_params.get("independent_variables", [])
+        self.date_column = date_column or model_params.get("date_column")
+        self.maxlags = maxlags or model_params.get("maxlags") or model_params.get("lags")
+        self.ic = ic or model_params.get("ic")
+        self.mask = mask if mask is not None else model_params.get("mask")
 
     def _get_required_columns(self):
         cols = list(self.target_variables)
