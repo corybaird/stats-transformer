@@ -1,0 +1,12 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: tvar
+  target_variables:
+    - realgdp
+    - realinv
+  threshold_variable: realcons
+  lags: 2
+  delay: 1
+  trim: 0.15

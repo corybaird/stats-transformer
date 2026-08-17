@@ -1,0 +1,11 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: vecm
+  target_variables:
+    - realgdp
+    - realcons
+    - realinv
+  k_ar_diff: 1
+  deterministic: ci

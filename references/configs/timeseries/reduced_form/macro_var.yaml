@@ -1,0 +1,10 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: var
+  target_variables:
+    - realgdp
+    - realcons
+    - realinv
+  maxlags: 2

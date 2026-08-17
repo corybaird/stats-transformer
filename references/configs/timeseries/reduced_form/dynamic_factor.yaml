@@ -1,0 +1,14 @@
+data:
+  raw_data_file: data/examples/academic/miranda_agrippino_rey_2020/var_panel.parquet.gzip
+
+model:
+  model_type: dynamic_factor
+  target_variables:
+    - EA_GDP
+    - EA_CPI
+    - US_GDP
+    - US_CPI
+  n_factors: 1
+  factor_lags: 1
+  max_iter: 100
+  tol: 1e-6

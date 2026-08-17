@@ -81,14 +81,14 @@ def test_pipeline_dispatches_model_type_from_params(tmp_path, model_type, expect
 
 
 def test_pipeline_construction_validates_config_before_dispatch(project_root):
-    config_path = project_root / "references" / "configs" / "mroz_iv.yaml"
+    config_path = project_root / "references" / "configs" / "regression" / "mroz_iv.yaml"
     pipeline = Pipeline(params_path=str(config_path))
     # _get_config() runs Config.validate(); a config with an unknown or
     # underspecified model_type must fail here, before any model is built.
     pipeline._get_config()
 
 
-@pytest.mark.parametrize("config_path", sorted(Path("references/configs").glob("*.yaml")))
+@pytest.mark.parametrize("config_path", sorted(Path("references/configs").rglob("*.yaml")))
 def test_pipeline_configs_pass_validation_or_are_not_pipeline_configs(config_path):
     with open(config_path, "r") as f:
         params = yaml.safe_load(f)
@@ -100,7 +100,7 @@ def test_pipeline_configs_pass_validation_or_are_not_pipeline_configs(config_pat
 
 
 def test_mroz_iv_config_dispatches_iv_with_endogenous_and_instruments(project_root):
-    config_path = project_root / "references" / "configs" / "mroz_iv.yaml"
+    config_path = project_root / "references" / "configs" / "regression" / "mroz_iv.yaml"
     pipeline = Pipeline(params_path=str(config_path))
     pipeline._initialize_from_params()
 
@@ -142,7 +142,7 @@ def test_models_star_import_does_not_raise():
         assert hasattr(models_module, name), f"__all__ entry '{name}' is not importable"
 
 
-@pytest.mark.parametrize("config_path", sorted(Path("references/configs").glob("*.yaml")))
+@pytest.mark.parametrize("config_path", sorted(Path("references/configs").rglob("*.yaml")))
 def test_pipeline_configs_dispatch_to_declared_model_type(config_path):
     with open(config_path, "r") as f:
         params = yaml.safe_load(f)

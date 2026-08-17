@@ -1,0 +1,12 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: svec
+  target_variables:
+    - realgdp
+    - realcons
+    - realinv
+  k_ar_diff: 2
+  coint_rank: 2
+  max_iter: 200

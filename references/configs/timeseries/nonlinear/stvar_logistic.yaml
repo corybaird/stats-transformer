@@ -1,0 +1,12 @@
+data:
+  raw_data_file: data/examples/timeseries/macrodata.csv
+
+model:
+  model_type: stvar
+  target_variables:
+    - realgdp
+    - realinv
+  transition_variable: realcons
+  lags: 1
+  delay: 1
+  max_iter: 200

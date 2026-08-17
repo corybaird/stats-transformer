@@ -1,0 +1,12 @@
+data:
+  raw_data_file: data/examples/academic/ghysels_2018/Ch_5/arma_inven.csv
+
+model:
+  model_type: arima
+  target_variable: rcpi
+  independent_variables:
+    - rcpi
+  order:
+    - 1
+    - 0
+    - 1
