@@ -118,10 +118,10 @@ flowchart TD
     MB --> |fit / predict / get_model_metadata| TS[Time-Series]
     MB --> |fit / predict / get_model_metadata| UNSUP[Discrete & Unsupervised]
 
-    REG --> OLS[Regression / RobustOLS / PanelRegression / IV2SLS / SpecificationRunner]
-    TS --> VAR[VAR / VECM / LocalProjections / LocalProjectionsIV / ARIMA / RestrictedVAR]
-    TS --> SVAR[SVAR / BlanchardQuah / ProxySVAR / SignZeroSVAR / VolatilitySVAR / IndependenceSVAR / SVEC]
-    UNSUP --> DIS[Logit / PCA / KMeans]
+    REG --> OLS[Regression / RobustOLS / PanelRegression / IV2SLS / PanelIV2SLS / GMM / DiD / SpecificationRunner]
+    TS --> VAR[VAR / VECM / LocalProjections / LocalProjectionsIV / ARIMA / DynamicFactor / BVAR / TVAR / TVECM / STVAR]
+    TS --> SVAR[SVAR / BlanchardQuah / ProxySVAR / SignZeroSVAR / VolatilitySVAR / IndependenceSVAR / CVMSVAR / NonGaussianSVAR / SVEC]
+    UNSUP --> DIS[Logit / Probit / PCA / KMeans]
 
     VAR --> META[JSON Metadata & Coefficients]
     SVAR --> META
@@ -135,25 +135,31 @@ flowchart TD
 | **Regression** | `RegressionModel` | OLS regression with intercept or entity fixed effects | Pipeline: `ols`; Direct API |
 | **Regression** | `RobustOLSModel` | Heteroskedasticity/autocorrelation robust OLS (HC/HAC) | Pipeline: `robust_ols`; Direct API |
 | **Regression** | `PanelRegressionModel` | Entity & time fixed effects panel regression | Pipeline: `panel_ols`; Direct API |
-| **Regression** | `IV2SLSModel` | 2-Stage Least Squares instrumental variables regression | Pipeline: `iv`; Direct API |
+| **Regression** | `IV2SLSModel` | 2-Stage Least Squares instrumental variables regression | Pipeline: `iv` (aliases: `iv_2sls`, `2sls`); Direct API |
+| **Regression** | `PanelIV2SLSModel` | Panel 2SLS regression with fixed effects | Pipeline: `panel_iv`; Direct API |
 | **Regression** | `GMMModel` | Generalized Method of Moments (one-step, two-step, iterated, CUE; HAC weighting; J-test) | Pipeline: `gmm`; Direct API |
 | **Regression** | `DiDModel` | Callaway-Sant'Anna staggered difference-in-differences (group-time ATT) | Pipeline: `did`; Direct API |
 | **Regression** | `SpecificationRunner` | Multi-specification regression runner utility | Direct API |
-| **Time Series** | `VARModel` | Reduced-form OLS Vector Autoregression | Direct API |
-| **Time Series** | `VECMModel` | Johansen Cointegrated Vector Error Correction Model | Direct API |
+| **Time Series** | `VARModel` | Reduced-form OLS Vector Autoregression | Pipeline: `var`; Direct API |
+| **Time Series** | `VECMModel` | Johansen Cointegrated Vector Error Correction Model | Pipeline: `vecm`; Direct API |
 | **Time Series** | `RestrictedVAR` | Reduced-form VAR with equation-level coefficient masks | Direct API |
-| **Time Series** | `ARIMAModel` | Univariate Autoregressive Integrated Moving Average | Direct API |
-| **Time Series** | `SVARModel` | Structural VAR under short-run linear restrictions | Direct API |
+| **Time Series** | `ARIMAModel` | Univariate Autoregressive Integrated Moving Average | Pipeline: `arima`; Direct API |
+| **Time Series** | `SVARModel` | Structural VAR under short-run linear restrictions | Pipeline: `svar`; Direct API |
 | **Time Series** | `BlanchardQuahModel` | Long-run structural VAR identification (Blanchard-Quah) | Pipeline: `blanchard_quah`; Direct API |
 | **Time Series** | `ProxySVARModel` | External-instrument structural VAR identification | Pipeline: `proxy_svar`; Direct API |
-| **Time Series** | `SignZeroSVARModel` | Sign & zero restriction structural VAR identification | Pipeline: `sign_restrictions`; Direct API |
-| **Time Series** | `VolatilitySVARModel` | Changes-in-volatility heteroskedastic structural VAR | Direct API |
-| **Time Series** | `IndependenceSVARModel` | Distance covariance / ICA data-driven structural VAR | Direct API |
-| **Time Series** | `SVEC` | Structural VECM combining cointegration with restrictions | Direct API — *Planned* (ML estimation not yet implemented) |
+| **Time Series** | `SignZeroSVARModel` | Sign, zero, and narrative restriction structural VAR identification | Pipeline: `sign_restrictions` (alias: `sign_zero`); Direct API |
+| **Time Series** | `VolatilitySVARModel` | Changes-in-volatility heteroskedastic structural VAR across break regimes | Pipeline: `volatility_svar`; Direct API |
+| **Time Series** | `IndependenceSVARModel` | Distance covariance / ICA data-driven structural VAR | Pipeline: `independence_svar`; Direct API |
+| **Time Series** | `CVMSVARModel` | Cramér-von Mises distance independence structural VAR | Pipeline: `cvm_svar` (alias: `cvm`); Direct API |
+| **Time Series** | `NonGaussianSVARModel` | Non-Gaussian maximum likelihood structural VAR with Student-t shocks | Pipeline: `non_gaussian_svar` (alias: `non_gaussian`); Direct API |
+| **Time Series** | `SVECModel` | Structural VECM combining cointegration rank with restrictions | Pipeline: `svec`; Direct API |
 | **Time Series** | `LocalProjectionsModel` | Jordà (2005) horizon-by-horizon local projections | Pipeline: `local_projections`; Direct API |
-| **Time Series** | `DynamicFactorModel` | EM-estimated dynamic factor model (Kalman filter/smoother) | Pipeline: `dynamic_factor`; Direct API |
 | **Time Series** | `LocalProjectionsIVModel` | Instrumented local projections (Stock & Watson 2018) | Pipeline: `lp_iv`; Direct API |
+| **Time Series** | `DynamicFactorModel` | EM-estimated dynamic factor model (Kalman filter/smoother) | Pipeline: `dynamic_factor`; Direct API |
 | **Time Series** | `BVARModel` | Conjugate Normal-Inverse-Wishart Bayesian VAR (Minnesota prior) | Pipeline: `bvar`; Direct API |
+| **Time Series** | `TVARModel` | Two-regime threshold Vector Autoregression | Pipeline: `tvar`; Direct API |
+| **Time Series** | `TVECMModel` | Threshold Cointegrated Vector Error Correction Model | Pipeline: `tvecm`; Direct API |
+| **Time Series** | `STVARModel` | Smooth Transition Vector Autoregression with GIRFs | Pipeline: `stvar`; Direct API |
 | **Discrete** | `LogitModel` | Binary logit maximum-likelihood classification | Pipeline: `logit`; Direct API |
 | **Discrete** | `ProbitModel` | Binary probit maximum-likelihood classification | Pipeline: `probit`; Direct API |
 | **Unsupervised** | `PCAModel` | Principal Component Analysis feature extraction | Pipeline: `pca`; Direct API |
@@ -169,8 +175,8 @@ flowchart TD
 
 #### Access Modes: Pipeline Supported vs Direct API
 
-- **Pipeline Supported (YAML Dispatcher)**: The automated `Pipeline` orchestrator reads a `params.yaml` configuration file and routes the execution via `model.model_type` (e.g. `model_type: ols`, `robust_ols`, `panel_ols`, `pca`, `kmeans`, `blanchard_quah`, `proxy_svar`, `sign_restrictions`, `local_projections`, `lp_iv`, `dynamic_factor`, `gmm`, `did`, `bvar`). This allows non-programmatic, reproducible execution across full pipeline stages (`resample` -> `features` -> `regression` -> `visualization`).
-- **Direct API Usage**: Specialized estimators and diagnostic utilities (such as `VARModel`, `VECMModel`, `SVARModel`, `VolatilitySVARModel`, `IndependenceSVARModel`, `ARIMAModel`, `IV2SLSModel`, `LogitModel`, `GrangerCausalityTester`) can be instantiated directly as Python classes (`model = VARModel(...)`). Direct API usage provides full control over estimation parameters, custom matrix masks, and advanced structural identification loops.
+- **Pipeline Supported (YAML Dispatcher)**: The automated `Pipeline` orchestrator reads a `params.yaml` configuration file and routes execution via `model.model_type` across all registered model types in `MODEL_REGISTRY`. This allows non-programmatic, reproducible execution across full pipeline stages (`resample` -> `features` -> `regression` -> `visualization`).
+- **Direct API Usage**: All estimators and diagnostic utilities can also be instantiated directly as Python classes (`model = VARModel(...)`). Direct API usage provides full programmatic control over estimation parameters, custom matrix masks, and advanced structural identification loops.
 
 ---
 
