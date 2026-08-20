@@ -8,7 +8,7 @@ This document details the organization of the `data/` directory in `stats-transf
 
 The `data/` directory separates tracked example datasets from local pipeline outputs and raw ingestion folders.
 
-```
+```text
 data/
 ├── examples/                    # Tracked in Git: Packaged datasets for tests & examples
 │   ├── academic/                # Replication datasets (Nakamura-Steinsson, Bauer-Swanson)
@@ -29,45 +29,37 @@ data/
 
 ---
 
-## 2. Packaged Example Datasets (`data/examples/`)
+## 2. Master Packaged Datasets Reference Table
 
-The `data/examples/` directory contains all datasets necessary for running library tests, verification benchmarks, and example scripts.
+The table below catalogs all packaged datasets available in `data/examples/`, their programmatic access key via `load_example()`, frequency, and reference source.
+
+| Dataset Key (`load_example`) | Relative Path in `data/examples/` | Frequency | Target Method / Demonstration | Literature Reference |
+| --- | --- | --- | --- | --- |
+| `macrodb_gdp_inflation` | `macrodb_gdp_inflation.parquet` | Quarterly | Default macro panel, Panel OLS, VAR | Cross-country macroeconomic database |
+| `sofr_surprises` | `academic/acosta_brennan_jacobson_2024/sofr_surprises.parquet.gzip` | Daily | High-frequency monetary surprises, VAR | Acosta, Brennan, & Jacobson (2024) |
+| `pmu_data` | `academic/cieslak_hansen_mcmahon_xiao_2024/pmu_data.parquet.gzip` | Monthly | Policymakers' Uncertainty text shocks | Cieslak, Hansen, McMahon, & Xiao (2024) |
+| `news_sentiment` | `academic/shapiro_sudhof_wilson_2022/news_sentiment.parquet.gzip` | Daily | High-frequency sentiment, Robust OLS | Shapiro, Sudhof, & Wilson (2022) |
+| `policy_loans` | `academic/lane_2025/policy_loans.parquet.gzip` | Annual | Staggered DiD, Targeted industrial lending | Lane (2025) |
+| `tariffs` | `academic/lane_2025/tariffs.parquet.gzip` | Annual | Tariff liberalization panels | Lane (2025) |
+| `global_factor` | `academic/miranda_agrippino_rey_2020/global_factor.parquet.gzip` | Monthly | Dynamic Factor Model comparison | Miranda-Agrippino & Rey (2020) |
+| `greenbook_forecast_errors` | `academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip` | Quarterly | FOMC Greenbook CPI forecast errors | Coibion & Gorodnichenko (2012) |
+| `fomc_surprises` | `academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip` | Daily / Event | BVAR sign-restriction shock classification | Jarociński & Karadi (2020) |
+| `nakamura_steinsson` | `academic/nakamura_steinsson/` | Event | High-frequency monetary shock PCA | Nakamura & Steinsson (2018) |
+| `bauer_swanson` | `academic/bauer_swanson/` | Monthly | Orthogonalized monetary surprise VAR | Bauer & Swanson (2023) |
+| `bbm_2023` | `academic/bbm_2023/` | Daily | High-frequency yield curve surprises | Bauer, Bernanke, & Milstein (2023) |
+| `gertler_karadi` | `academic/gertler_karadi/` | Monthly | Proxy SVAR / SVAR-IV monetary policy | Gertler & Karadi (2015) |
+| `stock_watson` | `academic/stock_watson/` | Quarterly | 3-variable macroeconomic VAR | Stock & Watson (2001) |
+| `longley` | `regression/longley.csv` | Annual | Collinear OLS / Robust OLS verification | Longley (1967) |
+| `grunfeld` | `regression/grunfeld.csv` | Annual | Corporate investment panel FE / RE | Grunfeld (1958) |
+| `mroz` | `regression/mroz.csv` | Cross-Section | 2SLS instrumental variables regression | Mroz (1987) |
+| `spector_logit` | `discrete/spector.csv` | Cross-Section | Binary Logit maximum-likelihood estimation | Spector & Mazzeo (1980) |
+| `macrodata` | `timeseries/macrodata.csv` | Quarterly | VAR(2) coefficient & covariance benchmark | `statsmodels` macrodata |
+| `bq_1989` | `matlab_examples/BQ1989_Data.xlsx` | Quarterly | Blanchard-Quah SVAR identification | Blanchard & Quah (1989) |
+| `ghysels_ch6` | `timeseries/ghysels_ch6/` | Quarterly | Multi-step forecasting & VAR simulations | Ghysels & Marcellino (2018) |
+| `ghysels_ch7` | `timeseries/ghysels_ch7/` | Monthly | Cointegration & Vector Error Correction | Ghysels & Marcellino (2018) |
 
 > [!NOTE]
 > Academic citations, literature references, and data provenance for all packaged datasets are cataloged in [Academic Citations](citations.md#2-academic-datasets--data-sources).
-
-### 2.1 Macroeconomic Panel (`data/examples/macrodb_gdp_inflation.parquet`)
-
-- **Description**: Default multi-country quarterly panel covering GDP, inflation, and interest rate indicators.
-- **Primary Use**: Used by `stats_transformer.data.load_example("macrodb_gdp_inflation")` and default `params.yaml` configurations.
-
-### 2.2 Academic Replication Datasets (`data/examples/academic/`)
-
-- **Acosta, Brennan, & Jacobson (2024)**: High-frequency SOFR futures surprises and policy path indicators in `data/examples/academic/acosta_brennan_jacobson_2024/sofr_surprises.parquet.gzip`. Used in `src/examples/academic/acosta_brennan_jacobson_2024.py`.
-- **Cieslak, Hansen, McMahon, & Xiao (2024)**: Policymakers' Uncertainty (PMU) text and market indicators in `data/examples/academic/cieslak_hansen_mcmahon_xiao_2024/pmu_data.parquet.gzip`. Used in `src/examples/academic/cieslak_hansen_mcmahon_xiao_2024.py`.
-- **Shapiro, Sudhof, & Wilson (2022)**: High-frequency daily news sentiment series in `data/examples/academic/shapiro_sudhof_wilson_2022/news_sentiment.parquet.gzip`. Used in `src/examples/academic/shapiro_sudhof_wilson_2022.py`.
-- **Lane (2025)**: Industrial policy loans and tariff data in `data/examples/academic/lane_2025/policy_loans.parquet.gzip` and `tariffs.parquet.gzip`. Used in `src/examples/academic/lane_2025.py`, including an illustrative staggered `DiDModel` fit on a cohort derived from tariff-liberalization timing (the source extract has no first-treatment column).
-- **Miranda-Agrippino & Rey (2020)**: Published Global Factor reference series (not the underlying asset-price input panel, which is unavailable) in `data/examples/academic/miranda_agrippino_rey_2020/global_factor.parquet.gzip`. Used for illustrative comparison in `src/examples/academic/miranda_agrippino_rey_2020.py`, which fits `DynamicFactorModel` on a synthetic panel.
-- **Coibion & Gorodnichenko (2012)**: FOMC Greenbook CPI forecast and backcast series (Bauer, Bernanke, & Milstein 2023 extract) in `data/examples/academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip`. Used in `src/examples/academic/coibion_gorodnichenko_2012.py` for a simplified single-series forecast-error orthogonality test (the original FOMC-panel meeting-to-meeting target alignment is not reconstructable from this extract).
-- **Nakamura & Steinsson (2018)**: High-frequency monetary policy surprise series used in `src/examples/academic/nakamura_steinsson.py` and `nakamura_steinsson_pca.py`.
-- **Bauer & Swanson (2023)**: Orthogonalized monetary surprise dataset used in `src/examples/academic/bauer_swanson.py`.
-- **Bauer, Bernanke, & Milstein (2023)**: Yield curve dataset in `data/examples/academic/bbm_2023/` used in `src/examples/academic/bauer_bernanke_milstein.py`.
-- **Jarociński & Karadi (2020)**: FOMC-day fed funds futures, Treasury yield, and equity surprises (Jarociński 2024 extract) in `data/examples/academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip`. Used in `src/examples/academic/jarocinski_karadi_2020.py` for a conjugate `BVARModel` fit with poor man's sign classification of monetary policy vs. information shocks.
-
-### 2.3 Time-Series Textbook Datasets (`data/examples/timeseries/`)
-
-- **Ghysels & Marcellino (2018) Chapter 6 & 7**: Datasets for US monetary series, EU GDP growth, UK term structure, and US leading economic indicators in `data/examples/timeseries/ghysels_ch6/` and `ghysels_ch7/`.
-- **Kilian & Lütkepohl (2017)**: Structural VAR and VECM demonstration series.
-
-### 2.4 Regression Benchmark Datasets (`data/examples/regression/`)
-
-- **Longley Dataset (1967)**: Highly collinear economic dataset used for OLS/Robust OLS testing in `src/examples/regression/longley.py`.
-- **Grunfeld Panel Dataset (1958)**: Corporate investment panel dataset used for fixed-effects panel regression testing in `src/examples/regression/grunfeld.py`.
-- **Mroz IV Dataset (1987)**: Female labor supply dataset used for 2SLS instrumental variables testing in `src/examples/regression/mroz_iv.py`.
-
-### 2.5 Discrete Choice Datasets (`data/examples/discrete/`)
-
-- **Spector & Mazzeo Logit Dataset (1980)**: Educational performance dataset used for binary Logit testing in `src/examples/discrete/spector_logit.py`.
 
 ---
 
@@ -98,7 +90,40 @@ data:
       path: data/examples/timeseries/macrodata.csv
       frequency: Q
   merge:
-    on: [country, date]
-    how: outer
-    output_path: data/pipeline/resampled_merged.parquet
+    on:
+      - country
+      - date
+    how: inner
 ```
+
+---
+
+## 4. Detailed Dataset Catalog
+
+### 4.1 Macroeconomic Panel (`data/examples/macrodb_gdp_inflation.parquet`)
+- **Description**: Default multi-country quarterly panel covering GDP, inflation, and interest rate indicators.
+- **Primary Use**: Used by `stats_transformer.data.load_example("macrodb_gdp_inflation")` and default `params.yaml` configurations.
+
+### 4.2 Academic Replication Datasets (`data/examples/academic/`)
+- **Acosta, Brennan, & Jacobson (2024)**: High-frequency SOFR futures surprises and policy path indicators in `data/examples/academic/acosta_brennan_jacobson_2024/sofr_surprises.parquet.gzip`. Used in `src/examples/academic/acosta_brennan_jacobson_2024.py`.
+- **Cieslak, Hansen, McMahon, & Xiao (2024)**: Policymakers' Uncertainty (PMU) text and market indicators in `data/examples/academic/cieslak_hansen_mcmahon_xiao_2024/pmu_data.parquet.gzip`. Used in `src/examples/academic/cieslak_hansen_mcmahon_xiao_2024.py`.
+- **Shapiro, Sudhof, & Wilson (2022)**: High-frequency daily news sentiment series in `data/examples/academic/shapiro_sudhof_wilson_2022/news_sentiment.parquet.gzip`. Used in `src/examples/academic/shapiro_sudhof_wilson_2022.py`.
+- **Lane (2025)**: Industrial policy loans and tariff data in `data/examples/academic/lane_2025/policy_loans.parquet.gzip` and `tariffs.parquet.gzip`. Used in `src/examples/academic/lane_2025.py`.
+- **Miranda-Agrippino & Rey (2020)**: Published Global Factor reference series in `data/examples/academic/miranda_agrippino_rey_2020/global_factor.parquet.gzip`. Used in `src/examples/academic/miranda_agrippino_rey_2020.py`.
+- **Coibion & Gorodnichenko (2012)**: FOMC Greenbook CPI forecast and backcast series in `data/examples/academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip`. Used in `src/examples/academic/coibion_gorodnichenko_2012.py`.
+- **Nakamura & Steinsson (2018)**: High-frequency monetary policy surprise series used in `src/examples/academic/nakamura_steinsson.py` and `nakamura_steinsson_pca.py`.
+- **Bauer & Swanson (2023)**: Orthogonalized monetary surprise dataset used in `src/examples/academic/bauer_swanson.py`.
+- **Bauer, Bernanke, & Milstein (2023)**: Yield curve dataset in `data/examples/academic/bbm_2023/` used in `src/examples/academic/bauer_bernanke_milstein.py`.
+- **Jarociński & Karadi (2020)**: FOMC-day fed funds futures, Treasury yield, and equity surprises in `data/examples/academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip`. Used in `src/examples/academic/jarocinski_karadi_2020.py`.
+
+### 4.3 Time-Series Textbook Datasets (`data/examples/timeseries/`)
+- **Ghysels & Marcellino (2018) Chapter 6 & 7**: Datasets for US monetary series, EU GDP growth, UK term structure, and US leading economic indicators in `data/examples/timeseries/ghysels_ch6/` and `ghysels_ch7/`.
+- **Kilian & Lütkepohl (2017)**: Structural VAR and VECM demonstration series.
+
+### 4.4 Regression Benchmark Datasets (`data/examples/regression/`)
+- **Longley Dataset (1967)**: Highly collinear economic dataset used for OLS/Robust OLS testing in `src/examples/regression/longley.py`.
+- **Grunfeld Panel Dataset (1958)**: Corporate investment panel dataset used for fixed-effects panel regression testing in `src/examples/regression/grunfeld.py`.
+- **Mroz IV Dataset (1987)**: Female labor supply dataset used for 2SLS instrumental variables testing in `src/examples/regression/mroz_iv.py`.
+
+### 4.5 Discrete Choice Datasets (`data/examples/discrete/`)
+- **Spector & Mazzeo Logit Dataset (1980)**: Educational performance dataset used for binary Logit testing in `src/examples/discrete/spector_logit.py`.
