@@ -21,20 +21,21 @@
 - **Declarative YAML Configuration:** Controls data sources, frequency resampling, transformations, model specifications, and visual outputs via `params.yaml`.
 - **Broad Econometric Coverage:** Provides unified APIs for cross-sectional (OLS, Robust OLS), panel (Fixed Effects), time-series (VAR, VECM, SVAR, Local Projections), instrumental-variables (2SLS, LP-IV), discrete-choice (Logit), and unsupervised methods (PCA, KMeans).
 - **Cross-Language Validation & Agent-Ready:** Numerically verified against R (`stats`, `vars`), Stata (`regress`, `logit`, `pca`), and MATLAB (`mldivide`), with an embedded architectural skill for AI agents.
-- **Extensible Roadmap:** Built for active expansion into high-frequency, non-linear, and structural macroeconomic extensions (see [Roadmap](docs/extensions/roadmap.md)).
+- **Extensible Roadmap:** Built for active expansion into high-frequency, non-linear, and structural macroeconomic extensions (see [Roadmap](docs/roadmap.md)).
 
 ---
 
 ## 2. Documentation
 
 - **Core Guides (`docs/`)**
-  - **[Overview](docs/overview.md):** Documentation map, model inventory, and example index.
-  - **[Architecture & Design](docs/library/architecture.md):** Pipeline stages, object hierarchy, and data flow.
-  - **[Numerical Validation](docs/validation/validation.md):** Cross-language R, Stata, and MATLAB verification matrix.
+  - **[Overview](docs/overview.md):** Documentation map, model domain summary, and quickstart links.
+  - **[Architecture & Design](docs/library/architecture.md):** Pipeline stages, object hierarchy, and repository file structure.
+  - **[Implemented Models](docs/library/models.md):** Complete catalog of all 30 implemented model classes and utilities.
+  - **[Data Guide](docs/library/data.md):** Data directory organization and packaged example datasets.
+  - **[Software Benchmarks](docs/validation/benchmarks.md):** Cross-language R, Stata, and MATLAB verification matrix.
   - **[Testing Suite](docs/validation/testing_suite.md):** Automated unit, integration, and verification test guide.
   - **[Academic Citations](docs/library/citations.md):** Literature sources, paper datasets, and reference software.
-  - **[Roadmap & Extensions](docs/extensions/roadmap.md):** Planned model expansions and frequentist VAR milestones.
-  - **[File Structure](docs/library/file_structure.md):** Cookiecutter-based research folder layout.
+  - **[Future Roadmap](docs/roadmap.md):** Planned model expansions and complexity triage.
 
 - **Interactive Notebooks (`notebooks/`)**
   - **[Overall Pipeline](notebooks/0-overall-pipeline.ipynb):** End-to-end data ingestion, transformation, and estimation.
