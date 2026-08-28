@@ -5,6 +5,7 @@ from stats_transformer.models.regression.iv import IV2SLSModel
 from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
 from stats_transformer.models.regression.gmm import GMMModel
 from stats_transformer.models.regression.did import DiDModel
+from stats_transformer.models.regression.spec_runner import SpecificationRunner
 from stats_transformer.models.discrete.logit import LogitModel
 from stats_transformer.models.discrete.probit import ProbitModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
@@ -31,18 +32,23 @@ from stats_transformer.models.timeseries import (
 )
 
 MODEL_REGISTRY = {
-    "ols": {"cls": RegressionModel, "kind": "single_equation"},
-    "robust_ols": {"cls": RobustOLSModel, "kind": "single_equation"},
-    "arima": {"cls": ARIMAModel, "kind": "svar_family"},
-    "logit": {"cls": LogitModel, "kind": "single_equation"},
+    # regression models
+    "ols": {"cls": RegressionModel, "kind": "single_equation"}, 
+    "robust_ols": {"cls": RobustOLSModel, "kind": "single_equation"}, 
+    "arima": {"cls": ARIMAModel, "kind": "svar_family"}, 
+    "panel_ols": {"cls": PanelRegressionModel, "kind": "panel"}, 
+    "iv": {"cls": IV2SLSModel, "kind": "iv"}, 
+    "panel_iv": {"cls": PanelIV2SLSModel, "kind": "panel_iv"}, 
+    "gmm": {"cls": GMMModel, "kind": "iv"}, 
+    "did": {"cls": DiDModel, "kind": "did"}, 
+    "spec_runner": {"cls": SpecificationRunner, "kind": "spec_runner"},
+    # discrete models
+    "logit": {"cls": LogitModel, "kind": "single_equation"}, 
     "probit": {"cls": ProbitModel, "kind": "single_equation"},
-    "panel_ols": {"cls": PanelRegressionModel, "kind": "panel"},
-    "iv": {"cls": IV2SLSModel, "kind": "iv"},
-    "panel_iv": {"cls": PanelIV2SLSModel, "kind": "panel_iv"},
-    "gmm": {"cls": GMMModel, "kind": "iv"},
-    "did": {"cls": DiDModel, "kind": "did"},
+    # unsupervised models
     "pca": {"cls": PCAModel, "kind": "unsupervised"},
     "kmeans": {"cls": KMeansModel, "kind": "unsupervised"},
+    # timeseries models
     "var": {"cls": VARModel, "kind": "svar_family"},
     "vecm": {"cls": VECMModel, "kind": "svar_family"},
     "svec": {"cls": SVECModel, "kind": "svar_family"},
