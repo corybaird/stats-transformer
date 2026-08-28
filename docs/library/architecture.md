@@ -78,6 +78,7 @@ src/stats_transformer/
 ├── pipeline.py                    # YAML-driven orchestration
 ├── data/                          # Packaged datasets and example loader
 ├── featurization/
+|   ├── base.py                    # Base model for feature engineering
 │   ├── feature_engineering.py     # Transformations and resampling
 │   ├── data_merger.py             # Multi-source panel joins
 │   └── event_study.py             # Event-study window construction
