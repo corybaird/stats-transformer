@@ -10,6 +10,7 @@ from .discrete.logit import LogitModel
 from .discrete.probit import ProbitModel
 from .unsupervised.unsupervised import UnsupervisedModel, PCAModel, KMeansModel
 from .timeseries import (
+    ARIMAModel,
     BlanchardQuahModel,
     DynamicFactorModel,
     BVARModel,
@@ -51,6 +52,7 @@ __all__ = [
     "UnsupervisedModel",
     "PCAModel",
     "KMeansModel",
+    "ARIMAModel",
     "BlanchardQuahModel",
     "DynamicFactorModel",
     "BVARModel",
