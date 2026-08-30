@@ -129,7 +129,7 @@ This section catalogs all 27 runnable example modules in `src/examples/`, detail
 | **Dynamic Factor Model** | `src.examples.academic.miranda_agrippino_rey_2020` | Miranda-Agrippino & Rey (2020) | `data/examples/academic/miranda_agrippino_rey_2020/global_factor.parquet.gzip` | **Illustrative Method Demo (Synthetic Input)** | EM-estimated dynamic factor extraction from risky-asset panel |
 | **Survey Forecast Rigidity** | `src.examples.academic.coibion_gorodnichenko_2012` | Coibion & Gorodnichenko (2012) | `data/examples/academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip` | **Paper Replication Example** | Two-step GMM forecast-error orthogonality test |
 | **Provider Pipeline** | `src.examples.featurization.fred` | St. Louis Fed FRED API | `data/raw/fred_cache.parquet` | **Data & Feature Pipeline Demo** | Automated multi-series FRED data download & alignment |
-| **Provider Pipeline** | `src.examples.featurization.monetary` | Federal Reserve Macro Series | `data/raw/macrodb_gdp_inflation.parquet` | **Data & Feature Pipeline Demo** | Monetary policy indicator featurization pipeline |
+| **Provider Pipeline** | `src.examples.featurization.monetary` | Federal Reserve Macro Series | `data/macrodb_gdp_inflation.parquet` | **Data & Feature Pipeline Demo** | Monetary policy indicator featurization pipeline |
 
 ---
 
