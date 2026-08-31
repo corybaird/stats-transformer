@@ -96,3 +96,37 @@ exclude = [
   "/reports",
   "/models",
 ]
+
+[tool.hatch.build.targets.sdist.force-include]
+"data/examples/academic/acosta_brennan_jacobson_2024" = "data/examples/academic/acosta_brennan_jacobson_2024"
+"data/examples/academic/bauer_swanson_2023" = "data/examples/academic/bauer_swanson_2023"
+"data/examples/academic/bbm_2023" = "data/examples/academic/bbm_2023"
+"data/examples/academic/cieslak_hansen_mcmahon_xiao_2024" = "data/examples/academic/cieslak_hansen_mcmahon_xiao_2024"
+"data/examples/academic/coibion_gorodnichenko_2012" = "data/examples/academic/coibion_gorodnichenko_2012"
+"data/examples/academic/jarocinski_karadi_2020" = "data/examples/academic/jarocinski_karadi_2020"
+"data/examples/academic/lane_2025" = "data/examples/academic/lane_2025"
+"data/examples/academic/miranda_agrippino_rey_2020" = "data/examples/academic/miranda_agrippino_rey_2020"
+"data/examples/academic/nakamura_steinsson_2018" = "data/examples/academic/nakamura_steinsson_2018"
+"data/examples/academic/shapiro_sudhof_wilson_2022" = "data/examples/academic/shapiro_sudhof_wilson_2022"
+"data/examples/academic/synthetic_nakamura.csv" = "data/examples/academic/synthetic_nakamura.csv"
+"data/examples/discrete" = "data/examples/discrete"
+"data/examples/matlab_examples" = "data/examples/matlab_examples"
+"data/examples/regression" = "data/examples/regression"
+"data/examples/timeseries" = "data/examples/timeseries"
+
+[tool.hatch.build.targets.wheel.force-include]
+"data/examples/academic/acosta_brennan_jacobson_2024" = "stats_transformer/data/examples/academic/acosta_brennan_jacobson_2024"
+"data/examples/academic/bauer_swanson_2023" = "stats_transformer/data/examples/academic/bauer_swanson_2023"
+"data/examples/academic/bbm_2023" = "stats_transformer/data/examples/academic/bbm_2023"
+"data/examples/academic/cieslak_hansen_mcmahon_xiao_2024" = "stats_transformer/data/examples/academic/cieslak_hansen_mcmahon_xiao_2024"
+"data/examples/academic/coibion_gorodnichenko_2012" = "stats_transformer/data/examples/academic/coibion_gorodnichenko_2012"
+"data/examples/academic/jarocinski_karadi_2020" = "stats_transformer/data/examples/academic/jarocinski_karadi_2020"
+"data/examples/academic/lane_2025" = "stats_transformer/data/examples/academic/lane_2025"
+"data/examples/academic/miranda_agrippino_rey_2020" = "stats_transformer/data/examples/academic/miranda_agrippino_rey_2020"
+"data/examples/academic/nakamura_steinsson_2018" = "stats_transformer/data/examples/academic/nakamura_steinsson_2018"
+"data/examples/academic/shapiro_sudhof_wilson_2022" = "stats_transformer/data/examples/academic/shapiro_sudhof_wilson_2022"
+"data/examples/academic/synthetic_nakamura.csv" = "stats_transformer/data/examples/academic/synthetic_nakamura.csv"
+"data/examples/discrete" = "stats_transformer/data/examples/discrete"
+"data/examples/matlab_examples" = "stats_transformer/data/examples/matlab_examples"
+"data/examples/regression" = "stats_transformer/data/examples/regression"
+"data/examples/timeseries" = "stats_transformer/data/examples/timeseries"
