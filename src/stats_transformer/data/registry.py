@@ -189,6 +189,15 @@ EXAMPLE_DATASETS = {
         "Quarterly",
         "statsmodels macrodata",
     ),
+    "ghysels_ch5": {
+        "description": "ARIMA and univariate time-series forecasting textbook exercises",
+        "time_period": "Quarterly",
+        "source": "Ghysels and Marcellino (2018), Chapter 5",
+        "files": {
+            "arma_inven": _file("timeseries/ghysels_ch5/arma_inven.csv"),
+            "arma_tbill": _file("timeseries/ghysels_ch5/arma_tbill.csv"),
+        },
+    },
     "ghysels_ch6": {
         "description": "VAR forecasting and impulse-response textbook exercises",
         "time_period": "Quarterly",
@@ -207,6 +216,25 @@ EXAMPLE_DATASETS = {
             "uk_term_structure": _file("timeseries/ghysels_ch7/dataonly_uktermstructure.csv"),
             "us_lei": _file("timeseries/ghysels_ch7/dataonly_uslei.csv"),
             "simulated_cointegration": _file("timeseries/ghysels_ch7/simulated_cointegration.csv"),
+        },
+    },
+    "ghysels_ch8": {
+        "description": "Bayesian VAR and Minnesota prior textbook exercises",
+        "time_period": "Simulated / Quarterly",
+        "source": "Ghysels and Marcellino (2018), Chapter 8",
+        "files": {
+            "bvar_simulated": _file("timeseries/ghysels_ch8/bvar_simulated_ch8_sec4.csv"),
+            "eugrowth": _file("timeseries/ghysels_ch8/dataonly_eugrowth_ch8_sec5.csv"),
+            "inflation_eurostat": _file("timeseries/ghysels_ch8/dataonly_inflation_eurostat_ch8_sec6.csv"),
+        },
+    },
+    "ghysels_ch10": {
+        "description": "Threshold and nonlinear VAR textbook exercises",
+        "time_period": "Simulated / Monthly",
+        "source": "Ghysels and Marcellino (2018), Chapter 10",
+        "files": {
+            "indprod": _file("timeseries/ghysels_ch10/indprod_ch9.csv"),
+            "simulated": _file("timeseries/ghysels_ch10/simulated_ch10_sec5.csv"),
         },
     },
     "adrr_2018": _single(

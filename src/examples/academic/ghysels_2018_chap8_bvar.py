@@ -9,7 +9,7 @@ class Ghysels2018Chap8BVARExample:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/academic/ghysels_2018/Ch_8/bvar_simulated_ch8_sec4.csv")
+            self.data_path = Path("data/examples/timeseries/ghysels_ch8/bvar_simulated_ch8_sec4.csv")
         self.model = None
 
     def _load_data(self):
