@@ -220,3 +220,10 @@ Planned models are triaged across four implementation tiers based on mathematica
 ### 6.1 Explicitly Deferred Scope
 - **General Bayesian MCMC Sampling**: Gibbs samplers, Metropolis-Hastings chains, and hierarchical state-space priors are explicitly deferred to maintain a lightweight codebase without external C++/sampler dependencies. Analytical conjugate Bayesian estimation (see `BVARModel` in [Implemented Models Catalog](library/models.md#35-analytical-conjugate-bayesian-var-bvarmodel)) is in scope because its posterior moments are available in closed form.
 - **High-Dimensional Penalized VARs**: Regularized L1/L2 lasso and elastic net VAR estimators are deferred to a dedicated high-dimensional module.
+
+### 6.2 Model Registry and Utility Tooling Harmonization
+- **Estimator and Utility Decoupling**: Separate standalone `ModelBase` statistical estimators from post-estimation computation engines (`GIRFEngine`) and batch runners (`SpecificationRunner`).
+- **Restricted VAR Pipeline Integration**: Expose `RestrictedVAR` through `params.yaml` either via a dedicated `restricted_var` model key or through `model.var.restrictions` configuration in `VARModel`.
+- **Multi-Specification Runner Relocation**: Relocate `SpecificationRunner` from `src/stats_transformer/models/regression/` to `src/stats_transformer/pipeline/` or `src/stats_transformer/reporting/` to maintain `models/` exclusively for single-model estimators.
+- **Simulation Engine Relocation**: Relocate `GIRFEngine` to a dedicated time series diagnostics or IRF calculation module.
+
