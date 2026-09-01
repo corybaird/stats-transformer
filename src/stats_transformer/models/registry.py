@@ -5,7 +5,6 @@ from stats_transformer.models.regression.iv import IV2SLSModel
 from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
 from stats_transformer.models.regression.gmm import GMMModel
 from stats_transformer.models.regression.did import DiDModel
-from stats_transformer.models.regression.spec_runner import SpecificationRunner
 from stats_transformer.models.discrete.logit import LogitModel
 from stats_transformer.models.discrete.probit import ProbitModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel, KMeansModel
@@ -41,7 +40,6 @@ MODEL_REGISTRY = {
     "panel_iv": {"cls": PanelIV2SLSModel, "kind": "panel_iv"}, 
     "gmm": {"cls": GMMModel, "kind": "iv"}, 
     "did": {"cls": DiDModel, "kind": "did"}, 
-    "spec_runner": {"cls": SpecificationRunner, "kind": "spec_runner"},
     # discrete models
     "logit": {"cls": LogitModel, "kind": "single_equation"}, 
     "probit": {"cls": ProbitModel, "kind": "single_equation"},

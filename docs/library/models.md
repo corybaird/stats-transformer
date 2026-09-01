@@ -44,7 +44,7 @@ These models are fully implemented and verified via automated Python unit and in
 | **Applied Regression** | `PanelIV2SLSModel` | `panel_iv` | `PanelIV2SLSModel` | Grunfeld (`data/examples/regression/grunfeld.csv`) | R `fixest::feols`, Stata `xtivreg` | **Implemented** |
 | **Applied Regression** | `GMMModel` | `gmm` | `GMMModel` | Greenbook (`data/examples/academic/coibion_gorodnichenko_2012/`) | R `gmm::gmm`, Stata `gmm` | **Implemented** |
 | **Applied Regression** | `DiDModel` | `did` | `DiDModel` | Policy Loans (`data/examples/academic/lane_2025/`) | R `did::att_gt`, Stata `csdid` | **Implemented** |
-| **Applied Regression** | `SpecificationRunner` | `spec_runner` | `SpecificationRunner` | Longley (`data/examples/regression/longley.csv`) | Custom grid runner | **Utility Wrapper** |
+| **Applied Regression** | `SpecificationRunner` | `None` | `SpecificationRunner` | Longley (`data/examples/regression/longley.csv`) | Custom grid runner | **Utility Wrapper** |
 | **Discrete Choice** | `ProbitModel` | `probit` | `ProbitModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::glm(probit)`, Stata `probit` | **Implemented** |
 | **Unsupervised Learning** | `KMeansModel` | `kmeans` | `KMeansModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::kmeans`, Stata `cluster kmeans` | **Implemented** |
 | **Reduced-Form Time Series** | `RestrictedVAR` | `None` | `RestrictedVAR` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `vars::restrict`, Stata `var (constrained)` | **Implemented** |
@@ -121,7 +121,7 @@ These models are fully implemented and verified via automated Python unit and in
 ### 2.8 Specification Runner (`SpecificationRunner`)
 - **Description**: Multi-specification grid runner executing and compiling regressions across multiple combinations of controls, fixed effects, and clustering rules.
 - **Module Location**: `src/stats_transformer/models/regression/spec_runner.py`
-- **Pipeline Access**: `spec_runner` (direct instantiation: `SpecificationRunner`)
+- **Pipeline Access**: `None` (direct instantiation: `SpecificationRunner`)
 
 ---
 
