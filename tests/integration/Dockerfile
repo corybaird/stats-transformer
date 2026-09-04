@@ -20,7 +20,8 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/
 # Install R packages. Raise the default download timeout (60s) -- building
 # several of these from source over a non-datacenter connection routinely
 # exceeds it well before the build itself is actually stuck.
-RUN Rscript -e 'options(warn=2, timeout=600); install.packages(c("vars", "svars", "jsonlite", "lmtest", "sandwich", "AER", "plm", "tsDyn"), repos="https://cloud.r-project.org/")'
+RUN Rscript -e 'options(warn=2, timeout=600); install.packages(c("vars", "svars", "jsonlite", "lmtest", "sandwich", "AER", "plm", "remotes"), repos="https://cloud.r-project.org/")'
+RUN Rscript -e 'options(timeout=600); remotes::install_version("tsDyn", version="11.0.5.2", repos="https://cloud.r-project.org/", upgrade="never")'
 
 WORKDIR /app
 
