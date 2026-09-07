@@ -142,6 +142,13 @@ def test_models_star_import_does_not_raise():
         assert hasattr(models_module, name), f"__all__ entry '{name}' is not importable"
 
 
+def test_arima_model_is_available_from_models_public_api():
+    from stats_transformer.models import ARIMAModel
+    from stats_transformer.models.timeseries import ARIMAModel as TimeSeriesARIMAModel
+
+    assert ARIMAModel is TimeSeriesARIMAModel
+
+
 @pytest.mark.parametrize("config_path", sorted(Path("references/configs").rglob("*.yaml")))
 def test_pipeline_configs_dispatch_to_declared_model_type(config_path):
     with open(config_path, "r") as f:

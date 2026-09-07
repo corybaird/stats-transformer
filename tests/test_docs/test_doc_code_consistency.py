@@ -6,16 +6,13 @@ from pathlib import Path
 
 import stats_transformer.models
 
-DOCS = Path(__file__).parent.parent.parent / "docs" / "extensions"
-ROADMAP = DOCS / "roadmap.md"
-MODELS_DOC = DOCS / "models.md"
+DOCS_DIR = Path(__file__).parent.parent.parent / "docs"
+MODELS_DOC = DOCS_DIR / "library" / "models.md"
+ROADMAP_DOC = DOCS_DIR / "roadmap.md"
+BENCHMARKS_DOC = DOCS_DIR / "validation" / "benchmarks.md"
 
 
 def _importable_names():
-    # Walk the whole models package rather than only the top-level __all__:
-    # several documented classes (SVARBootstrap, VARLagSelector, RestrictedVAR)
-    # are legitimately importable from their own modules without being
-    # re-exported at the top level.
     names = set()
     package = stats_transformer.models
     for module_info in pkgutil.walk_packages(package.__path__, prefix=package.__name__ + "."):
@@ -29,68 +26,48 @@ def _importable_names():
     return names
 
 
-def _roadmap_rows():
+def _benchmark_rows():
     rows = []
-    for line in ROADMAP.read_text().splitlines():
-        if not line.startswith("|") or line.startswith("| ---") or "Model Class" in line:
+    in_section_2 = False
+    for line in BENCHMARKS_DOC.read_text().splitlines():
+        if "## 2. Software Parity Benchmarks" in line:
+            in_section_2 = True
             continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
-        if len(cells) < 8:
-            continue
-        class_match = re.search(r'`([A-Za-z_][A-Za-z0-9_]*)`', cells[1])
-        if not class_match:
-            continue
-        rows.append((class_match.group(1), cells[-1]))
+        if in_section_2:
+            if "## 3." in line:
+                break
+            if not line.startswith("|") or line.startswith("| ---"):
+                continue
+            cells = [c.strip() for c in line.split("|")[1:-1]]
+            if len(cells) < 5 or cells[1] == "Model":
+                continue
+            class_match = re.search(r'`([A-Za-z_][A-Za-z0-9_]*)`', cells[1])
+            if not class_match:
+                continue
+            rows.append((class_match.group(1), cells[-1]))
     return rows
 
 
-def test_roadmap_has_parseable_rows():
-    rows = _roadmap_rows()
-    assert len(rows) > 10, f"Parsed only {len(rows)} roadmap rows; the table format may have changed"
+def test_benchmarks_doc_has_parseable_rows():
+    rows = _benchmark_rows()
+    assert len(rows) > 10, f"Parsed only {len(rows)} benchmark rows; the table format may have changed"
 
 
-@pytest.mark.parametrize("class_name,status", [r for r in _roadmap_rows() if "Verified" in r[1]])
-def test_roadmap_verified_classes_are_importable(class_name, status):
+@pytest.mark.parametrize("class_name,status", [r for r in _benchmark_rows() if "Verified" in r[1]])
+def test_benchmark_verified_classes_are_importable(class_name, status):
     assert class_name in _importable_names(), (
-        f"roadmap.md marks {class_name} as {status}, but it is not importable from "
-        f"stats_transformer.models. Either implement/export it or change its status to *Planned*."
+        f"benchmarks.md marks {class_name} as {status}, but it is not importable from "
+        f"stats_transformer.models."
     )
 
 
-def test_models_doc_implemented_sections_reference_real_classes():
-    # Every "### ... (`Name`) - **Implemented**" heading must name a real class.
+def test_models_doc_sections_reference_real_classes():
     importable = _importable_names()
     problems = []
     for line in MODELS_DOC.read_text().splitlines():
-        if not line.startswith("### ") or "**Implemented**" not in line:
+        if not line.startswith("### "):
             continue
         for name in re.findall(r'`([A-Za-z_][A-Za-z0-9_]*)`', line):
             if name not in importable:
                 problems.append(f"{line.strip()} -> `{name}` is not importable")
-    assert not problems, "models.md claims these are Implemented but they do not exist:\n" + "\n".join(problems)
-
-
-# Classes that exist and import, but whose estimation is deliberately not
-# implemented -- they raise NotImplementedError rather than fabricating
-# results. They are correctly documented as *Planned* despite being importable.
-IMPORTABLE_BUT_NOT_IMPLEMENTED = set()
-
-
-def test_models_doc_planned_sections_are_not_implemented():
-    # The inverse guard: if something marked *Planned* becomes importable, the
-    # doc is now understating the library and should be promoted.
-    importable = _importable_names() - IMPORTABLE_BUT_NOT_IMPLEMENTED
-    stale = []
-    for line in MODELS_DOC.read_text().splitlines():
-        if not line.startswith("### ") or "*Planned*" not in line:
-            continue
-        for name in re.findall(r'`([A-Za-z_][A-Za-z0-9_]*)`', line):
-            if name in importable:
-                stale.append(f"{line.strip()} -> `{name}` is now importable")
-    assert not stale, "models.md marks these *Planned* but they now exist; promote them to **Implemented**:\n" + "\n".join(stale)
-
-
-def test_importable_but_unimplemented_classes_still_raise():
-    # Guards the exemption above: if anything is added to IMPORTABLE_BUT_NOT_IMPLEMENTED,
-    # ensure it actually exists and is accounted for.
-    assert isinstance(IMPORTABLE_BUT_NOT_IMPLEMENTED, set)
+    assert not problems, "models.md references classes that do not exist:\n" + "\n".join(problems)

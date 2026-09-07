@@ -1,5 +1,5 @@
 data:
-  raw_data_file: data/examples/academic/ghysels_2018/Ch_5/arma_inven.csv
+  raw_data_file: data/examples/timeseries/ghysels_ch5/arma_inven.csv
 
 model:
   model_type: arima

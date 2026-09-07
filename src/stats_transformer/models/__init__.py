@@ -6,10 +6,12 @@ from .regression.iv import IV2SLSModel
 from .regression.panel_iv import PanelIV2SLSModel
 from .regression.gmm import GMMModel
 from .regression.did import DiDModel
+from .regression.spec_runner import SpecificationRunner
 from .discrete.logit import LogitModel
 from .discrete.probit import ProbitModel
 from .unsupervised.unsupervised import UnsupervisedModel, PCAModel, KMeansModel
 from .timeseries import (
+    ARIMAModel,
     BlanchardQuahModel,
     DynamicFactorModel,
     BVARModel,
@@ -46,11 +48,13 @@ __all__ = [
     "PanelIV2SLSModel",
     "GMMModel",
     "DiDModel",
+    "SpecificationRunner",
     "LogitModel",
     "ProbitModel",
     "UnsupervisedModel",
     "PCAModel",
     "KMeansModel",
+    "ARIMAModel",
     "BlanchardQuahModel",
     "DynamicFactorModel",
     "BVARModel",

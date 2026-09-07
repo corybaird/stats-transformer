@@ -1,24 +1,12 @@
-# System architecture
+# System Architecture & Repository Structure
 
-`stats-transformer` is a configuration-driven Python library for the full empirical workflow: frequency-aware data preparation, feature construction, econometric estimation, diagnostics, and publication-oriented outputs. It is a workflow layer built on established Python estimators such as `statsmodels` and `linearmodels`; it does not replace their estimator-specific interfaces.
-
-## Table of Contents
-
-1. [1. Workflow contract](#1-workflow-contract)
-2. [2. Package tree](#2-package-tree)
-3. [3. Core components](#3-core-components)
-   - [3.1 Data and Feature Engineering](#31-data-and-feature-engineering)
-   - [3.2 Econometric Estimators & Base Interface](#32-econometric-estimators--base-interface)
-   - [3.3 Visualization and Reporting](#33-visualization-and-reporting)
-4. [4. Configuration boundary](#4-configuration-boundary)
-5. [5. Agent-facing architectural guidance](#5-agent-facing-architectural-guidance)
-6. [6. Related documentation](#6-related-documentation)
+`stats-transformer` is a configuration-driven Python library designed for the complete empirical workflow: frequency-aware data preparation, feature construction, econometric estimation, diagnostics, and publication-ready reporting outputs. It acts as a reproducible workflow layer built upon foundational Python scientific computing packages (`numpy`, `pandas`, `statsmodels`, `linearmodels`, `scipy`).
 
 ---
 
-## 1. Workflow contract
+## 1. Workflow Contract
 
-For YAML-driven runs, `Pipeline` coordinates the following stages:
+For YAML-driven execution, the `Pipeline` class coordinates sequential execution stages:
 
 ```mermaid
 flowchart LR
@@ -31,202 +19,161 @@ flowchart LR
     G --> H[visualization]
 ```
 
-- `Pipeline.run(stage=...)` accepts `resample`, `features`, `eda`, `regression`, `visualization`, or `None` for full runs.
-- Each stage persists inspectable artifacts including merged parquets, engineered CSVs, JSON model metadata, and figures.
-- Stage breakdown:
-  - `resample`: Aligns configured data sources and performs joins via `DataMerger`.
+- **Pipeline Stages**:
+  - `resample`: Aligns multi-frequency datasets and performs panel joins via `DataMerger`.
   - `features`: Applies `FeatureEngineer` transformations within entity boundaries.
   - `regression`: Fits configured estimators and outputs structured JSON metadata.
   - `visualization`: Renders configured plots from transformed data or saved model metadata.
+  - `eda`: Generates exploratory data analysis charts.
+- **Stage Execution**: `Pipeline.run(stage=...)` accepts `resample`, `features`, `eda`, `regression`, `visualization`, or `None` for full sequential execution.
+- **Persisted Artifacts**: Every stage persists inspectable artifacts (Parquet, CSV, JSON, figures) enabling modular inspection and caching.
 
 ---
 
-## 2. Package tree
+## 2. Repository File Structure & Boundaries
+
+The repository follows a Cookiecutter Data Science-style separation between reusable library code, empirical inputs, executable examples, tests, configurations, and generated outputs.
+
+```text
+.
+├── .agents/                       # Project instructions and agent skills
+├── data/
+│   ├── examples/                  # Bundled and validation example datasets
+│   ├── final/                     # Engineered analysis-ready panels (gitignored)
+│   ├── pipeline/                  # Resampled and merged intermediate parquets (gitignored)
+│   ├── raw/                       # Source raw datasets
+│   └── temp/                      # Disposable local data (gitignored)
+├── docs/
+│   ├── library/                   # Architecture, model catalog, data guide, citations
+│   ├── validation/                # Software benchmarks and test suite guides
+│   ├── overview.md                # Central documentation hub
+│   └── roadmap.md                 # Future model extensions roadmap
+├── models/                        # Serialized model artifacts when produced
+├── notebooks/                     # Exploratory interactive demonstrations
+├── references/
+│   ├── configs/                   # YAML specifications (params.yaml)
+│   └── dictionaries/              # Constant mapping files
+├── reports/
+│   ├── figures/                   # Generated visual outputs
+│   ├── tables/                    # Generated LaTeX and markdown tables
+│   └── visualizations/            # EDA and model visualizations
+├── src/
+│   ├── examples/                  # Executable demonstrations and benchmark scripts
+│   ├── stats_transformer/         # Installable Python package
+│   └── temp/                      # Disposable development scripts
+└── tests/
+    ├── data/                      # Stable test fixtures
+    ├── integration/               # Multi-language integration tests (R, Stata)
+    ├── verification/              # Opt-in external verification (MATLAB)
+    └── test_*.py                  # Automated unit and integration tests
+```
+
+---
+
+## 3. Package Architecture & Core Components
 
 ```text
 src/stats_transformer/
-├── __init__.py                    # public API re-exports
+├── __init__.py                    # Public API re-exports
 ├── pipeline.py                    # YAML-driven orchestration
-├── data/                          # packaged datasets and panel construction
+├── data/                          # Packaged datasets and example loader
 ├── featurization/
-│   ├── feature_engineering.py     # transformations and resampling
-│   ├── data_merger.py             # multi-source joins
-│   └── event_study.py             # event-study data construction
+|   ├── base.py                    # Base model for feature engineering
+│   ├── feature_engineering.py     # Transformations and resampling
+│   ├── data_merger.py             # Multi-source panel joins
+│   └── event_study.py             # Event-study window construction
 ├── models/
-│   ├── base.py                    # common model contract
-│   ├── regression/                # OLS, robust OLS, panel OLS, IV, spec runner
-│   ├── timeseries/                # VAR, VECM, SVAR, LP, ARIMA, identification, diagnostics
-│   ├── discrete/                  # logit
-│   └── unsupervised/              # PCA and K-means
-├── reporting/                     # result exporters
-├── utils/                         # configuration and shared helpers
+│   ├── base.py                    # Common ModelBase contract
+│   ├── registry.py                # Model registry and YAML dispatcher
+│   ├── regression/                # OLS, Robust OLS, Panel OLS, IV, Panel IV, GMM, DiD, SpecRunner
+│   ├── timeseries/                # VAR, VECM, SVAR, LP, ARIMA, Dynamic Factor, BVAR, Nonlinear, Diagnostics
+│   ├── discrete/                  # Logit, Probit
+│   └── unsupervised/              # PCA, KMeans
+├── reporting/                     # Result exporters and table generation
+├── utils/                         # Configuration and shared utilities
 └── visualization/
-    ├── charts/                    # reusable chart components, including IRFPlot
-    ├── eda/                       # exploratory visualizers
-    ├── models/                    # model and regression visualizers
-    ├── tables/                    # table generation
-    └── defaults/                  # styles, colors, labels, and formatters
+    ├── charts/                    # Reusable chart components (IRFPlot, TimeSeriesPlot, etc.)
+    ├── eda/                       # Exploratory visualizers
+    ├── models/                    # Model and regression visualizers
+    ├── tables/                    # TableGenerator
+    └── defaults/                  # Styles, palettes, labels, formatters
 ```
 
 ---
 
-## 3. Core components
+## 4. Component Details & Subsystem Diagrams
 
-### 3.1 Data and Feature Engineering
-
-#### Data Flow Diagram
-
-```mermaid
-flowchart LR
-    subgraph DataSources["Raw Data Sources"]
-        CSV[CSV Files]
-        PQ[Parquet Files]
-    end
-
-    subgraph ResampleMerge["1. Resample & Merge Stage"]
-        RS[FeatureEngineer.resample_dataset]
-        DM[DataMerger.merge]
-    end
-
-    subgraph FeatureTransforms["2. Feature Engineering Stage"]
-        FE[FeatureEngineer.fit_transform]
-        TF["Transforms: log, lag, lead, zscore, changepct, rollingmean"]
-    end
-
-    DataSources --> RS
-    RS --> DM
-    DM --> FE
-    FE --> TF
-    TF --> MergedDataset[Engineered Panel Parquet / CSV]
-```
-
-#### Key Capabilities
-
-- **`FeatureEngineer`**: Applies transformations within entity boundaries across annual (A), quarterly (Q), monthly (M), and daily (D) frequencies. Supported operations: log levels, raw and percentage changes, lags, leads, rolling means, z-scores, and forward differences.
-- **`DataMerger`**: Executes panel joins across multiple data sources using explicit entity and date keys.
-- **`EventStudyBuilder`**: Constructs normalized event-window datasets around discrete shock dates.
-
----
-
-### 3.2 Econometric Estimators & Base Interface
-
-#### Estimator Hierarchy Diagram
+### 4.1 Data Ingestion & Feature Engineering Flow
 
 ```mermaid
 flowchart TD
-    MB[ModelBase Interface] --> |fit / predict / get_model_metadata| REG[Regression]
-    MB --> |fit / predict / get_model_metadata| TS[Time-Series]
-    MB --> |fit / predict / get_model_metadata| UNSUP[Discrete & Unsupervised]
+    DataSources[Data Ingestion: Raw CSV / Parquet / APIs] --> RS[Resampler: Frequency Aggregation A/Q/M/D]
+    RS --> DM[DataMerger: Entity & Date Key Joins]
+    DM --> FE[FeatureEngineer: Lags / Leads / Changes / Z-Scores]
+    FE --> TF[EventStudyBuilder: Shock-Window Alignment]
+    TF --> MergedDataset[Analysis-Ready Panel Dataset]
+```
 
-    REG --> OLS[Regression / RobustOLS / PanelRegression / IV2SLS / PanelIV2SLS / GMM / DiD / SpecificationRunner]
-    TS --> VAR[VAR / VECM / LocalProjections / LocalProjectionsIV / ARIMA / DynamicFactor / BVAR / TVAR / TVECM / STVAR]
-    TS --> SVAR[SVAR / BlanchardQuah / ProxySVAR / SignZeroSVAR / VolatilitySVAR / IndependenceSVAR / CVMSVAR / NonGaussianSVAR / SVEC]
+- **`FeatureEngineer`**: Applies transformations within entity boundaries across annual (A), quarterly (Q), monthly (M), and daily (D) frequencies. Operations include log levels, changes, percentage changes, lags, leads, rolling means, and z-scores.
+- **`DataMerger`**: Executes panel joins across multiple data sources using explicit entity and date keys.
+- **`EventStudyBuilder`**: Constructs normalized event-window panels around shock dates.
+
+---
+
+### 4.2 Econometric Estimators & Base Hierarchy
+
+```mermaid
+flowchart TD
+    MB[ModelBase Interface: fit / predict / get_model_metadata] --> REG[Applied Regression]
+    MB --> TS[Time-Series Models]
+    MB --> UNSUP[Discrete & Unsupervised]
+
+    REG --> OLS[OLS / RobustOLS / PanelRegression / IV2SLS / PanelIV2SLS / GMM / DiD / SpecificationRunner]
+    TS --> VAR[VAR / VECM / LocalProjections / LP-IV / ARIMA / DynamicFactor / BVAR / TVAR / TVECM / STVAR]
+    TS --> SVAR[SVAR / BlanchardQuah / ProxySVAR / SignZero / Volatility / Independence / CVM / NonGaussian / SVEC]
     UNSUP --> DIS[Logit / Probit / PCA / KMeans]
 
-    VAR --> META[JSON Metadata & Coefficients]
+    VAR --> META[JSON Metadata & Result DataFrames]
     SVAR --> META
     REG --> META
 ```
 
-#### Complete Model Subsystem Matrix
-
-| Family | Class Name | Description | Access Mode |
-| --- | --- | --- | --- |
-| **Regression** | `RegressionModel` | OLS regression with intercept or entity fixed effects | Pipeline: `ols`; Direct API |
-| **Regression** | `RobustOLSModel` | Heteroskedasticity/autocorrelation robust OLS (HC/HAC) | Pipeline: `robust_ols`; Direct API |
-| **Regression** | `PanelRegressionModel` | Entity & time fixed effects panel regression | Pipeline: `panel_ols`; Direct API |
-| **Regression** | `IV2SLSModel` | 2-Stage Least Squares instrumental variables regression | Pipeline: `iv` (aliases: `iv_2sls`, `2sls`); Direct API |
-| **Regression** | `PanelIV2SLSModel` | Panel 2SLS regression with fixed effects | Pipeline: `panel_iv`; Direct API |
-| **Regression** | `GMMModel` | Generalized Method of Moments (one-step, two-step, iterated, CUE; HAC weighting; J-test) | Pipeline: `gmm`; Direct API |
-| **Regression** | `DiDModel` | Callaway-Sant'Anna staggered difference-in-differences (group-time ATT) | Pipeline: `did`; Direct API |
-| **Regression** | `SpecificationRunner` | Multi-specification regression runner utility | Direct API |
-| **Time Series** | `VARModel` | Reduced-form OLS Vector Autoregression | Pipeline: `var`; Direct API |
-| **Time Series** | `VECMModel` | Johansen Cointegrated Vector Error Correction Model | Pipeline: `vecm`; Direct API |
-| **Time Series** | `RestrictedVAR` | Reduced-form VAR with equation-level coefficient masks | Direct API |
-| **Time Series** | `ARIMAModel` | Univariate Autoregressive Integrated Moving Average | Pipeline: `arima`; Direct API |
-| **Time Series** | `SVARModel` | Structural VAR under short-run linear restrictions | Pipeline: `svar`; Direct API |
-| **Time Series** | `BlanchardQuahModel` | Long-run structural VAR identification (Blanchard-Quah) | Pipeline: `blanchard_quah`; Direct API |
-| **Time Series** | `ProxySVARModel` | External-instrument structural VAR identification | Pipeline: `proxy_svar`; Direct API |
-| **Time Series** | `SignZeroSVARModel` | Sign, zero, and narrative restriction structural VAR identification | Pipeline: `sign_restrictions` (alias: `sign_zero`); Direct API |
-| **Time Series** | `VolatilitySVARModel` | Changes-in-volatility heteroskedastic structural VAR across break regimes | Pipeline: `volatility_svar`; Direct API |
-| **Time Series** | `IndependenceSVARModel` | Distance covariance / ICA data-driven structural VAR | Pipeline: `independence_svar`; Direct API |
-| **Time Series** | `CVMSVARModel` | Cramér-von Mises distance independence structural VAR | Pipeline: `cvm_svar` (alias: `cvm`); Direct API |
-| **Time Series** | `NonGaussianSVARModel` | Non-Gaussian maximum likelihood structural VAR with Student-t shocks | Pipeline: `non_gaussian_svar` (alias: `non_gaussian`); Direct API |
-| **Time Series** | `SVECModel` | Structural VECM combining cointegration rank with restrictions | Pipeline: `svec`; Direct API |
-| **Time Series** | `LocalProjectionsModel` | Jordà (2005) horizon-by-horizon local projections | Pipeline: `local_projections`; Direct API |
-| **Time Series** | `LocalProjectionsIVModel` | Instrumented local projections (Stock & Watson 2018) | Pipeline: `lp_iv`; Direct API |
-| **Time Series** | `DynamicFactorModel` | EM-estimated dynamic factor model (Kalman filter/smoother) | Pipeline: `dynamic_factor`; Direct API |
-| **Time Series** | `BVARModel` | Conjugate Normal-Inverse-Wishart Bayesian VAR (Minnesota prior) | Pipeline: `bvar`; Direct API |
-| **Time Series** | `TVARModel` | Two-regime threshold Vector Autoregression | Pipeline: `tvar`; Direct API |
-| **Time Series** | `TVECMModel` | Threshold Cointegrated Vector Error Correction Model | Pipeline: `tvecm`; Direct API |
-| **Time Series** | `STVARModel` | Smooth Transition Vector Autoregression with GIRFs | Pipeline: `stvar`; Direct API |
-| **Discrete** | `LogitModel` | Binary logit maximum-likelihood classification | Pipeline: `logit`; Direct API |
-| **Discrete** | `ProbitModel` | Binary probit maximum-likelihood classification | Pipeline: `probit`; Direct API |
-| **Unsupervised** | `PCAModel` | Principal Component Analysis feature extraction | Pipeline: `pca`; Direct API |
-| **Unsupervised** | `KMeansModel` | K-means clustering algorithm | Pipeline: `kmeans`; Direct API |
-| **Diagnostics & Utils** | `GrangerCausalityTester` | Pairwise & system Granger causality testing | Direct Utility API |
-| **Diagnostics & Utils** | `ResidualDiagnostics` | Portmanteau autocorrelation, Jarque-Bera, ARCH-LM | Direct Utility API |
-| **Diagnostics & Utils** | `StabilityDiagnostics` | Companion matrix eigenvalue roots & stability plot | Direct Utility API |
-| **Diagnostics & Utils** | `StationarityDiagnostics` | ADF and KPSS unit-root stationarity tests | Direct Utility API |
-| **Diagnostics & Utils** | `VARLagSelector` | Information criteria lag selection (AIC, HQ, SC, FPE) | Direct Utility API |
-| **Diagnostics & Utils** | `VARForecaster` | Point forecasting and analytic error bounds | Direct Utility API |
-| **Diagnostics & Utils** | `ForecastEvaluator` | RMSE and MAE forecast error evaluation | Direct Utility API |
-| **Diagnostics & Utils** | `TimeSeriesDecompositions` | Historical and forecast error variance decompositions | Direct Utility API |
-
-#### Access Modes: Pipeline Supported vs Direct API
-
-- **Pipeline Supported (YAML Dispatcher)**: The automated `Pipeline` orchestrator reads a `params.yaml` configuration file and routes execution via `model.model_type` across all registered model types in `MODEL_REGISTRY`. This allows non-programmatic, reproducible execution across full pipeline stages (`resample` -> `features` -> `regression` -> `visualization`).
-- **Direct API Usage**: All estimators and diagnostic utilities can also be instantiated directly as Python classes (`model = VARModel(...)`). Direct API usage provides full programmatic control over estimation parameters, custom matrix masks, and advanced structural identification loops.
+- **Unified Base Contract (`ModelBase`)**: Every model implements the `ModelBase` abstract contract (`fit`, `predict`, `get_model_metadata`).
+- **Normalized Outputs**: All estimators return normalized DataFrames and structured JSON metadata containing coefficients, standard errors, $t$-statistics, $p$-values, covariance matrices, and model diagnostic metrics.
+- **Complete Reference**: For full mathematical specifications, access aliases, and benchmark comparisons for all 30 implemented model classes, see the [Implemented Models Catalog](models.md).
 
 ---
 
-### 3.3 Visualization and Reporting
-
-#### Reporting Flow Diagram
+### 4.3 Visualization & Reporting Flow
 
 ```mermaid
 flowchart LR
     MD[Model Metadata JSON] --> VIS[Model Visualizers]
-    TD[Transformed Data CSV] --> EDA[EDA Visualizers]
+    TD[Transformed Data Parquet] --> EDA[EDA Visualizers]
     VIS --> CHART[Standalone Charts: IRFPlot / TimeSeriesPlot / CoefficientBarChart]
     MD --> REP[TableGenerator & exporters.py]
-    REP --> LATEX[LaTeX / Overleaf Tables]
+    REP --> LATEX[LaTeX / Overleaf Tables & Markdown Summaries]
 ```
 
-#### Key Capabilities
-
-- **Modular Chart Components (`src/stats_transformer/visualization/charts/`)**:
-  - `IRFPlot`: Multi-panel impulse response curves with confidence intervals.
-  - `TimeSeriesPlot`: Time series tracking with custom shading and overlays.
-  - `CoefficientBarChart`: Model coefficient comparisons with error bars.
-  - `FacetedTimeSeries`, `BinnedScatterPlot`, `CorrelationHeatmap`.
-- **Reporting & Exporters (`src/stats_transformer/reporting/`)**:
-  - `TableGenerator`: Generates publication-ready LaTeX and Markdown summary tables.
-  - `exporters.py`: Persists execution metrics and transformed DataFrames.
+- **Modular Chart Components (`src/stats_transformer/visualization/charts/`)**: Standalone, composable plotting classes (`IRFPlot`, `TimeSeriesPlot`, `CoefficientBarChart`, `FacetedTimeSeries`, `BinnedScatterPlot`, `CorrelationHeatmap`).
+- **Reporting & Exporters (`src/stats_transformer/reporting/`)**: Publication-ready LaTeX and Markdown table generation via `TableGenerator` and metrics persistence via `exporters.py`.
 
 ---
 
-## 4. Configuration boundary
+## 5. Configuration & Reproducibility Boundaries
 
-The repository maintains strict separation between reusable library code and empirical specifications:
-
-- `references/configs/`: Stores YAML specification files (`params.yaml`).
-- `data/`: Holds raw, intermediate, final, and example datasets. See [Data directory guide](data.md) for full dataset catalog and layout.
+- `references/configs/`: The control center for reproducible specifications. Configurations select raw data, transformation settings, model choices, and output directories.
 - `reports/`: Stores output figures, LaTeX tables, and JSON metadata.
-- `src/examples/academic/`: Contains runnable paper replication scripts.
+- Source datasets remain unmodified. The pipeline writes intermediate and final artifacts to `data/pipeline/` and `data/final/`.
 
 ---
 
-## 5. Agent-facing architectural guidance
+## 6. Related Documentation
 
-The repository includes an agent skill at `.agents/skills/stats-transformer-architecture/` providing machine-readable guidance for coding agents. It details pipeline contracts, extension points, public re-exports, and file routing patterns.
-
----
-
-## 6. Related documentation
-
-- [Repository structure](file_structure.md)
+- [Documentation overview](../overview.md)
+- [Implemented models catalog](models.md)
 - [Data directory guide](data.md)
-- [Academic Citations](citations.md)
+- [Academic citations](citations.md)
+- [Cross-language software benchmarks](../validation/benchmarks.md)
 - [Testing suite](../validation/testing_suite.md)
-- [Academic & numerical validation](../validation/validation.md)
+- [Future model roadmap](../roadmap.md)

@@ -143,7 +143,9 @@ YAML `model.independent_variables` and `model.target_variable` are required; the
 ## Pointers
 
 - Canonical architecture doc: `docs/library/architecture.md`
-- File-structure doc: `docs/library/file_structure.md`
+- Implemented models catalog: `docs/library/models.md`
+- Roadmap doc: `docs/roadmap.md`
+- Benchmarks doc: `docs/validation/benchmarks.md`
 - Library README: `README.md`
 - Commit message conventions: `.agents/git-management-pypi.md` (NOT duplicated here)
 - Test fixture config: `references/configs/test_pipeline.yaml`

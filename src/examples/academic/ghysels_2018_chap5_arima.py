@@ -9,7 +9,7 @@ class Ghysels2018Chap5ARIMAExample:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/academic/ghysels_2018/Ch_5/arma_inven.csv")
+            self.data_path = Path("data/examples/timeseries/ghysels_ch5/arma_inven.csv")
         self.model = None
 
     def _load_data(self):
@@ -18,7 +18,7 @@ class Ghysels2018Chap5ARIMAExample:
 
     def run(self):
         df = self._load_data()
-        target_col = df.columns[1] if len(df.columns) > 1 else df.columns[0]
+        target_col = "rcpi" if "rcpi" in df.columns else (df.columns[1] if len(df.columns) > 1 else df.columns[0])
         self.model = ARIMAModel(
             target=target_col,
             order=(1, 0, 1)
