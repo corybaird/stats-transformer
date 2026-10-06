@@ -66,10 +66,11 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Implementation Strategy**: Closed-form OLS given fixed decay parameter $\lambda$ or 1D grid search.
 - **Target Benchmark**: Nelson & Siegel (1987), `cacoleman16/tsecon` (`nelson_siegel`)
 
-### 2.6 Fry-Pagan Median Target Selection
+### 2.6 Fry-Pagan Median Target Selection [Completed]
+- **Status**: Implemented via `get_representative_draw()` in `SignZeroSVARModel` and `BayesianSignZeroSVARModel`.
 - **Description**: Selection routine finding the single structural identification draw $Q^*$ whose IRF profile minimizes quadratic distance to the pointwise median IRF:
   $$Q^* = \arg\min_k \sum_{i,j,h} \left( \frac{\text{IRF}_{i,j,h}^{(k)} - \text{median}_{i,j,h}}{\text{std}_{i,j,h}} \right)^2$$
-- **Implementation Strategy**: Post-draw selection helper in `SignZeroSVARModel`.
+- **Implementation Strategy**: Post-draw selection helper in `SignZeroSVARModel` and `BayesianSignZeroSVARModel`.
 - **Target Benchmark**: Fry & Pagan (2011), `ambropo/VAR-Toolbox` (`VARsign.m`)
 
 ### 2.7 Survey Expectations Diagnostics
@@ -218,7 +219,7 @@ Planned models are triaged across four implementation tiers based on mathematica
 ## 6. Deferred Scope & Architecture Boundaries
 
 ### 6.1 Explicitly Deferred Scope
-- **General Bayesian MCMC Sampling**: Gibbs samplers, Metropolis-Hastings chains, and hierarchical state-space priors are explicitly deferred to maintain a lightweight codebase without external C++/sampler dependencies. Analytical conjugate Bayesian estimation (see `BVARModel` in [Implemented Models Catalog](library/models.md#35-analytical-conjugate-bayesian-var-bvarmodel)) is in scope because its posterior moments are available in closed form.
+- **General Bayesian MCMC Sampling**: Gibbs samplers, Metropolis-Hastings chains, and hierarchical state-space priors are explicitly deferred to maintain a lightweight codebase without external C++/sampler dependencies. Analytical conjugate Bayesian estimation (see `BVARModel`, `PandemicBVARModel`, and `BayesianSignZeroSVARModel` in [Implemented Models Catalog](library/models.md#55-analytical-conjugate-bayesian-var-bvarmodel)) is in scope because its posterior moments and QR rotations are available in closed form.
 - **High-Dimensional Penalized VARs**: Regularized L1/L2 lasso and elastic net VAR estimators are deferred to a dedicated high-dimensional module.
 
 ### 6.2 Model Registry and Utility Tooling Harmonization
