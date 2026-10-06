@@ -55,6 +55,7 @@ These models are fully implemented and verified via automated Python unit and in
 | **Reduced-Form Time Series** | `LocalProjectionsIVModel` | `lp_iv` | `LocalProjectionsIVModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | R `lpirfs::lp_lin_iv`, Stata `lproj` | **Implemented** |
 | **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Implemented** |
 | **Structural Identification** | `SignZeroSVARModel` | `sign_restrictions` (`sign_zero`) | `SignZeroSVARModel` | Kilian & Lütkepohl (`data/examples/timeseries/macrodata.csv`) | MATLAB `VAR-Toolbox 4.0`, R `BMR` | **Implemented** |
+| **Structural Identification** | `BayesianSignZeroSVARModel` | `bsvar_sign_zero` (`bayesian_sign_zero`) | `BayesianSignZeroSVARModel` | UK SVAR (`data/examples/timeseries/macrodata.csv`) | Bank of England (Brignone & Piffer 2025), Arias et al. (2018) | **Implemented** |
 | **Structural Identification** | `IndependenceSVARModel` | `independence_svar` | `IndependenceSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.dc` | **Implemented** |
 | **Structural Identification** | `CVMSVARModel` | `cvm_svar` (`cvm`) | `CVMSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.cvm` | **Implemented** |
 | **Structural Identification** | `NonGaussianSVARModel` | `non_gaussian_svar` (`non_gaussian`) | `NonGaussianSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.ng` | **Implemented** |
@@ -303,6 +304,13 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/structural/svec.py`
 - **Pipeline Access**: `svec` (direct instantiation: `SVECModel`)
 - **Benchmark Target**: R (`vars::SVEC`), MATLAB (`VAR-Toolbox 4.0`)
+
+### 6.10 Bayesian Sign & Zero Restrictions SVAR (`BayesianSignZeroSVARModel`)
+- **Description**: Bayesian Structural VAR identification combining Minnesota prior parameter draws with simultaneous sign, zero, and narrative restrictions via Haar/QR rotation sampling and Chan et al. (2025) column-permutation efficiency acceleration.
+- **Specification**: $Y_t = c + \sum_{i=1}^p A_i Y_{t-i} + u_t$ with $u_t = P Q \epsilon_t$, where $P = \text{chol}(\Sigma^{(d)})$ and $Q$ is an orthonormal rotation matrix drawn conditionally across posterior draws.
+- **Module Location**: `src/stats_transformer/models/timeseries/identification/bayesian_sign_zero.py`
+- **Pipeline Access**: `bsvar_sign_zero` (alias: `bayesian_sign_zero`)
+- **Benchmark Target**: Bank of England (Brignone & Piffer 2025), Arias et al. (2018), Chan et al. (2025)
 
 ---
 
