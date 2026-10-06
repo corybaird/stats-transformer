@@ -34,6 +34,7 @@ from .timeseries import (
     STVARModel,
     GIRFEngine,
     BayesianSignZeroSVARModel,
+    PandemicBVARModel,
 )
 from .timeseries.identification.bootstrap import SVARBootstrap
 from .timeseries.reduced_form.restrictions import RestrictedVAR, RestrictedVARResults
@@ -83,4 +84,5 @@ __all__ = [
     "STVARModel",
     "GIRFEngine",
     "BayesianSignZeroSVARModel",
+    "PandemicBVARModel",
 ]

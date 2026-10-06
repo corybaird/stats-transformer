@@ -29,6 +29,7 @@ from stats_transformer.models.timeseries import (
     STVARModel,
     ARIMAModel,
     BayesianSignZeroSVARModel,
+    PandemicBVARModel,
 )
 
 MODEL_REGISTRY = {
@@ -67,6 +68,7 @@ MODEL_REGISTRY = {
     "local_projections": {"cls": LocalProjectionsModel, "kind": "lp"},
     "lp_iv": {"cls": LocalProjectionsIVModel, "kind": "lp_iv"},
     "bsvar_sign_zero": {"cls": BayesianSignZeroSVARModel, "kind": "svar_family"},
+    "pandemic_bvar": {"cls": PandemicBVARModel, "kind": "svar_family"},
 }
 
 MODEL_TYPE_ALIASES = {
