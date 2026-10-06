@@ -33,6 +33,7 @@ from .timeseries import (
     TVECMModel,
     STVARModel,
     GIRFEngine,
+    BayesianSignZeroSVARModel,
 )
 from .timeseries.identification.bootstrap import SVARBootstrap
 from .timeseries.reduced_form.restrictions import RestrictedVAR, RestrictedVARResults
@@ -81,4 +82,5 @@ __all__ = [
     "TVECMModel",
     "STVARModel",
     "GIRFEngine",
+    "BayesianSignZeroSVARModel",
 ]

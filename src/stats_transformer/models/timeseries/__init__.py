@@ -22,8 +22,10 @@ from .nonlinear.tvar import TVARModel
 from .nonlinear.tvecm import TVECMModel
 from .nonlinear.stvar import STVARModel
 from .nonlinear.girf import GIRFEngine
+from .identification.bayesian_sign_zero import BayesianSignZeroSVARModel
 
 __all__ = [
+    "BayesianSignZeroSVARModel",
     "BlanchardQuahModel",
     "DynamicFactorModel",
     "BVARModel",

@@ -28,6 +28,7 @@ from stats_transformer.models.timeseries import (
     TVECMModel,
     STVARModel,
     ARIMAModel,
+    BayesianSignZeroSVARModel,
 )
 
 MODEL_REGISTRY = {
@@ -65,6 +66,7 @@ MODEL_REGISTRY = {
     "stvar": {"cls": STVARModel, "kind": "svar_family"},
     "local_projections": {"cls": LocalProjectionsModel, "kind": "lp"},
     "lp_iv": {"cls": LocalProjectionsIVModel, "kind": "lp_iv"},
+    "bsvar_sign_zero": {"cls": BayesianSignZeroSVARModel, "kind": "svar_family"},
 }
 
 MODEL_TYPE_ALIASES = {
@@ -73,6 +75,7 @@ MODEL_TYPE_ALIASES = {
     "sign_zero": "sign_restrictions",
     "cvm": "cvm_svar",
     "non_gaussian": "non_gaussian_svar",
+    "bayesian_sign_zero": "bsvar_sign_zero",
 }
 
 # ModelBase subclasses that are intentionally not reachable via Pipeline's
