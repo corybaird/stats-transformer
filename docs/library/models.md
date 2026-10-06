@@ -53,6 +53,7 @@ These models are fully implemented and verified via automated Python unit and in
 | **Reduced-Form Time Series** | `DynamicFactorModel` | `dynamic_factor` | `DynamicFactorModel` | Global Factor (`data/examples/academic/miranda_agrippino_rey_2020/`) | R `MARSS`, Stata `dfactor` | **Implemented** |
 | **Reduced-Form Time Series** | `LocalProjectionsModel` | `local_projections` | `LocalProjectionsModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | R `lpirfs::lp_lin`, Stata `jorda` | **Implemented** |
 | **Reduced-Form Time Series** | `LocalProjectionsIVModel` | `lp_iv` | `LocalProjectionsIVModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | R `lpirfs::lp_lin_iv`, Stata `lproj` | **Implemented** |
+| **Reduced-Form Time Series** | `PandemicBVARModel` | `pandemic_bvar` | `PandemicBVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | Cascaldi-Garcia (2022) | **Implemented** |
 | **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Implemented** |
 | **Structural Identification** | `SignZeroSVARModel` | `sign_restrictions` (`sign_zero`) | `SignZeroSVARModel` | Kilian & Lütkepohl (`data/examples/timeseries/macrodata.csv`) | MATLAB `VAR-Toolbox 4.0`, R `BMR` | **Implemented** |
 | **Structural Identification** | `BayesianSignZeroSVARModel` | `bsvar_sign_zero` (`bayesian_sign_zero`) | `BayesianSignZeroSVARModel` | UK SVAR (`data/examples/timeseries/macrodata.csv`) | Bank of England (Brignone & Piffer 2025), Arias et al. (2018) | **Implemented** |
@@ -239,6 +240,13 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/local_projections_iv.py`
 - **Pipeline Access**: `lp_iv` (direct instantiation: `LocalProjectionsIVModel`)
 - **Benchmark Target**: R (`lpirfs::lp_lin_iv`), Stata (`lproj`)
+
+### 5.9 Pandemic BVAR (`PandemicBVARModel`)
+- **Description**: Bayesian Vector Autoregression incorporating the Cascaldi-Garcia (2022) pandemic prior to downweight extreme volatility during pandemic or crisis quarters without distorting autoregressive lag shrinkage.
+- **Specification**: Weighted conjugate Normal-Inverse-Wishart estimator with observation rescaling $w_t = 1 / \sqrt{s_t}$ during specified pandemic regimes.
+- **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/pandemic_bvar.py`
+- **Pipeline Access**: `pandemic_bvar` (direct instantiation: `PandemicBVARModel`)
+- **Benchmark Target**: Cascaldi-Garcia (2022), Bank of England (Brignone & Piffer 2025)
 
 ---
 
