@@ -24,7 +24,7 @@
 | --- | --- | --- | --- |
 | **Project Entry** | [README](../README.md) | Quickstart guide, installation, and YAML pipeline demo | All users |
 | **Architecture** | [Architecture](library/architecture.md) | Pipeline stages, package tree, and repository file structure | Developers & pipeline users |
-| **Models** | [Implemented Models](library/models.md) | Complete reference of all 30 implemented model classes | Econometricians & modelers |
+| **Models** | [Implemented Models](library/models.md) | Complete reference of all 32 implemented model classes | Econometricians & modelers |
 | **Data** | [Data Guide](library/data.md) | Data directory organization and packaged example datasets | Data engineers & analysts |
 | **Citations** | [Citations](library/citations.md) | Literature references, data sources, and software citations | Academic researchers |
 | **Benchmarks** | [Benchmarks](validation/benchmarks.md) | Cross-language numerical benchmarks (Stata, MATLAB, R) and replications | Empirical validators |
@@ -37,15 +37,15 @@
 
 ## 3. Library Model Summary
 
-`stats-transformer` implements 30 specialized model classes and diagnostic engines across five functional domains. Every model is accessible via YAML pipeline configuration (`model.model_type`) or direct Python class instantiation.
+`stats-transformer` implements 32 specialized model classes and diagnostic engines across five functional domains. Every model is accessible via YAML pipeline configuration (`model.model_type`) or direct Python class instantiation.
 
 | Functional Domain | Key Implemented Classes | Primary Capabilities |
 | --- | --- | --- |
 | **Applied Regression** | `RegressionModel`, `RobustOLSModel`, `PanelRegressionModel`, `IV2SLSModel`, `PanelIV2SLSModel`, `GMMModel`, `DiDModel`, `SpecificationRunner` | OLS, robust covariance (HC/HAC), fixed/random effects panel, 2SLS, GMM, staggered DiD |
 | **Discrete Choice** | `LogitModel`, `ProbitModel` | Maximum-likelihood binary classification and marginal effects |
 | **Unsupervised Learning** | `PCAModel`, `KMeansModel` | Standardized PCA factor extraction and K-means clustering |
-| **Reduced-Form Time Series** | `VARModel`, `VECMModel`, `RestrictedVAR`, `ARIMAModel`, `BVARModel`, `DynamicFactorModel`, `LocalProjectionsModel`, `LocalProjectionsIVModel` | Multivariate dynamics, cointegration, analytical BVAR, Kalman factor extraction, Jordà local projections |
-| **Structural Identification** | `SVARModel`, `BlanchardQuahModel`, `ProxySVARModel`, `SignZeroSVARModel`, `VolatilitySVARModel`, `IndependenceSVARModel`, `CVMSVARModel`, `NonGaussianSVARModel`, `SVECModel` | Short-run $AB$, long-run $C(1)$, external instruments (SVAR-IV), sign/zero/narrative restrictions, volatility breaks, ICA, Copula distance, Student-$t$ QMLE, structural VECM |
+| **Reduced-Form Time Series** | `VARModel`, `VECMModel`, `RestrictedVAR`, `ARIMAModel`, `BVARModel`, `DynamicFactorModel`, `LocalProjectionsModel`, `LocalProjectionsIVModel`, `PandemicBVARModel` | Multivariate dynamics, cointegration, analytical BVAR, Kalman factor extraction, Jordà local projections, pandemic dummy variance weighting |
+| **Structural Identification** | `SVARModel`, `BlanchardQuahModel`, `ProxySVARModel`, `SignZeroSVARModel`, `BayesianSignZeroSVARModel`, `VolatilitySVARModel`, `IndependenceSVARModel`, `CVMSVARModel`, `NonGaussianSVARModel`, `SVECModel` | Short-run $AB$, long-run $C(1)$, external instruments (SVAR-IV), sign/zero/narrative restrictions, Bayesian sign/zero sampling, volatility breaks, ICA, Copula distance, Student-$t$ QMLE, structural VECM |
 | **Nonlinear Dynamics** | `TVARModel`, `TVECMModel`, `STVARModel`, `GIRFEngine` | Two-regime threshold VAR/VECM, smooth transition VAR, generalized impulse responses |
 | **Diagnostics & Utilities** | `GrangerCausalityTester`, `ResidualDiagnostics`, `StabilityDiagnostics`, `StationarityDiagnostics`, `VARLagSelector`, `VARForecaster`, `ForecastEvaluator`, `TimeSeriesDecompositions` | Causality tests, companion stability, unit root tests, lag selection criteria, point forecasting, historical shock decomposition |
 
@@ -57,6 +57,6 @@ For full mathematical definitions, estimation algorithms, parameter tables, and 
 
 The library maintains strict protocols for empirical and numerical validation:
 
-- **Automated Unit & Integration Testing**: Over 350 test cases running under continuous integration. See [Testing suite](validation/testing_suite.md).
+- **Automated Unit & Integration Testing**: Over 400 test cases running under continuous integration. See [Testing suite](validation/testing_suite.md).
 - **Cross-Language Software Parity**: Automated benchmark suites verifying machine precision against StataNow 19.5, MATLAB 2025b, and containerized R. See [Cross-language software benchmarks](validation/benchmarks.md).
 - **Academic Replications**: Runnable Python translations of empirical macroeconomic papers with bundled datasets.

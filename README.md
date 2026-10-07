@@ -30,7 +30,7 @@
 - **Core Guides (`docs/`)**
   - **[Overview](docs/overview.md):** Documentation map, model domain summary, and quickstart links.
   - **[Architecture & Design](docs/library/architecture.md):** Pipeline stages, object hierarchy, and repository file structure.
-  - **[Implemented Models](docs/library/models.md):** Complete catalog of all 30 implemented model classes and utilities.
+  - **[Implemented Models](docs/library/models.md):** Complete catalog of all 32 implemented model classes and utilities.
   - **[Data Guide](docs/library/data.md):** Data directory organization and packaged example datasets.
   - **[Software Benchmarks](docs/validation/benchmarks.md):** Cross-language R, Stata, and MATLAB verification matrix.
   - **[Testing Suite](docs/validation/testing_suite.md):** Automated unit, integration, and verification test guide.

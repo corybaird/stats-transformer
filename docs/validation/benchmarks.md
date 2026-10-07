@@ -59,6 +59,8 @@ These models are fully implemented in Python and tested with automated unit and 
 | **Time Series** | `ARIMAModel` | R (`forecast::auto.arima`), Stata (`arima`) | US Macro (`data/examples/timeseries/macrodata.csv`) | *Planned* |
 | **Time Series** | `ProxySVARModel` | R (`svars`), MATLAB (`VAR-Toolbox 4.0`) | Gertler & Karadi (`data/examples/matlab_examples/GK2015_Data.xlsx`) | *Planned* |
 | **Time Series** | `SignZeroSVARModel` | MATLAB (`VAR-Toolbox 4.0`), R (`BMR`) | Kilian & Lütkepohl (`data/examples/timeseries/macrodata.csv`) | *Planned* |
+| **Time Series** | `BayesianSignZeroSVARModel` | MATLAB (`VAR-Toolbox 4.0`), R (`BMR`) | Arias et al. (`data/examples/matlab_examples/ADRR2018_Data.xlsx`) | *Planned* |
+| **Time Series** | `PandemicBVARModel` | MATLAB (Cascaldi-Garcia 2022), R (`BVAR`) | US Macro (`data/examples/timeseries/macrodata.csv`) | *Planned* |
 | **Time Series** | `IndependenceSVARModel` | R (`svars`) | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | *Planned* |
 | **Time Series** | `SVECModel` | R (`vars::SVEC`), MATLAB (`VAR-Toolbox 4.0`) | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | *Planned* |
 | **Time Series** | `LocalProjectionsModel` | R (`lpirfs::lp_lin`), Stata (`jorda`) | Jordà & Taylor (`data/examples/matlab_examples/JT2025_Data.xlsx`) | *Planned* |
