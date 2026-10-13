@@ -22,12 +22,25 @@ def test_config_sections():
     config = Config(
         data={"featurization": {"feature1": True}},
         model={"type": "rf"},
-        visualization={"theme": "dark"}
+        reporting={"theme": "dark"}
     )
 
     assert config.get_featurization_config()["feature1"] is True
     assert config.get_model_config()["type"] == "rf"
-    assert config.get_visualization_config()["theme"] == "dark"
+    assert config.get_reporting_config()["theme"] == "dark"
+
+
+def test_reporting_config_falls_back_to_legacy_visualization_key():
+    config = Config(visualization={"theme": "dark"})
+    with pytest.warns(DeprecationWarning, match="`visualization:` config key"):
+        assert config.get_reporting_config()["theme"] == "dark"
+    with pytest.warns(DeprecationWarning):
+        assert config.get_visualization_config()["theme"] == "dark"
+
+
+def test_reporting_config_empty_section_returns_empty_dict():
+    assert Config(reporting=None).get_reporting_config() == {}
+    assert Config().get_reporting_config() == {}
 
 
 def test_validate_raises_on_unknown_model_type():

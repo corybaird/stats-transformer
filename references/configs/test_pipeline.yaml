@@ -12,5 +12,5 @@ model:
     - x2
   summary_output_path: data/temp/test_summary.json
 
-visualization:
+reporting:
   output_dir: data/temp/visualizations

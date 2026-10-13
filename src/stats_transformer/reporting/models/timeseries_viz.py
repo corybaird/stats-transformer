@@ -1,5 +1,5 @@
-from stats_transformer.visualization.base import BaseVisualizer
-from stats_transformer.visualization.charts.timeseries_reporting import HistoricalDecompositionChart, ImpulseResponseChart, VarianceDecompositionChart
+from stats_transformer.reporting.base import BaseVisualizer
+from stats_transformer.reporting.charts.timeseries_reporting import HistoricalDecompositionChart, ImpulseResponseChart, VarianceDecompositionChart
 
 
 class TimeSeriesVisualizer(BaseVisualizer):

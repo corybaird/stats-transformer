@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from stats_transformer.visualization.tables.table_generator import TableGenerator
+from stats_transformer.reporting.tables.table_generator import TableGenerator
 
 
 class TimeSeriesTableBuilder:

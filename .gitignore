@@ -1,6 +1,4 @@
 # Byte-compiled / optimized / DLL files
-# Generated visualization outputs
-src/stats_transformer/visualization/expansion/
 # Generated dictionary mappings
 references/dictionaries/
 # Generated visualization configs

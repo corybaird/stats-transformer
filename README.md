@@ -93,7 +93,7 @@ model:
     - interest_rate
     - inflation
 
-visualization:
+reporting:
   output_dir: reports/visualizations
 ```
 
@@ -129,7 +129,7 @@ transformed_data = pipeline.run(stage="features")
 model_results = pipeline.run(stage="regression")
 
 # Generate and save visualizations
-pipeline.run(stage="visualization")
+pipeline.run(stage="reporting")
 ```
 
 ### 3.4. Testing

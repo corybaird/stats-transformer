@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from stats_transformer.visualization.defaults.colors import get_color_palette
-from stats_transformer.visualization.defaults.labels import get_readable_label
-from stats_transformer.visualization.formatters.style import apply_style
+from stats_transformer.reporting.defaults.colors import get_color_palette
+from stats_transformer.reporting.defaults.labels import get_readable_label
+from stats_transformer.reporting.formatters.style import apply_style
 
 
 def _create_panel_grid(panel_count, ncols, panel_width=5.5, panel_height=4.0):

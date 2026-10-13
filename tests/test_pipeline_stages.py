@@ -11,12 +11,12 @@ from stats_transformer.models.unsupervised.unsupervised import PCAModel
 from stats_transformer.models.timeseries import BlanchardQuahModel, LocalProjectionsModel, LocalProjectionsIVModel
 
 
-def _write_config(tmp_path, model, data=None, visualization=None):
+def _write_config(tmp_path, model, data=None, reporting=None):
     config = {"model": model}
     if data is not None:
         config["data"] = data
-    if visualization is not None:
-        config["visualization"] = visualization
+    if reporting is not None:
+        config["reporting"] = reporting
     config_path = tmp_path / "params.yaml"
     config_path.write_text(yaml.dump(config))
     return config_path
@@ -214,7 +214,7 @@ def test_run_eda_stage_calls_eda_visualizer(tmp_path, test_df, monkeypatch):
         tmp_path,
         model={"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"]},
         data={"raw_data_file": str(data_path), "featurization": {"entity_column": "country", "date_column": "date"}},
-        visualization={"output_dir": str(tmp_path / "viz")},
+        reporting={"output_dir": str(tmp_path / "viz")},
     )
 
     calls = {}
@@ -223,7 +223,7 @@ def test_run_eda_stage_calls_eda_visualizer(tmp_path, test_df, monkeypatch):
         calls["data_path"] = data_path
         return {"ran": True}
 
-    monkeypatch.setattr("stats_transformer.visualization.eda.eda.EDAVisualizer.run", fake_run)
+    monkeypatch.setattr("stats_transformer.reporting.eda.eda.EDAVisualizer.run", fake_run)
 
     pipeline = Pipeline(params_path=str(config_path))
     result = pipeline.run(stage="eda")
@@ -256,9 +256,9 @@ def test_run_features_stage_raises_without_data_path(tmp_path):
         pipeline.run(stage="features")
 
 
-# --- run(): visualization stage, loading from disk ---
+# --- run(): reporting stage, loading from disk ---
 
-def test_run_visualization_stage_loads_transformed_data_and_summary_from_disk(tmp_path, test_df):
+def test_run_reporting_stage_loads_transformed_data_and_summary_from_disk(tmp_path, test_df):
     processed_path = tmp_path / "processed.csv"
     test_df.to_csv(processed_path, index=False)
 
@@ -269,16 +269,59 @@ def test_run_visualization_stage_loads_transformed_data_and_summary_from_disk(tm
         tmp_path,
         model={"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"], "summary_output_path": str(summary_path)},
         data={"raw_data_file": str(tmp_path / "unused.csv"), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
-        visualization={"output_dir": str(tmp_path / "viz")},
+        reporting={"output_dir": str(tmp_path / "viz")},
     )
 
     pipeline = Pipeline(params_path=str(config_path))
-    results = pipeline.run(stage="visualization")
+    results = pipeline.run(stage="reporting")
 
     assert pipeline.transformed_data is not None
     assert pipeline.model_results == {"metrics": {"r_squared": 0.5}}
     assert "time_series" in results
 
+
+def test_run_legacy_visualization_stage_and_key_warn_but_still_work(tmp_path, test_df):
+    processed_path = tmp_path / "processed.csv"
+    test_df.to_csv(processed_path, index=False)
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text(json.dumps({"metrics": {"r_squared": 0.5}}))
+
+    config = {
+        "model": {"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"], "summary_output_path": str(summary_path)},
+        "data": {"raw_data_file": str(tmp_path / "unused.csv"), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
+        "visualization": {"output_dir": str(tmp_path / "legacy_viz")},
+    }
+    config_path = tmp_path / "params.yaml"
+    config_path.write_text(yaml.dump(config))
+
+    pipeline = Pipeline(params_path=str(config_path))
+    with pytest.warns(DeprecationWarning) as record:
+        results = pipeline.run(stage="visualization")
+
+    messages = [str(w.message) for w in record]
+    assert any('stage "visualization"' in m for m in messages)
+    assert any("`visualization:` config key" in m for m in messages)
+    assert "time_series" in results
+    assert (tmp_path / "legacy_viz").is_dir()
+
+
+
+def test_run_reporting_stage_without_model_summary_renders_data_plots(tmp_path, test_df):
+    processed_path = tmp_path / "processed.csv"
+    test_df.to_csv(processed_path, index=False)
+
+    config_path = _write_config(
+        tmp_path,
+        model={"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"]},
+        data={"raw_data_file": str(tmp_path / "unused.csv"), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
+        reporting={"output_dir": str(tmp_path / "viz")},
+    )
+
+    pipeline = Pipeline(params_path=str(config_path))
+    results = pipeline.run(stage="reporting")
+
+    assert pipeline.model_results is None
+    assert "time_series" in results
 
 # --- run(): full run (stage=None) ---
 
@@ -308,7 +351,7 @@ def test_run_full_pipeline(tmp_path, monkeypatch):
             "merge": {"on": ["country", "date"], "how": "outer", "output_path": str(merged_path)},
             "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)},
         },
-        "visualization": {"output_dir": str(tmp_path / "viz")},
+        "reporting": {"output_dir": str(tmp_path / "viz")},
     }
     config_path = tmp_path / "params.yaml"
     config_path.write_text(yaml.dump(config))

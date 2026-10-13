@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-10-13
+
+### Changed
+
+- **Package rename: `visualization` → `reporting`.** `src/stats_transformer/visualization/` is merged with the former `reporting/` submodule (`exporters.py`, `timeseries/` reporter and adapters) into a single `src/stats_transformer/reporting/` package covering charts, tables, exports, formatters, and defaults. Import from `stats_transformer.reporting.*`.
+- Pipeline stage `reporting` replaces `visualization` (`pipeline.run(stage="reporting")`), and the YAML config key `reporting:` replaces `visualization:`. `Config.get_reporting_config()` replaces `get_visualization_config()`.
+- `ReportExporter` is now importable from the top-level `stats_transformer` package.
+- `tests/test_visualization/` is merged into `tests/test_reporting/`; configs, README, notebooks, agent skill, and `docs/library/architecture.md` use the new name.
+
+### Deprecated
+
+These keep working in 1.7.0 but emit a `DeprecationWarning` and will be removed in a future release:
+
+- Imports from `stats_transformer.visualization` and its submodules (e.g. `stats_transformer.visualization.charts.bar`). They resolve to the same module objects under `stats_transformer.reporting`.
+- `pipeline.run(stage="visualization")`.
+- The `visualization:` YAML config key (used only when `reporting:` is absent or empty).
+- `Config.get_visualization_config()`.
+
+### Fixed
+
+- **The reporting stage crashed when no model summary was available.** `Pipeline.create_visualizations` tested a DataFrame for truthiness (`not self.transformed_data`), which raised `ValueError: The truth value of a DataFrame is ambiguous` whenever `model_results` was empty, e.g. running the stage on transformed data before any model had been fit.
+
 ## [1.6.0] - 2026-08-16
 
 ### ⚠️ Breaking

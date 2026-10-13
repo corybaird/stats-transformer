@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from abc import ABC, abstractmethod
 import sys
+from stats_transformer.utils.config import resolve_reporting_config
 
 DEFAULT_OUTPUT_DIR = "reports/visualizations"
 DEFAULT_FILE_FORMAT = "png"
@@ -29,7 +30,7 @@ class BaseVisualizer(ABC):
 
         overrides = {"output_dir": output_dir, "file_format": file_format, "dpi": dpi, "style": style}
         self.viz_params = {"output_dir": DEFAULT_OUTPUT_DIR, "file_format": DEFAULT_FILE_FORMAT, "dpi": DEFAULT_DPI, "style": DEFAULT_STYLE}
-        self.viz_params.update(self.params.get("visualization", {}) or {})
+        self.viz_params.update(resolve_reporting_config(self.params or {}))
         self.viz_params.update({key: value for key, value in overrides.items() if value is not None})
 
         os.makedirs(self.viz_params["output_dir"], exist_ok=True)

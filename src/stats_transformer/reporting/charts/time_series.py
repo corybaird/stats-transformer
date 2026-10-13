@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-from stats_transformer.visualization.formatters.style import apply_style
-from stats_transformer.visualization.defaults.labels import get_readable_label
+from stats_transformer.reporting.formatters.style import apply_style
+from stats_transformer.reporting.defaults.labels import get_readable_label
 
 class TimeSeriesPlot:
     """
@@ -18,7 +18,7 @@ class TimeSeriesPlot:
             fig = ax.figure
 
         if colors is None:
-            from stats_transformer.visualization.defaults.colors import get_color_palette
+            from stats_transformer.reporting.defaults.colors import get_color_palette
             colors = get_color_palette("default", len(y_cols))
 
         x = df[x_col]
@@ -65,7 +65,7 @@ class IRFPlot:
         axes = axes.flatten()
 
         if colors is None:
-            from stats_transformer.visualization.defaults.colors import PALETTE_CATEGORICAL
+            from stats_transformer.reporting.defaults.colors import PALETTE_CATEGORICAL
             colors = PALETTE_CATEGORICAL
 
         for idx, group in enumerate(groups):
@@ -123,7 +123,7 @@ class FacetedTimeSeries:
         axes = axes.flatten()
 
         if colors is None:
-            from stats_transformer.visualization.defaults.colors import get_color_palette
+            from stats_transformer.reporting.defaults.colors import get_color_palette
             colors = get_color_palette("default", len(value_cols))
 
         for idx, facet in enumerate(facets):

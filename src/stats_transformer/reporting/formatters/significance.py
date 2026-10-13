@@ -9,7 +9,7 @@ def star(pval, thresholds=None):
         return ""
         
     if thresholds is None:
-        from stats_transformer.visualization.defaults.labels import SIGNIFICANCE_THRESHOLDS
+        from stats_transformer.reporting.defaults.labels import SIGNIFICANCE_THRESHOLDS
         thresholds = SIGNIFICANCE_THRESHOLDS
         
     for thresh in sorted(thresholds.keys()):
