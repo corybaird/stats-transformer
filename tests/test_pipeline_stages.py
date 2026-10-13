@@ -306,6 +306,23 @@ def test_run_legacy_visualization_stage_and_key_warn_but_still_work(tmp_path, te
 
 
 
+def test_run_reporting_stage_without_model_summary_renders_data_plots(tmp_path, test_df):
+    processed_path = tmp_path / "processed.csv"
+    test_df.to_csv(processed_path, index=False)
+
+    config_path = _write_config(
+        tmp_path,
+        model={"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"]},
+        data={"raw_data_file": str(tmp_path / "unused.csv"), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
+        reporting={"output_dir": str(tmp_path / "viz")},
+    )
+
+    pipeline = Pipeline(params_path=str(config_path))
+    results = pipeline.run(stage="reporting")
+
+    assert pipeline.model_results is None
+    assert "time_series" in results
+
 # --- run(): full run (stage=None) ---
 
 def test_run_full_pipeline(tmp_path, monkeypatch):

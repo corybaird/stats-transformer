@@ -210,7 +210,7 @@ class Pipeline:
             json.dump(self.model_results, f, indent=4)
 
     def create_visualizations(self, output_dir: str = "reports/visualizations", visualization_types: Optional[List[str]] = None, display_only: bool = False) -> Dict[str, Any]:
-        if not self.model_results and not self.transformed_data:
+        if not self.model_results and self.transformed_data is None:
             return {}
         
         report_config = {}
