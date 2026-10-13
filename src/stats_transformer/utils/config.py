@@ -1,8 +1,19 @@
 """Configuration handling for the stats-transformer library."""
 
 import yaml
+import warnings
 from typing import Dict, Any, Optional
 import logging
+
+
+def resolve_reporting_config(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the `reporting:` section of a params dict, falling back to the deprecated `visualization:` key."""
+    if params.get("reporting"):
+        return params["reporting"]
+    if params.get("visualization"):
+        warnings.warn("The `visualization:` config key is deprecated and will be removed in a future release; rename it to `reporting:`.", DeprecationWarning, stacklevel=3)
+        return params["visualization"]
+    return {}
 
 
 class Config:
@@ -130,14 +141,18 @@ class Config:
         """
         return self.get("model", {})
     
-    def get_visualization_config(self) -> Dict[str, Any]:
+    def get_reporting_config(self) -> Dict[str, Any]:
         """
-        Get visualization configuration.
+        Get reporting configuration.
         
         Returns:
-            Dictionary with visualization settings
+            Dictionary with reporting settings
         """
-        return self.get("visualization", {})
+        return resolve_reporting_config(self.config)
+    
+    # Deprecated alias for get_reporting_config; kept while YAML still allows `visualization:`
+    def get_visualization_config(self) -> Dict[str, Any]:
+        return self.get_reporting_config()
     
     def to_dict(self) -> Dict[str, Any]:
         """

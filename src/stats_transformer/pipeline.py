@@ -1,5 +1,6 @@
 import logging
 import os
+import warnings
 import pandas as pd
 from typing import Any, Dict, List, Optional, Union
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
@@ -9,7 +10,7 @@ from stats_transformer.reporting.eda.data_viz import DataVisualizer
 from stats_transformer.reporting.eda.eda import EDAVisualizer
 from stats_transformer.models.base import ModelBase
 from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
-from stats_transformer.utils.config import Config
+from stats_transformer.utils.config import Config, resolve_reporting_config
 
 class Pipeline:
 
@@ -212,14 +213,14 @@ class Pipeline:
         if not self.model_results and not self.transformed_data:
             return {}
         
-        viz_config = {}
+        report_config = {}
         if self.params_path and os.path.exists(self.params_path):
-            viz_config = self._get_config().get("visualization", {})
+            report_config = self._get_config().get_reporting_config()
         
         results = {}
         if self.model_results:
-            reg_viz = RegressionVisualizer(params_path=self.params_path, output_dir=output_dir, file_format=viz_config.get("file_format", "png"), dpi=viz_config.get("dpi", 300), style=viz_config.get("style", "default"))
-            viz_types = visualization_types or viz_config.get("regression", {}).get("plots", ["coefficient_plot", "model_summary", "residuals"])
+            reg_viz = RegressionVisualizer(params_path=self.params_path, output_dir=output_dir, file_format=report_config.get("file_format", "png"), dpi=report_config.get("dpi", 300), style=report_config.get("style", "default"))
+            viz_types = visualization_types or report_config.get("regression", {}).get("plots", ["coefficient_plot", "model_summary", "residuals"])
             for viz_type in viz_types:
                 try:
                     if viz_type == "coefficient_plot":
@@ -230,7 +231,7 @@ class Pipeline:
                     self.logger.error(f"Error creating {viz_type} visualization: {e}")
         
         if self.transformed_data is not None:
-            data_viz = DataVisualizer(params_path=self.params_path, output_dir=output_dir, file_format=viz_config.get("file_format", "png"), dpi=viz_config.get("dpi", 300), style=viz_config.get("style", "default"))
+            data_viz = DataVisualizer(params_path=self.params_path, output_dir=output_dir, file_format=report_config.get("file_format", "png"), dpi=report_config.get("dpi", 300), style=report_config.get("style", "default"))
             try:
                 if self.entity_column and self.date_column:
                     results["time_series"] = data_viz.create_time_series_plot(self.transformed_data, entity_column=self.entity_column, date_column=self.date_column, display_only=display_only)
@@ -251,13 +252,17 @@ class Pipeline:
             # Prefer merged output if it exists or if we are in a later stage
             effective_data_path = merged_output_path if os.path.exists(merged_output_path) else raw_data_file
             
-            viz_output_dir = params.get("visualization", {}).get("output_dir", "reports/visualizations")
+            report_config = resolve_reporting_config(params)
+            report_output_dir = report_config.get("output_dir", "reports/visualizations")
             processed_path = data_config.get("featurization", {}).get("output_path")
             summary_path = params.get("model", {}).get("summary_output_path")
         else:
             raise ValueError("Pipeline.run() requires a params_path")
 
-        valid_stages = {"resample", "features", "eda", "regression", "visualization"}
+        valid_stages = {"resample", "features", "eda", "regression", "reporting"}
+        if stage == "visualization":  # Deprecated alias for "reporting"
+            warnings.warn('Pipeline stage "visualization" is deprecated and will be removed in a future release; use "reporting".', DeprecationWarning, stacklevel=2)
+            stage = "reporting"
         if stage is not None and stage not in valid_stages:
             raise ValueError(f"Unknown stage '{stage}'. Valid values: {sorted(valid_stages)}, or None for a full run")
 
@@ -295,7 +300,7 @@ class Pipeline:
         elif stage == "eda":
             if not effective_data_path:
                 raise ValueError("No data path found for eda stage")
-            eda_viz = EDAVisualizer(params_path=self.params_path, output_dir=viz_output_dir)
+            eda_viz = EDAVisualizer(params_path=self.params_path, output_dir=report_output_dir)
             return eda_viz.run(data_path=effective_data_path)
         
         elif stage == "regression":
@@ -313,14 +318,14 @@ class Pipeline:
                 self.save_model_summary(summary_path)
             return self.model_results
             
-        elif stage == "visualization":
+        elif stage == "reporting":
             if (self.transformed_data is None) and processed_path and os.path.exists(processed_path):
                 self.transformed_data = pd.read_csv(processed_path)
             if (self.model_results is None) and summary_path and os.path.exists(summary_path):
                 import json
                 with open(summary_path, "r") as f:
                     self.model_results = json.load(f)
-            return self.create_visualizations(output_dir=viz_output_dir)
+            return self.create_visualizations(output_dir=report_output_dir)
         
         else:
             # Full run (stage is None)
@@ -345,7 +350,7 @@ class Pipeline:
             transformed_data = self.fit_transform(merged_output_path)
             if processed_path:
                 transformed_data.to_csv(processed_path, index=False)
-            self.create_visualizations(output_dir=viz_output_dir)
+            self.create_visualizations(output_dir=report_output_dir)
             self.save_results(output_dir="reports")
             if summary_path:
                 self.save_model_summary(summary_path)
