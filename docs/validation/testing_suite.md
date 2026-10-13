@@ -34,8 +34,7 @@ The `pyproject.toml` test configuration adds `src/` to the Python path. The test
 | `tests/test_models/test_timeseries_models.py` | VAR, VECM, and core time-series methods | estimator and utility behavior |
 | `tests/test_models/test_unsupervised_models.py` | PCA and K-means | component and cluster outputs |
 | `tests/test_timeseries_extensions.py` | structural VAR extensions and VAR-Toolbox translations | synthetic-data execution and bundled-example execution |
-| `tests/test_visualization/` | charts, EDA, model visualizers, event studies | plot and visualizer construction |
-| `tests/test_reporting/` | exporters | report serialization |
+| `tests/test_reporting/` | charts, EDA, model visualizers, event studies, exporters | plot and visualizer construction, report serialization |
 | `tests/test_utils/` | configuration, country conversion, time-series utilities | helper behavior and error conditions |
 | `tests/test_examples/` | example registry | example discovery and registration |
 | `tests/integration/` | multi-language integration tests | containerized R, Stata, and local cross-checks |
@@ -58,7 +57,7 @@ Add a regression test beside the smallest existing test that exercises the behav
 | Features and data | `tests/test_feature_engineering/`, `tests/test_data/` | transformations, resampling, merging, data loading, and packaged examples |
 | Regression and discrete models | `tests/test_models/test_regression_models.py`, `tests/test_models/test_discrete_models.py` | OLS variants, panel models, IV, diagnostics, logit, and probit behavior |
 | Time series | `tests/test_models/test_timeseries_models.py`, `tests/test_timeseries_extensions.py` | VAR, VECM, Granger utilities, Blanchard-Quah, proxy SVAR, sign restrictions, LP-IV, and decompositions |
-| Visualization and reporting | `tests/test_visualization/`, `tests/test_reporting/` | chart construction, visualizer behavior, event studies, and exporters |
+| Reporting | `tests/test_reporting/` | chart construction, visualizer behavior, event studies, and exporters |
 | Utilities | `tests/test_utils/` | configuration and country-name conversion |
 
 The time-series extension tests use synthetic data to verify that new structural model classes fit and return expected object shapes. They do not establish equivalence with MATLAB outputs.

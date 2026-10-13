@@ -5,11 +5,11 @@ description: Library architecture and pipeline usage for the stats-transformer P
 
 # stats-transformer Architecture
 
-`stats-transformer` is a configuration-driven Python library for macroeconomic data transformation, modeling, and visualization. A single `params.yaml` describes datasets, transformations, model choice, and visualization style; the `Pipeline` class in `src/stats_transformer/pipeline.py:15` runs the configured stages end-to-end.
+`stats-transformer` is a configuration-driven Python library for macroeconomic data transformation, modeling, and reporting. A single `params.yaml` describes datasets, transformations, model choice, and reporting style; the `Pipeline` class in `src/stats_transformer/pipeline.py:15` runs the configured stages end-to-end.
 
 ## Mental model
 
-`params.yaml` → `Pipeline` orchestrator → stages in order: `resample` → `features` → `regression`/`model` → `visualization`. Each stage persists its artifact (parquet, csv, json) so stages can be run individually and re-cached.
+`params.yaml` → `Pipeline` orchestrator → stages in order: `resample` → `features` → `regression`/`model` → `reporting`. Each stage persists its artifact (parquet, csv, json) so stages can be run individually and re-cached.
 
 The mermaid diagram in `docs/library/architecture.md:9` is the canonical flow. Read it before adding anything new.
 
@@ -29,7 +29,7 @@ src/stats_transformer/
 │   ├── timeseries/              # VAR, VECM, SVAR, LocalProjections, Granger
 │   ├── discrete/                # Logit
 │   └── unsupervised/            # PCA, KMeans
-├── visualization/
+├── reporting/
 │   ├── base.py                  # BaseVisualizer
 │   ├── charts/                  # Standalone chart components
 │   ├── models/                  # RegressionVisualizer, ModelVisualizer
@@ -65,7 +65,7 @@ references/
 | --- | --- |
 | Add a transformation (e.g. new `rollingstd`) | `src/stats_transformer/featurization/feature_engineering.py` (extend `valid_base_transformations` at line 309 and the dispatch in `fit_transform`) |
 | Add a new model | New file under `src/stats_transformer/models/<family>/` subclassing `ModelBase` (`src/stats_transformer/models/base.py:10`); register in that family's `__init__.py` and in `src/stats_transformer/models/__init__.py`; wire into `Pipeline._initialize_from_params` (`src/stats_transformer/pipeline.py:50`) and `_initialize_from_args` (line 69) |
-| Add a new chart component | New class in `src/stats_transformer/visualization/charts/` (mirror `bar.py` / `time_series.py`), then export from `src/stats_transformer/visualization/charts/__init__.py` and `src/stats_transformer/visualization/__init__.py` |
+| Add a new chart component | New class in `src/stats_transformer/reporting/charts/` (mirror `bar.py` / `time_series.py`), then export from `src/stats_transformer/reporting/charts/__init__.py` and `src/stats_transformer/reporting/__init__.py` |
 | Add a new YAML config | `references/configs/<name>.yaml` (template: `references/configs/test_pipeline.yaml`) |
 | Add a packaged example dataset | `src/stats_transformer/data/` and expose via `list_examples` / `load_example` |
 | Add a new dictionary mapping | `references/dictionaries/<NAME>.py` (constants only, per project rules) |
@@ -73,12 +73,12 @@ references/
 
 ## Pipeline stage contract
 
-`Pipeline.run(stage=None)` is the dispatcher. Stage values: `resample`, `features`, `eda`, `regression`, `visualization`, or `None` for full run.
+`Pipeline.run(stage=None)` is the dispatcher. Stage values: `resample`, `features`, `eda`, `regression`, `reporting`, or `None` for full run.
 
 - `resample` — calls `FeatureEngineer.resample_dataset` per dataset in `data.datasets`, then `DataMerger.merge` to produce `data.merge.output_path` (default `data/pipeline/resampled_merged.parquet`).
 - `features` — runs `FeatureEngineer.fit_transform` on the merged output (or `raw_data_file` if merge hasn't run) and writes `data.featurization.output_path`.
 - `regression` — fits the configured model and writes `reports/model_summary.json`.
-- `visualization` — reads the model summary and renders plots to `visualization.output_dir` (default `reports/visualizations`).
+- `reporting` — reads the model summary and renders plots, tables, and metadata to `reporting.output_dir` (default `reports/visualizations`).
 - `eda` — runs `EDAVisualizer` on the same data path.
 
 The full-run branch (no `stage` arg) executes all of the above in order; see `src/stats_transformer/pipeline.py:275`.
@@ -113,7 +113,7 @@ model:
     add_entity_fixed_effects: true
   summary_output_path: reports/tables/model_summary.json
 
-visualization:
+reporting:
   output_dir: reports/visualizations
   file_format: png
   dpi: 300

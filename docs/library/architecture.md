@@ -16,16 +16,16 @@ flowchart LR
     D --> E[features]
     E --> F[model]
     F --> G[metadata and artifacts]
-    G --> H[visualization]
+    G --> H[reporting]
 ```
 
 - **Pipeline Stages**:
   - `resample`: Aligns multi-frequency datasets and performs panel joins via `DataMerger`.
   - `features`: Applies `FeatureEngineer` transformations within entity boundaries.
   - `regression`: Fits configured estimators and outputs structured JSON metadata.
-  - `visualization`: Renders configured plots from transformed data or saved model metadata.
+  - `reporting`: Renders configured plots, tables, and model metadata from transformed data (legacy `visualization` stage name still accepted).
   - `eda`: Generates exploratory data analysis charts.
-- **Stage Execution**: `Pipeline.run(stage=...)` accepts `resample`, `features`, `eda`, `regression`, `visualization`, or `None` for full sequential execution.
+- **Stage Execution**: `Pipeline.run(stage=...)` accepts `resample`, `features`, `eda`, `regression`, `reporting`, or `None` for full sequential execution.
 - **Persisted Artifacts**: Every stage persists inspectable artifacts (Parquet, CSV, JSON, figures) enabling modular inspection and caching.
 
 ---
@@ -89,14 +89,16 @@ src/stats_transformer/
 │   ├── timeseries/                # VAR, VECM, SVAR, LP, ARIMA, Dynamic Factor, BVAR, Nonlinear, Diagnostics
 │   ├── discrete/                  # Logit, Probit
 │   └── unsupervised/              # PCA, KMeans
-├── reporting/                     # Result exporters and table generation
+├── reporting/                     # Charts, tables, exporters, and model visualizers
+│   ├── charts/                    # Reusable chart components (IRFPlot, TimeSeriesPlot, etc.)
+│   ├── eda/                       # Exploratory visualizers
+│   ├── models/                    # Model and regression visualizers
+│   ├── tables/                    # TableGenerator
+│   ├── timeseries/                # Time-series report adapters and reporter
+│   ├── formatters/                # Significance stars and style application
+│   ├── defaults/                  # Styles, palettes, labels
+│   └── exporters.py               # Metrics persistence
 ├── utils/                         # Configuration and shared utilities
-└── visualization/
-    ├── charts/                    # Reusable chart components (IRFPlot, TimeSeriesPlot, etc.)
-    ├── eda/                       # Exploratory visualizers
-    ├── models/                    # Model and regression visualizers
-    ├── tables/                    # TableGenerator
-    └── defaults/                  # Styles, palettes, labels, formatters
 ```
 
 ---
@@ -155,7 +157,7 @@ flowchart LR
     REP --> LATEX[LaTeX / Overleaf Tables & Markdown Summaries]
 ```
 
-- **Modular Chart Components (`src/stats_transformer/visualization/charts/`)**: Standalone, composable plotting classes (`IRFPlot`, `TimeSeriesPlot`, `CoefficientBarChart`, `FacetedTimeSeries`, `BinnedScatterPlot`, `CorrelationHeatmap`).
+- **Modular Chart Components (`src/stats_transformer/reporting/charts/`)**: Standalone, composable plotting classes (`IRFPlot`, `TimeSeriesPlot`, `CoefficientBarChart`, `FacetedTimeSeries`, `BinnedScatterPlot`, `CorrelationHeatmap`).
 - **Reporting & Exporters (`src/stats_transformer/reporting/`)**: Publication-ready LaTeX and Markdown table generation via `TableGenerator` and metrics persistence via `exporters.py`.
 
 ---
