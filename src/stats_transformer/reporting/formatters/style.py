@@ -18,7 +18,7 @@ def resolve_style_path(style_name):
         
     try:
         # Check in the package's bundled styles
-        pkg_path = importlib.resources.files('stats_transformer.visualization.defaults.styles') / style_name
+        pkg_path = importlib.resources.files('stats_transformer.reporting.defaults.styles') / style_name
         if pkg_path.is_file():
             return str(pkg_path)
     except Exception as e:

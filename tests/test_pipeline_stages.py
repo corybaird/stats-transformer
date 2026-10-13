@@ -223,7 +223,7 @@ def test_run_eda_stage_calls_eda_visualizer(tmp_path, test_df, monkeypatch):
         calls["data_path"] = data_path
         return {"ran": True}
 
-    monkeypatch.setattr("stats_transformer.visualization.eda.eda.EDAVisualizer.run", fake_run)
+    monkeypatch.setattr("stats_transformer.reporting.eda.eda.EDAVisualizer.run", fake_run)
 
     pipeline = Pipeline(params_path=str(config_path))
     result = pipeline.run(stage="eda")

@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 from scipy import stats
-from stats_transformer.visualization.base import BaseVisualizer
-from stats_transformer.visualization.defaults.labels import get_readable_label
-from stats_transformer.visualization.formatters.style import apply_style
+from stats_transformer.reporting.base import BaseVisualizer
+from stats_transformer.reporting.defaults.labels import get_readable_label
+from stats_transformer.reporting.formatters.style import apply_style
 
 class DataVisualizer(BaseVisualizer):
     
@@ -45,7 +45,7 @@ class DataVisualizer(BaseVisualizer):
         df[date_column] = pd.to_datetime(df[date_column])
         df = df.sort_values(date_column)
         
-        from stats_transformer.visualization.charts.time_series import TimeSeriesPlot
+        from stats_transformer.reporting.charts.time_series import TimeSeriesPlot
         
         if entity_column and entity_column in df.columns:
             # We want one line per entity, so we pivot the data
@@ -102,7 +102,7 @@ class DataVisualizer(BaseVisualizer):
     def create_scatter_plots(self, data, feature_list, target=None, hue=None, subdir="scatter_plots", display_only=False):
         saved_files = []
         if target is not None:
-            from stats_transformer.visualization.charts.scatter import ScatterWithRegression
+            from stats_transformer.reporting.charts.scatter import ScatterWithRegression
             chart = ScatterWithRegression(style_path=self.viz_params.get("style", "scatter"))
             for feature in feature_list:
                 if feature == target: continue
@@ -127,7 +127,7 @@ class DataVisualizer(BaseVisualizer):
             fig, ax = plt.subplots(figsize=(10, 6))
             if by_group and by_group in data.columns:
                 groups = data[by_group].unique()[:10]
-                from stats_transformer.visualization.defaults.colors import get_color_palette
+                from stats_transformer.reporting.defaults.colors import get_color_palette
                 colors = get_color_palette("default", len(groups))
                 for i, group in enumerate(groups):
                     group_data = data[data[by_group] == group][feature].dropna()
@@ -147,7 +147,7 @@ class DataVisualizer(BaseVisualizer):
         return None if display_only else saved_files
     
     def create_correlation_matrix(self, data, feature_list, method="pearson", subdir="correlations", display_only=False):
-        from stats_transformer.visualization.charts.heatmap import CorrelationHeatmap
+        from stats_transformer.reporting.charts.heatmap import CorrelationHeatmap
         chart = CorrelationHeatmap(style_path=self.viz_params.get("style", "default"))
         fig, ax = chart.plot(df=data, columns=feature_list, method=method)
         return self.save_figure(fig, f"correlation_matrix_{method}", subdir, display_only=display_only)

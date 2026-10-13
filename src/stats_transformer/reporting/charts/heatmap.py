@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
-from stats_transformer.visualization.formatters.style import apply_style
-from stats_transformer.visualization.defaults.labels import get_readable_label
+from stats_transformer.reporting.formatters.style import apply_style
+from stats_transformer.reporting.defaults.labels import get_readable_label
 
 class CorrelationHeatmap:
     """

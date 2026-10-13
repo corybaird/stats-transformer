@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from stats_transformer.visualization.charts import (
+from stats_transformer.reporting.charts import (
     CoefficientBarChart, GroupedBarChart, StackedBarChart,
     TimeSeriesPlot, IRFPlot, FacetedTimeSeries,
     BinnedScatterPlot, ScatterWithRegression, CorrelationHeatmap

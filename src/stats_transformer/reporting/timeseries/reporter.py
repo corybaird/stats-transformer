@@ -2,8 +2,8 @@ from pathlib import Path
 
 from stats_transformer.reporting.timeseries.adapters import BlanchardQuahResultAdapter, LocalProjectionsIVResultAdapter, LocalProjectionsResultAdapter, VARResultAdapter
 from stats_transformer.reporting.timeseries.results import TimeSeriesReportRun
-from stats_transformer.visualization.models.timeseries_viz import TimeSeriesVisualizer
-from stats_transformer.visualization.tables.timeseries import TimeSeriesTableBuilder
+from stats_transformer.reporting.models.timeseries_viz import TimeSeriesVisualizer
+from stats_transformer.reporting.tables.timeseries import TimeSeriesTableBuilder
 
 
 class TimeSeriesReporter:

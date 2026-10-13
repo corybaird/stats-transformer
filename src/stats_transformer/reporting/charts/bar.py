@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from stats_transformer.visualization.formatters.style import apply_style
-from stats_transformer.visualization.formatters.significance import annotate_stars
-from stats_transformer.visualization.defaults.labels import get_readable_label
+from stats_transformer.reporting.formatters.style import apply_style
+from stats_transformer.reporting.formatters.significance import annotate_stars
+from stats_transformer.reporting.defaults.labels import get_readable_label
 
 class CoefficientBarChart:
     """
@@ -64,7 +64,7 @@ class GroupedBarChart:
             fig = ax.figure
 
         if colors is None:
-            from stats_transformer.visualization.defaults.colors import PALETTE_CATEGORICAL
+            from stats_transformer.reporting.defaults.colors import PALETTE_CATEGORICAL
             colors = PALETTE_CATEGORICAL
 
         x_vals = df[x_col].unique().tolist()
@@ -144,7 +144,7 @@ class StackedBarChart:
             fig = ax.figure
 
         if colors is None:
-            from stats_transformer.visualization.defaults.colors import get_color_palette
+            from stats_transformer.reporting.defaults.colors import get_color_palette
             colors = get_color_palette("default", len(y_cols))
 
         x = df[x_col]

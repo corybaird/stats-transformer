@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import statsmodels.api as sm
-from stats_transformer.visualization.models.regression_viz import RegressionVisualizer
+from stats_transformer.reporting.models.regression_viz import RegressionVisualizer
 
 
 @pytest.fixture

@@ -4,9 +4,9 @@ import pandas as pd
 from typing import Any, Dict, List, Optional, Union
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 from stats_transformer.featurization.data_merger import DataMerger
-from stats_transformer.visualization.models.regression_viz import RegressionVisualizer
-from stats_transformer.visualization.eda.data_viz import DataVisualizer
-from stats_transformer.visualization.eda.eda import EDAVisualizer
+from stats_transformer.reporting.models.regression_viz import RegressionVisualizer
+from stats_transformer.reporting.eda.data_viz import DataVisualizer
+from stats_transformer.reporting.eda.eda import EDAVisualizer
 from stats_transformer.models.base import ModelBase
 from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
 from stats_transformer.utils.config import Config

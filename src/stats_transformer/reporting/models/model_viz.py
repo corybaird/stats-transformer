@@ -2,9 +2,9 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from stats_transformer.visualization.base import BaseVisualizer
-from stats_transformer.visualization.defaults.labels import get_readable_label
-from stats_transformer.visualization.charts.bar import CoefficientBarChart
+from stats_transformer.reporting.base import BaseVisualizer
+from stats_transformer.reporting.defaults.labels import get_readable_label
+from stats_transformer.reporting.charts.bar import CoefficientBarChart
 
 class ModelVisualizer(BaseVisualizer):
 

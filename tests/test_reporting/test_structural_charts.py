@@ -4,7 +4,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from stats_transformer.visualization.charts.timeseries.structural import RestrictionHeatmap, SwathePlot
+from stats_transformer.reporting.charts.timeseries.structural import RestrictionHeatmap, SwathePlot
 
 
 @pytest.fixture

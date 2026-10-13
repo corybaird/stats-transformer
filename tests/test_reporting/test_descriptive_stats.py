@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from unittest.mock import MagicMock
-from stats_transformer.visualization.tables.descriptive_stats import DescriptiveStatsTable
+from stats_transformer.reporting.tables.descriptive_stats import DescriptiveStatsTable
 
 
 @pytest.fixture

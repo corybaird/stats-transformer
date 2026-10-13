@@ -4,9 +4,9 @@ import numpy as np
 import os
 import shutil
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
-from stats_transformer.visualization.models.regression_viz import RegressionVisualizer
-from stats_transformer.visualization.eda.data_viz import DataVisualizer
-from stats_transformer.visualization.models.model_viz import ModelVisualizer
+from stats_transformer.reporting.models.regression_viz import RegressionVisualizer
+from stats_transformer.reporting.eda.data_viz import DataVisualizer
+from stats_transformer.reporting.models.model_viz import ModelVisualizer
 
 def test_regression_visualizer():
     # 1. Create a model and fit it to get metadata
@@ -44,7 +44,7 @@ def test_regression_visualizer():
         shutil.rmtree(viz_dir)
 
 def test_eda_visualizer():
-    from stats_transformer.visualization.eda.eda import EDAVisualizer
+    from stats_transformer.reporting.eda.eda import EDAVisualizer
     
     df = pd.DataFrame({
         "a": [1, 2, np.nan, 4],
