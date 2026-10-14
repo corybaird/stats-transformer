@@ -206,7 +206,11 @@ class SVEC:
             err.max_restriction_violation = best_viol
             raise err
 
-        _, b_flat = min(candidates, key=lambda c: c[0])
+        # Best objective wins; a tie within 1e-9 keeps the first (deterministic) start.
+        best_obj, b_flat = candidates[0]
+        for c_obj, c_flat in candidates[1:]:
+            if c_obj < best_obj - 1e-9:
+                best_obj, b_flat = c_obj, c_flat
         B_est = b_flat.reshape((K, K))
         self.max_restriction_violation = restriction_violation(b_flat)
         for i in range(K):
