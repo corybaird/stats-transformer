@@ -12,5 +12,9 @@ model:
     - x2
   summary_output_path: data/temp/test_summary.json
 
+output:
+  # Per-run artefact folders go to data/temp (gitignored) instead of the repo's default data/pipeline
+  root: data/temp/runs
+
 reporting:
   output_dir: data/temp/visualizations

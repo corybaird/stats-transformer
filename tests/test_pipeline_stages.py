@@ -17,6 +17,8 @@ def _write_config(tmp_path, model, data=None, reporting=None):
         config["data"] = data
     if reporting is not None:
         config["reporting"] = reporting
+    # Keep per-run artefacts inside tmp_path instead of the repo's default data/pipeline
+    config["output"] = {"root": str(tmp_path / "output_root")}
     config_path = tmp_path / "params.yaml"
     config_path.write_text(yaml.dump(config))
     return config_path
@@ -437,6 +439,7 @@ def test_run_legacy_visualization_stage_and_key_warn_but_still_work(tmp_path, te
     summary_path.write_text(json.dumps({"metrics": {"r_squared": 0.5}}))
 
     config = {
+        "output": {"root": str(tmp_path / "output_root")},
         "model": {"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"], "summary_output_path": str(summary_path)},
         "data": {"raw_data_file": str(tmp_path / "unused.csv"), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
         "visualization": {"output_dir": str(tmp_path / "legacy_viz")},
