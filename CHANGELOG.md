@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2026-10-14
+
+### Fixed
+
+- **Full pipeline run on configs without `data.datasets`.** A full run (`stage=None`, or the CLI without `--stage`) always ran the data stage, which crashed with `IndexError` for any config that uses `data.raw_data_file`, including every config in `references/configs` and the paper's Mincer example. A full run now skips the data stage when no datasets are configured and feeds `raw_data_file` straight into features. The manifest lists only the stages that ran. `run(stage="data")` without datasets raises a clear `ValueError` and creates no run folder.
+- README quickstart used a non-existent data file and a `frequency` key the schema does not have. It now uses the bundled Grunfeld data and current keys, checked by a test.
+- `docs/validation/benchmarks.md` no longer points to `src/examples/software_benchmarks/matlab_comparator.py`, whose source was removed. It points to the recorded `bq1989_long` benchmark and its test.
+
+### Changed
+
+- Model validation status has one source, `docs/validation/model_status.yaml`. `scripts/generate_model_status.py` renders the benchmarks.md §2.1 table and, with `--tex-out`, the paper's Table 1 rows; a test fails if the docs drift from the YAML. The YAML adds a `PandemicBVARModel` row and uses the paper's labels (`Known issue` for ProxySVAR and DiD, `Unresolved` for TVAR).
+
 ## [1.9.0] - 2026-10-14
 
 ### Added
