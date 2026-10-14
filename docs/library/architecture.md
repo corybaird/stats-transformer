@@ -38,7 +38,7 @@ The repository follows a Cookiecutter Data Science-style separation between reus
 ├── data/
 │   ├── examples/                  # Bundled and validation example datasets
 │   ├── final/                     # Engineered analysis-ready panels (gitignored)
-│   ├── pipeline/                  # Resampled and merged intermediate parquets (gitignored)
+│   ├── pipeline/                  # Per-run pipeline artifacts (<config>/<timestamp>/ run folders; gitignored)
 │   ├── raw/                       # Source raw datasets
 │   └── temp/                      # Disposable local data (gitignored)
 ├── docs/
@@ -163,8 +163,19 @@ flowchart LR
 ## 5. Configuration & Reproducibility Boundaries
 
 - `references/configs/`: The control center for reproducible specifications. Configurations select raw data, transformation settings, model choices, and output directories.
-- `reports/`: Stores output figures, LaTeX tables, and JSON metadata.
-- Source datasets remain unmodified. The pipeline writes intermediate and final artifacts to `data/pipeline/` and `data/final/`.
+- `reports/`: Stores figures and tables written to `reporting.output_dir` (default `reports/visualizations`) and any explicitly configured summary/report paths.
+- Source datasets remain unmodified. Each full pipeline run, and each single-stage run, writes its artifacts into a per-run folder under the output root (`output.root`, default `data/pipeline`), resolved relative to the CWD:
+
+```text
+<output.root>/<config_stem>/<YYYYMMDD_HHMMSS>/
+├── 01_data/merged.parquet        # only when data.merge.output_path is unset
+├── 02_features/features.parquet  # always written; keeps dtypes
+├── 03_model/model_summary.json   # written when the model stage runs
+└── manifest.json                 # config copy + sha256, input file checksums, git SHA (when available),
+                                  # package version, stages run, UTC timestamps, written files
+```
+
+- Explicit output paths (`data.merge.output_path`, `data.featurization.output_path`, `model.summary_output_path`, `reporting.output_dir`) are still written exactly as configured; the run folder is an addition, not a replacement. Single-stage runs chain through these explicit paths; a run folder does not replace them.
 
 ---
 
