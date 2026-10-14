@@ -20,6 +20,7 @@ from stats_transformer.models.timeseries.reduced_form.local_projections import L
 from stats_transformer.models.timeseries.reduced_form.local_projections_iv import LocalProjectionsIVModel
 from stats_transformer.models.timeseries.reduced_form.var import VARModel
 from stats_transformer.models.timeseries.reduced_form.vecm import VECMModel
+from stats_transformer.models.timeseries.structural.svec import SVECModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -239,9 +240,43 @@ def test_vecm_ghysels_ch7_matches_r_and_stata(key, path, cols, rows, k_ar_diff):
     np.testing.assert_allclose(_vec(m.model.alpha) * beta[0], _vec(_ref("stata", "vecm_ghysels_ch7")[key + "_alpha"]), rtol=1e-6)
 
 
-@pytest.mark.xfail(reason="VECMModel fixes the cointegration rank at 1 (vecm.py:32); the UK term structure needs rank 3", strict=True)
 def test_vecm_ghysels_ch7_uk_rank3_matches_r():
     cols = ["r1", "r3", "r6", "r24"]
     m = VECMModel(target_variables=cols, k_ar_diff=2, deterministic="ci", coint_rank=3)
     m.fit(_csv("data/examples/timeseries/ghysels_ch7/dataonly_uktermstructure.csv").iloc[:216][cols].reset_index(drop=True))
-    assert np.asarray(m.model.beta).shape[1] == 3
+    beta = np.asarray(m.model.beta, dtype=float)
+    beta_const = np.asarray(m.model.det_coef_coint, dtype=float)
+    got = np.vstack([beta, beta_const])
+    # R fixes the top rows of each cointegrating vector to the identity (same as statsmodels)
+    ref = np.asarray(_ref("r", "vecm_ghysels_ch7")["uk_r3_beta"])
+    np.testing.assert_allclose(got, ref, atol=1e-8)
+    np.testing.assert_allclose(np.asarray(m.model.alpha, dtype=float).T, np.asarray(_ref("r", "vecm_ghysels_ch7")["uk_r3_alpha"]), atol=1e-8)
+    assert got.shape == (5, 3)
+
+
+
+
+def test_svec_canada_matches_r():
+    cols = ["prod", "e", "U", "rw"]
+    nan = np.nan
+    SR = np.full((4, 4), nan)
+    SR[3, 1] = 0
+    LR = np.full((4, 4), nan)
+    LR[0, 1:4] = 0
+    LR[1:4, 3] = 0
+    m = SVECModel(target_variables=cols, k_ar_diff=2, coint_rank=1, deterministic="coli", SR=SR, LR=LR)
+    m.fit(_csv("tests/integration/var/canada.csv")[cols].reset_index(drop=True))
+    ref = _ref("r", "svec_canada")
+    # Compare raw matrices; the scale of each column is identified here (the
+    # ML optimum pins B B' to Sigma_u), so only the free sign is aligned by
+    # flipping a column whose diagonal sign differs.
+    got_sr = np.asarray(m.svec_fit.SR_est, dtype=float).copy()
+    got_lr = np.asarray(m.svec_fit.LR_est, dtype=float).copy()
+    ref_sr = np.asarray(ref["SR"], dtype=float)
+    for j in range(4):
+        if np.sign(got_sr[j, j]) != np.sign(ref_sr[j, j]):
+            got_sr[:, j] *= -1
+            got_lr[:, j] *= -1
+    np.testing.assert_allclose(got_sr, ref_sr, atol=1e-6)
+    np.testing.assert_allclose(got_lr, np.asarray(ref["LR"], dtype=float), atol=1e-6)
+    assert m.svec_fit.max_restriction_violation <= m.svec_fit.restr_tol

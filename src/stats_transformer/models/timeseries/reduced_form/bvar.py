@@ -3,6 +3,36 @@ import pandas as pd
 from scipy.stats import invwishart
 from stats_transformer.models.base import ModelBase
 
+def minnesota_prior_moments(n_vars, p, sigma_hat, lambda1, lambda2, lambda3, lambda4):
+    """Minnesota prior moments shared by the conjugate BVAR models.
+
+    Natural-conjugate (Kadiyala & Karlsson 1997) form: each equation's
+    coefficient prior covariance is sigma_i^2 * V, so the Minnesota scaling
+    sigma_i^2/sigma_j^2 lives entirely in V -- the entry for variable j's lag
+    must be tightness/sigma_j^2 (Banbura, Giannone & Reichlin 2010;
+    Koop & Korobilis 2010). V is shared across all equations (X is identical
+    for every one), and column j is an own-lag regressor only in variable j's
+    equation, so its tightness blends own and cross tightness across the
+    system.
+    """
+    k = 1 + n_vars * p
+    Lambda_prior = np.zeros((k, n_vars))
+    for i in range(n_vars):
+        Lambda_prior[1 + i, i] = 1.0
+
+    V_diag = np.zeros(k)
+    V_diag[0] = (sigma_hat.mean() * lambda4) ** 2
+    for lag in range(1, p + 1):
+        for j in range(n_vars):
+            row = 1 + (lag - 1) * n_vars + j
+            own_tightness = (lambda1 / (lag ** lambda3)) ** 2
+            cross_tightness = own_tightness * (lambda2 ** 2)
+            weighted_tightness = (own_tightness + (n_vars - 1) * cross_tightness) / n_vars if n_vars > 1 else own_tightness
+            V_diag[row] = weighted_tightness / (sigma_hat[j] ** 2)
+
+    return Lambda_prior, np.diag(V_diag)
+
+
 class BVARModel(ModelBase):
     _is_multivariate = True
 
@@ -46,7 +76,7 @@ class BVARModel(ModelBase):
         T, k = X.shape
 
         sigma_hat = self._ar1_residual_std(Y)
-        Lambda_prior, V_prior = self._minnesota_prior(n_vars, p, sigma_hat)
+        Lambda_prior, V_prior = minnesota_prior_moments(n_vars, p, sigma_hat, self.lambda1, self.lambda2, self.lambda3, self.lambda4)
         S_prior = np.diag(sigma_hat ** 2)
         nu_prior = n_vars + 2
 
@@ -92,35 +122,6 @@ class BVARModel(ModelBase):
             resid = y_t - X @ coef
             sigmas[i] = np.std(resid, ddof=X.shape[1]) if len(resid) > X.shape[1] else np.std(resid) + 1e-6
         return np.maximum(sigmas, 1e-6)
-
-    def _minnesota_prior(self, n_vars, p, sigma_hat):
-        # Natural-conjugate (Kadiyala & Karlsson 1997) Minnesota prior: the
-        # regressor-variance matrix V is shared across all equations (a
-        # requirement of the conjugate NIW form, since X is identical for
-        # every equation), so "own" vs. "cross" tightness is a property of
-        # each *regressor column* alone -- V does not vary by equation.
-        # Column j at lag l is that regressor's own-lag coefficient in
-        # variable j's equation and a cross-lag coefficient everywhere else,
-        # so we price it by its role as a regressor: tightness shrinks with
-        # lag length, and lambda2 governs the average cross-variable prior
-        # relative to the own-variable prior across the whole system.
-        k = 1 + n_vars * p
-        Lambda_prior = np.zeros((k, n_vars))
-        for i in range(n_vars):
-            Lambda_prior[1 + i, i] = 1.0
-
-        V_diag = np.zeros(k)
-        V_diag[0] = (sigma_hat.mean() * self.lambda4) ** 2
-        for lag in range(1, p + 1):
-            for j in range(n_vars):
-                row = 1 + (lag - 1) * n_vars + j
-                own_tightness = (self.lambda1 / (lag ** self.lambda3)) ** 2
-                cross_tightness = own_tightness * (self.lambda2 ** 2)
-                weighted_tightness = (own_tightness + (n_vars - 1) * cross_tightness) / n_vars if n_vars > 1 else own_tightness
-                V_diag[row] = weighted_tightness * (sigma_hat[j] ** 2)
-
-        V_prior = np.diag(V_diag)
-        return Lambda_prior, V_prior
 
     def _draw_posterior(self):
         rng = np.random.default_rng(self.seed)

@@ -4,6 +4,7 @@ import yaml
 from itertools import permutations
 from scipy.stats import invwishart
 from stats_transformer.models.base import ModelBase
+from stats_transformer.models.timeseries.reduced_form.bvar import minnesota_prior_moments
 from stats_transformer.models.timeseries.identification.sign_zero import _zero_restriction_bases, _sample_zero_restricted_q
 
 class BayesianSignZeroSVARModel(ModelBase):
@@ -85,23 +86,6 @@ class BayesianSignZeroSVARModel(ModelBase):
             sigmas[i] = np.std(resid, ddof=x_mat.shape[1]) if len(resid) > x_mat.shape[1] else np.std(resid) + 1e-6
         return np.maximum(sigmas, 1e-6)
 
-    def _minnesota_prior(self, n_vars, p, sigma_hat):
-        k = 1 + n_vars * p
-        lambda_prior = np.zeros((k, n_vars))
-        for i in range(n_vars):
-            lambda_prior[1 + i, i] = 1.0
-        v_diag = np.zeros(k)
-        v_diag[0] = (sigma_hat.mean() * self.lambda4) ** 2
-        for lag in range(1, p + 1):
-            for j in range(n_vars):
-                row = 1 + (lag - 1) * n_vars + j
-                own_tightness = (self.lambda1 / (lag ** self.lambda3)) ** 2
-                cross_tightness = own_tightness * (self.lambda2 ** 2)
-                weighted_tightness = (own_tightness + (n_vars - 1) * cross_tightness) / n_vars if n_vars > 1 else own_tightness
-                v_diag[row] = weighted_tightness * (sigma_hat[j] ** 2)
-        v_prior = np.diag(v_diag)
-        return lambda_prior, v_prior
-
     def _compute_ma_matrices(self, B_matrix, steps, n_vars, p):
         phis = np.zeros((steps, n_vars, n_vars))
         phis[0] = np.eye(n_vars)
@@ -166,7 +150,7 @@ class BayesianSignZeroSVARModel(ModelBase):
         T, k = X.shape
         self.n_obs = T
         sigma_hat = self._ar1_residual_std(Y)
-        Lambda_prior, V_prior = self._minnesota_prior(n_vars, p, sigma_hat)
+        Lambda_prior, V_prior = minnesota_prior_moments(n_vars, p, sigma_hat, self.lambda1, self.lambda2, self.lambda3, self.lambda4)
         S_prior = np.diag(sigma_hat ** 2)
         nu_prior = n_vars + 2
         V_prior_inv = np.linalg.inv(V_prior)

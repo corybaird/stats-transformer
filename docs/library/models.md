@@ -31,7 +31,7 @@ These models are asserted by automated wrapper tests against outputs recorded fr
 | **Discrete Choice** | `ProbitModel` | `probit` | `ProbitModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::glm(probit)`, Stata `probit` | **Verified** ($10^{-5}$) |
 | **Unsupervised Learning** | `PCAModel` | `pca` | `PCAModel` | Longley (`data/examples/regression/longley.csv`) | R `stats::prcomp`, Stata `pca` | **Verified** ($10^{-8}$) |
 | **Reduced-Form Time Series** | `VARModel` | `var` | `VARModel` | US Macro growth rates (`data/examples/timeseries/macrodata.csv`) | R `vars::VAR`, Stata `var` | **Verified** ($10^{-8}$) |
-| **Reduced-Form Time Series** | `VECMModel` | `vecm` | `VECMModel` | Ghysels & Marcellino Ch 7 (`data/examples/timeseries/ghysels_ch7/`), US Macro | R `urca::ca.jo`, Stata `vec`, MATLAB `vecm` | **Verified** (rank 1, `ci` and `co`, $10^{-6}$) |
+| **Reduced-Form Time Series** | `VECMModel` | `vecm` | `VECMModel` | Ghysels & Marcellino Ch 7 (`data/examples/timeseries/ghysels_ch7/`), US Macro | R `urca::ca.jo`, Stata `vec`, MATLAB `vecm` | **Verified** (rank 1 and rank 3, `ci` and `co`, $10^{-6}$) |
 | **Reduced-Form Time Series** | `ARIMAModel` | `arima` | `ARIMAModel` | US Macro growth rates (`data/examples/timeseries/macrodata.csv`) | R `stats::arima`, Stata `arima` | **Verified** (log-likelihood $10^{-7}$) |
 | **Reduced-Form Time Series** | `LocalProjectionsModel` | `local_projections` | `LocalProjectionsModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | Stata `regress` per horizon (HC3) | **Verified** (level-lead spec, $10^{-6}$) |
 | **Reduced-Form Time Series** | `LocalProjectionsIVModel` | `lp_iv` | `LocalProjectionsIVModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | Stata `ivregress 2sls` per horizon | **Verified** (level-lead spec, $10^{-6}$) |
@@ -60,7 +60,7 @@ These models are fully implemented and covered by automated Python unit and inte
 | **Structural Identification** | `IndependenceSVARModel` | `independence_svar` | `IndependenceSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.dc` | **Implemented** |
 | **Structural Identification** | `CVMSVARModel` | `cvm_svar` (`cvm`) | `CVMSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.cvm` | **Implemented** |
 | **Structural Identification** | `NonGaussianSVARModel` | `non_gaussian_svar` (`non_gaussian`) | `NonGaussianSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.ng` | **Implemented** |
-| **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Implemented** |
+| **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Verified** (R `svec_canada`, $10^{-6}$; column signs aligned) |
 | **Nonlinear Dynamics** | `TVECMModel` | `tvecm` | `TVECMModel` | Cointegration Panel (`data/examples/timeseries/ghysels_ch7/`) | R `tsDyn::TVECM` | **Implemented** (ECT regressor ECT_{t-1}, threshold ECT_{t-d}; empty regime raises) |
 | **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR` | **Implemented** (no recorded reference; empty/undersized regime raises) |
 | **Nonlinear Dynamics** | `STVARModel` | `stvar` | `STVARModel` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::STVAR` | **Implemented** |
@@ -201,7 +201,8 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/vecm.py`
 - **Pipeline Access**: `vecm` (direct instantiation: `VECMModel`)
 - **Benchmark Target**: R (`urca::ca.jo`), Stata (`vec`), MATLAB (`vecm`)
-- **Verified Discrepancy**: Normalised $\beta$ and $\alpha$ agree with Stata `vec` and MATLAB `vecm` to $10^{-6}$ on three Ghysels & Marcellino Ch 7 datasets and US macro, for `deterministic="ci"` (restricted constant) and `"co"`. Rank is fixed at 1 (known gap: the UK term structure needs rank 3).
+- **Verified Discrepancy**: Normalised $\beta$ and $\alpha$ agree with Stata `vec` and MATLAB `vecm` to $10^{-6}$ on three Ghysels & Marcellino Ch 7 datasets and US macro, for `deterministic="ci"` (restricted constant) and `"co"`. The UK term structure parity is also verified at rank 3 against R (`coint_rank=3`, R fixes the top three rows of $\beta$ to the identity, same as statsmodels).
+- **Cointegration Rank**: `model.coint_rank` (constructor arg `coint_rank`), default 1. Passed to the underlying statsmodels `VECM` fit.
 
 ### 5.3 Restricted VAR (`RestrictedVAR`)
 - **Description**: VAR enforced with structural zero restrictions on lag coefficients at the equation level.
@@ -220,7 +221,7 @@ These models are fully implemented and covered by automated Python unit and inte
 
 ### 5.5 Analytical Conjugate Bayesian VAR (`BVARModel`)
 - **Description**: Conjugate Normal-Inverse-Wishart prior BVAR with Minnesota prior moments, estimated analytically in closed form without MCMC dependencies.
-- **Specification**: $B | \Sigma \sim \mathcal{MN}(\bar B, \Sigma \otimes \bar V)$, $\Sigma \sim \mathcal{IW}(\bar S, \bar\nu)$.
+- **Specification**: $B | \Sigma \sim \mathcal{MN}(\bar B, \Sigma \otimes \bar V)$, $\Sigma \sim \mathcal{IW}(\bar S, \bar\nu)$. Because equation $i$'s coefficient prior covariance is $\sigma_i^2 \bar V$ (Kadiyala & Karlsson 1997), the Minnesota scaling $\sigma_i^2/\sigma_j^2$ lives entirely in $\bar V$: the diagonal entry for $y_j$ at lag $l$ is blended own/cross tightness ($\lambda_1/l^{\lambda_3}$, cross part times $\lambda_2^2$) divided by $\hat\sigma_j^2$.
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/bvar.py`
 - **Pipeline Access**: `bvar` (direct instantiation: `BVARModel`)
 - **Benchmark Target**: R (`BVAR::bvar`)
@@ -321,6 +322,7 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Module Location**: `src/stats_transformer/models/timeseries/structural/svec.py`
 - **Pipeline Access**: `svec` (direct instantiation: `SVECModel`)
 - **Benchmark Target**: R (`vars::SVEC`), MATLAB (`VAR-Toolbox 4.0`)
+- **Verified Discrepancy**: Restricted $B$ and $LR = \Xi B$ agree with R `vars::SVEC` (Canada example, `svec_canada`) to $10^{-6}$ (observed $4 \times 10^{-10}$) with only column signs aligned (the estimated scale is identified because the ML optimum pins $B B^T$ to $\hat\Sigma_u$). For a just-identified restriction set the ML system {restrictions, $B B^T = \hat\Sigma_u$} is solved directly; otherwise the concentrated likelihood is maximised in the free directions from several deterministic starts, and the max restriction violation is exposed as `SVEC.max_restriction_violation`.
 
 ### 6.10 Bayesian Sign & Zero Restrictions SVAR (`BayesianSignZeroSVARModel`)
 - **Description**: Bayesian Structural VAR identification combining Minnesota prior parameter draws with simultaneous sign, zero, and narrative restrictions via Haar/QR rotation sampling and Chan et al. (2025) column-permutation efficiency acceleration.

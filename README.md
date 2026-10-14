@@ -18,7 +18,7 @@
 
 `stats-transformer` is a Python library for data transformation, econometric modeling, and visualization. It automates feature engineering, model estimation, and reporting across time-series, panel, and cross-sectional datasets using a reproducible configuration workflow.
 
-- **Reproducible Workflows:** All research decisions from data ingestion to publication output are produced and tracked via single source of truth (`params.yaml`), in four stages
+- **Reproducible Workflows:** Research decisions from data ingestion to publication output are driven by a single config (`params.yaml`), in four stages; each run lands in a timestamped run folder with a provenance `manifest.json` (config and input checksums, git SHA, stages run, written files)
   - **Data stage:** ingest, resample, merge
   - **Features stage:** transform into analysis variables
   - **Model stage:** estimate with diagnostics and a JSON summary
