@@ -102,7 +102,11 @@ class SVEC:
             eigvals = np.maximum(eigvals, 1e-6)
             L = eigvecs @ np.diag(np.sqrt(eigvals))
 
-        b0_init = L.flatten()
+        # Deterministic starts for SLSQP: Cholesky factor and scaled identity.
+        starts = [
+            L.flatten(),
+            np.diag(np.sqrt(np.maximum(np.diag(sigma_u), 0.0))).flatten(),
+        ]
 
         def objective(b_flat):
             B = b_flat.reshape((K, K))
@@ -138,21 +142,19 @@ class SVEC:
                         "fun": lambda b, row_xi=row_xi, col_j=col_j, target_val=target_val: np.dot(row_xi, b.reshape((K, K))[:, col_j]) - target_val
                     })
 
-        opt_res = minimize(
-            objective,
-            b0_init,
-            method="SLSQP",
-            constraints=constraints,
-            options={"maxiter": self.max_iter, "ftol": 1e-9}
-        )
+        self.restr_tol = 1e-6
 
-        if not opt_res.success:
+        opt_res = None
+        for b0 in starts:
             opt_res = minimize(
                 objective,
-                b0_init,
-                method="Nelder-Mead",
-                options={"maxiter": self.max_iter * 2}
+                b0,
+                method="SLSQP",
+                constraints=constraints,
+                options={"maxiter": self.max_iter, "ftol": 1e-9}
             )
+            if opt_res.success:
+                break
 
         B_est = opt_res.x.reshape((K, K))
         for i in range(K):
@@ -160,8 +162,25 @@ class SVEC:
                 if sr_mask[i, j]:
                     B_est[i, j] = self.SR[i, j]
 
+        LR_est = Xi @ B_est
+        violations = []
+        for i in range(K):
+            for j in range(K):
+                if sr_mask[i, j]:
+                    violations.append(abs(B_est[i, j] - float(self.SR[i, j])))
+                if lr_mask[i, j]:
+                    violations.append(abs(LR_est[i, j] - float(self.LR[i, j])))
+        self.max_restriction_violation = max(violations, default=0.0)
+        if not opt_res.success or self.max_restriction_violation > self.restr_tol:
+            raise RuntimeError(
+                f"SVEC estimation failed: SLSQP did not satisfy the identifying "
+                f"restrictions to {self.restr_tol:g} "
+                f"(max violation {self.max_restriction_violation:.3e}); "
+                f"tried {len(starts)} deterministic starts"
+            )
+
         self.SR_est = B_est
-        self.LR_est = Xi @ B_est
+        self.LR_est = LR_est
         self.opt_res = opt_res
         self.bse = np.full((K, K), np.nan)
 

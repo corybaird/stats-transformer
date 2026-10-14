@@ -20,6 +20,7 @@ from stats_transformer.models.timeseries.reduced_form.local_projections import L
 from stats_transformer.models.timeseries.reduced_form.local_projections_iv import LocalProjectionsIVModel
 from stats_transformer.models.timeseries.reduced_form.var import VARModel
 from stats_transformer.models.timeseries.reduced_form.vecm import VECMModel
+from stats_transformer.models.timeseries.structural.svec import SVECModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -253,3 +254,28 @@ def test_vecm_ghysels_ch7_uk_rank3_matches_r():
     assert got.shape == (5, 3)
 
 
+
+
+def test_svec_canada_matches_r():
+    cols = ["prod", "e", "U", "rw"]
+    nan = np.nan
+    SR = np.full((4, 4), nan)
+    SR[3, 1] = 0
+    LR = np.full((4, 4), nan)
+    LR[0, 1:4] = 0
+    LR[1:4, 3] = 0
+    m = SVECModel(target_variables=cols, k_ar_diff=2, coint_rank=1, deterministic="coli", SR=SR, LR=LR)
+    m.fit(_csv("tests/integration/var/canada.csv")[cols].reset_index(drop=True))
+    ref = _ref("r", "svec_canada")
+
+    def colnorm(sr, lr):
+        # B's columns are only identified up to scaling/sign; fix sign on the
+        # diagonal of SR and scale columns to unit norm on both sides
+        f = np.array([np.sign(sr[j, j]) / np.linalg.norm(sr[:, j]) for j in range(4)])
+        return sr * f, lr * f
+
+    got_sr, got_lr = colnorm(np.asarray(m.svec_fit.SR_est, dtype=float), np.asarray(m.svec_fit.LR_est, dtype=float))
+    ref_sr, ref_lr = colnorm(np.asarray(ref["SR"], dtype=float), np.asarray(ref["LR"], dtype=float))
+    np.testing.assert_allclose(got_sr, ref_sr, atol=1e-4)
+    np.testing.assert_allclose(got_lr, ref_lr, atol=1e-4)
+    assert m.svec_fit.max_restriction_violation <= m.svec_fit.restr_tol
