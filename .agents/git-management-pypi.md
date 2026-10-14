@@ -49,6 +49,7 @@ When the user requests a commit:
 *   Ensure commits are atomic and follow the commit pattern.
 *   Ensure the branch is pushed or ask the user before pushing.
 *   Confirm the target branch, usually `main`.
+*   Optional: run `scripts/run-code-knowledge-graph.sh update` then `scripts/run-code-knowledge-graph.sh detect-changes` to list untested or high-risk changed functions.
 
 ### PR Content
 The PR should include:

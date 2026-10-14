@@ -140,6 +140,15 @@ YAML `model.independent_variables` and `model.target_variable` are required; the
 - [`models.md`](models.md) — model-by-model reference (purpose, parameters, edge cases).
 - [`transformations.md`](transformations.md) — `FeatureEngineer` transformations, resampling, `DataMerger` join semantics.
 
+## Code knowledge graph (optional)
+
+A local graph of functions, classes, calls and tests helps answer "what breaks if I change X" before editing shared code such as `ModelBase`, `Pipeline` or `FeatureEngineer`.
+
+- Build once: `scripts/run-code-knowledge-graph.sh build`; refresh after pulls: `scripts/run-code-knowledge-graph.sh update`.
+- Check impact of your changes: `scripts/run-code-knowledge-graph.sh detect-changes`.
+- The graph is local and untracked (`.code-review-graph/`). `status` shows the branch and commit it was built on; run `update` first if they differ from yours.
+- The skill files in this folder stay the source of truth for intended design. If the graph is missing, read them and the source directly.
+
 ## Pointers
 
 - Canonical architecture doc: `docs/library/architecture.md`
@@ -149,6 +158,7 @@ YAML `model.independent_variables` and `model.target_variable` are required; the
 - Library README: `README.md`
 - Commit message conventions: `.agents/git-management-pypi.md` (NOT duplicated here)
 - Test fixture config: `references/configs/test_pipeline.yaml`
+- Local code knowledge graph helper: `scripts/run-code-knowledge-graph.sh`
 
 ## What this skill does NOT cover
 
