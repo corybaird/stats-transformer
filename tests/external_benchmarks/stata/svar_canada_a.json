@@ -1,0 +1,182 @@
+{
+ "case": "svar_canada_a",
+ "engine": {
+  "product": "Stata",
+  "version": "19.5",
+  "born_date": "16 Apr 2025",
+  "edition": "MP",
+  "os": "Unix",
+  "machine_type": "Mac (Apple Silicon)"
+ },
+ "data": {
+  "path": "tests/integration/var/canada.csv",
+  "sha256": "7fa03363a8feed2188ffd08dfae6e4f207d5e35b98a1d94647d890b11f8cee94",
+  "sheet": null,
+  "columns": [
+   "e",
+   "prod",
+   "rw",
+   "U"
+  ],
+  "nrows": 84,
+  "filter": null
+ },
+ "settings": {
+  "command": "svar e prod rw U, lags(1/2) aeq(A) beq(I) with A diagonal free, A[2,1] and A[4,1] free. vars::SVAR documentation example (A-model, overidentified)"
+ },
+ "outputs": {
+  "A": [
+   [
+    2.921192916564396,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0922107312249672,
+    1.625191141386098,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    1.358273933501397,
+    0.0
+   ],
+   [
+    2.715851278855952,
+    0.0,
+    0.0,
+    5.174621291514739
+   ]
+  ],
+  "impact": [
+   [
+    0.3423259019729845,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    -0.0194230210430837,
+    0.6153122389943113,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.7362285142454084,
+    0.0
+   ],
+   [
+    -0.1796665275163933,
+    0.0,
+    0.0,
+    0.1932508571477074
+   ]
+  ],
+  "Sigma_ml": [
+   [
+    0.1171870231509625,
+    -0.0066490031871966,
+    -0.0374781141077227,
+    -0.0615045060832979
+   ],
+   [
+    -0.0066490031871966,
+    0.3789864051669436,
+    0.0575215690888588,
+    0.0123947436570324
+   ],
+   [
+    -0.0374781141077227,
+    0.0575215690888588,
+    0.5420324249929073,
+    0.0304648425367305
+   ],
+   [
+    -0.0615045060832979,
+    0.0123947436570324,
+    0.0304648425367305,
+    0.0696259548970382
+   ]
+  ],
+  "scalars": [
+   [
+    82.0,
+    -177.7887714229662,
+    3.940406571869914,
+    NaN,
+    NaN
+   ]
+  ]
+ },
+ "labels": {
+  "A": {
+   "rows": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ],
+   "cols": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ]
+  },
+  "impact": {
+   "rows": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ],
+   "cols": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ]
+  },
+  "Sigma_ml": {
+   "rows": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ],
+   "cols": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ]
+  },
+  "scalars": {
+   "rows": [
+    "r1"
+   ],
+   "cols": [
+    "c1",
+    "c2",
+    "c3",
+    "c4",
+    "c5"
+   ]
+  }
+ },
+ "layout": {
+  "A": "4 x 4 e(A), A u = e with e ~ N(0, I)",
+  "impact": "4 x 4 inv(A)",
+  "Sigma_ml": "4 x 4 e(Sigma) divisor T",
+  "scalars": "1 x 5 N, ll, chi2_oid, df_oid, converged"
+ },
+ "driver": "tests/external_benchmarks/stata/drivers/st_ref_svar_canada_a.do",
+ "driver_sha256": "36b22e2b890017d052d7951e9cfc7411a2cf4190e7a473500eec73354d9b3134",
+ "recorded_at": "2026-10-14T02:17:26.103336+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

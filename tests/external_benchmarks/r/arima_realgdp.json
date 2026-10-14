@@ -1,0 +1,83 @@
+{
+ "case": "arima_realgdp",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "stats": "4.6.1"
+  }
+ },
+ "data": {
+  "path": "data/examples/timeseries/macrodata.csv",
+  "sha256": "9b42d81d9716ec76766e51ead8a6e3850950bdf451e4e3e6bdd9c72129ec997f",
+  "sheet": null,
+  "columns": [
+   "realgdp",
+   "realcons",
+   "realinv",
+   "year",
+   "quarter"
+  ],
+  "nrows": 202,
+  "filter": null
+ },
+ "settings": {
+  "call": "arima(realgdp, order = c(1, 0, 1), method = ML)"
+ },
+ "outputs": {
+  "coef": [
+   [
+    0.6253603932388304
+   ],
+   [
+    -0.34982994805613
+   ],
+   [
+    0.7777767738575961
+   ]
+  ],
+  "se": [
+   [
+    0.13061446881041325
+   ],
+   [
+    0.15199669054037987
+   ],
+   [
+    0.10052562133917496
+   ]
+  ],
+  "sigma2": 0.6849871308768118,
+  "loglik": -248.47812222319203
+ },
+ "labels": {
+  "coef": {
+   "rows": [
+    "ar1",
+    "ma1",
+    "intercept"
+   ],
+   "cols": []
+  },
+  "se": {
+   "rows": [
+    "ar1",
+    "ma1",
+    "intercept"
+   ],
+   "cols": []
+  }
+ },
+ "layout": {
+  "coef": "3 x 1 ar1 ma1 intercept (intercept is the mean)",
+  "se": "3 x 1",
+  "sigma2": "scalar",
+  "loglik": "scalar"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_arima_realgdp.R",
+ "driver_sha256": "832c5efe458069dbaf5a6cd4b3f4e49b0deadb298392df281c150ccdfacd3958",
+ "recorded_at": "2026-10-14T02:17:11.919599+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

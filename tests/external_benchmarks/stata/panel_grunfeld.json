@@ -1,0 +1,126 @@
+{
+ "case": "panel_grunfeld",
+ "engine": {
+  "product": "Stata",
+  "version": "19.5",
+  "born_date": "16 Apr 2025",
+  "edition": "MP",
+  "os": "Unix",
+  "machine_type": "Mac (Apple Silicon)"
+ },
+ "data": {
+  "path": "data/examples/regression/grunfeld.csv",
+  "sha256": "45e6892bf942cf2ff61a9fe615b18af86eacbfc863daa9762b958c066b3c8fa7",
+  "sheet": null,
+  "columns": [
+   "invest",
+   "value",
+   "capital",
+   "firm",
+   "year"
+  ],
+  "nrows": 220,
+  "filter": null
+ },
+ "settings": {
+  "command": "xtset firm year; xtreg invest value capital, fe [vce(cluster firm)]"
+ },
+ "outputs": {
+  "beta_fe": [
+   [
+    0.1101291190257599
+   ],
+   [
+    0.3100334418750042
+   ],
+   [
+    -55.27154857651649
+   ]
+  ],
+  "se_fe": [
+   [
+    0.0112998432895952
+   ],
+   [
+    0.016540476519482
+   ],
+   [
+    10.89102464394249
+   ]
+  ],
+  "se_fe_cluster": [
+   [
+    0.0151082669985701
+   ],
+   [
+    0.0524724043919766
+   ],
+   [
+    25.31266280428532
+   ]
+  ],
+  "fe_scalars": [
+   [
+    220.0,
+    11.0,
+    0.7666706515488427,
+    82.1409017167625,
+    50.29952133236894
+   ]
+  ]
+ },
+ "labels": {
+  "beta_fe": {
+   "rows": [
+    "value",
+    "capital",
+    "_cons"
+   ],
+   "cols": [
+    "y1"
+   ]
+  },
+  "se_fe": {
+   "rows": [
+    "value",
+    "capital",
+    "_cons"
+   ],
+   "cols": [
+    "r1"
+   ]
+  },
+  "se_fe_cluster": {
+   "rows": [
+    "value",
+    "capital",
+    "_cons"
+   ],
+   "cols": [
+    "r1"
+   ]
+  },
+  "fe_scalars": {
+   "rows": [
+    "r1"
+   ],
+   "cols": [
+    "c1",
+    "c2",
+    "c3",
+    "c4",
+    "c5"
+   ]
+  }
+ },
+ "layout": {
+  "beta_fe": "3 x 1 value capital _cons",
+  "se_fe": "3 x 1",
+  "se_fe_cluster": "3 x 1 vce(cluster firm) with Stata small-sample factor",
+  "fe_scalars": "1 x 5 N, N_g, r2_within, sigma_u, sigma_e"
+ },
+ "driver": "tests/external_benchmarks/stata/drivers/st_ref_panel_grunfeld.do",
+ "driver_sha256": "40f8ecbb28713f27320944697156ec6ba1b7e9427cb035dd9c4f4626cf42429c",
+ "recorded_at": "2026-10-14T02:17:16.324435+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

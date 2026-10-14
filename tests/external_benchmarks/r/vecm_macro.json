@@ -1,0 +1,217 @@
+{
+ "case": "vecm_macro",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "urca": "1.3.4"
+  }
+ },
+ "data": {
+  "path": "data/examples/timeseries/macrodata.csv",
+  "sha256": "9b42d81d9716ec76766e51ead8a6e3850950bdf451e4e3e6bdd9c72129ec997f",
+  "sheet": null,
+  "columns": [
+   "realgdp",
+   "realcons",
+   "realinv",
+   "year",
+   "quarter"
+  ],
+  "nrows": 202,
+  "filter": null
+ },
+ "settings": {
+  "call": "urca::ca.jo(type = trace, ecdet = none, K = 2, spec = longrun); cajorls(r = 1)"
+ },
+ "outputs": {
+  "lambda": [
+   [
+    0.44450964957182115
+   ],
+   [
+    0.31107331433379976
+   ],
+   [
+    0.1654620990611775
+   ]
+  ],
+  "trace_stats": [
+   [
+    36.17542387391289
+   ],
+   [
+    110.69950797403847
+   ],
+   [
+    228.28031617797927
+   ]
+  ],
+  "trace_cval": [
+   [
+    6.5,
+    8.18,
+    11.65
+   ],
+   [
+    15.66,
+    17.95,
+    23.52
+   ],
+   [
+    28.71,
+    31.52,
+    37.22
+   ]
+  ],
+  "beta_normalized": [
+   [
+    1
+   ],
+   [
+    -2.590927962679948
+   ],
+   [
+    0.2713510876989625
+   ]
+  ],
+  "alpha": [
+   [
+    -0.3020320214989389
+   ],
+   [
+    0.11436049830913737
+   ],
+   [
+    -2.5708078341855045
+   ]
+  ],
+  "rlm_coef": [
+   [
+    -0.3020320214989389,
+    0.11436049830913737,
+    -2.5708078341855045
+   ],
+   [
+    -0.35722678649567813,
+    0.12900008537644894,
+    -3.006597898147893
+   ],
+   [
+    -0.7953125831362956,
+    0.07089328849941046,
+    -2.4488602871073275
+   ],
+   [
+    0.5940178992812544,
+    -0.619721884716621,
+    5.158499961062267
+   ],
+   [
+    -0.02251306347678684,
+    0.012744623582562885,
+    -0.6876239624978594
+   ]
+  ],
+  "Sigma_ml": [
+   [
+    0.6570853266859757,
+    0.3707766150839382,
+    2.2778082400647883
+   ],
+   [
+    0.3707766150839382,
+    0.49532175268476464,
+    0.4976863528535799
+   ],
+   [
+    2.2778082400647883,
+    0.4976863528535799,
+    15.62955457522908
+   ]
+  ],
+  "nobs": 200
+ },
+ "labels": {
+  "lambda": {
+   "rows": [],
+   "cols": []
+  },
+  "trace_stats": {
+   "rows": [],
+   "cols": []
+  },
+  "trace_cval": {
+   "rows": [
+    "r <= 2 |",
+    "r <= 1 |",
+    "r = 0  |"
+   ],
+   "cols": [
+    "10pct",
+    "5pct",
+    "1pct"
+   ]
+  },
+  "beta_normalized": {
+   "rows": [
+    "realgdp.l2",
+    "realcons.l2",
+    "realinv.l2"
+   ],
+   "cols": [
+    "ect1"
+   ]
+  },
+  "alpha": {
+   "rows": [
+    "realgdp.d",
+    "realcons.d",
+    "realinv.d"
+   ],
+   "cols": []
+  },
+  "rlm_coef": {
+   "rows": [
+    "ect1",
+    "constant",
+    "realgdp.dl1",
+    "realcons.dl1",
+    "realinv.dl1"
+   ],
+   "cols": [
+    "realgdp.d",
+    "realcons.d",
+    "realinv.d"
+   ]
+  },
+  "Sigma_ml": {
+   "rows": [
+    "realgdp.d",
+    "realcons.d",
+    "realinv.d"
+   ],
+   "cols": [
+    "realgdp.d",
+    "realcons.d",
+    "realinv.d"
+   ]
+  }
+ },
+ "layout": {
+  "lambda": "eigenvalues of the Johansen problem, descending, with one trailing 0 per ca.jo",
+  "trace_stats": "r<=2, r<=1, r=0 test statistics",
+  "trace_cval": "10, 5, 1 percent critical values",
+  "beta_normalized": "3 x 1 cointegrating vector normalised on realgdp",
+  "alpha": "3 x 1 loadings",
+  "rlm_coef": "coefficients of the restricted ECM",
+  "Sigma_ml": "3 x 3 divisor T",
+  "nobs": "scalar"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_vecm_macro.R",
+ "driver_sha256": "e3681fc7b6930115b22b6b2a8ea0adfdf05df0cc6814cc1352c9d90650ac2e25",
+ "recorded_at": "2026-10-14T02:17:10.689348+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

@@ -1,0 +1,148 @@
+{
+ "case": "iv_mroz",
+ "engine": {
+  "product": "Stata",
+  "version": "19.5",
+  "born_date": "16 Apr 2025",
+  "edition": "MP",
+  "os": "Unix",
+  "machine_type": "Mac (Apple Silicon)"
+ },
+ "data": {
+  "path": "data/examples/regression/mroz.csv",
+  "sha256": "ca22d8b3a47459d632e92a7822f3b752ad45a23980f28df496dd1e12d73e38df",
+  "sheet": null,
+  "columns": [
+   "rownames",
+   "inlf",
+   "hours",
+   "kidslt6",
+   "kidsge6",
+   "age",
+   "educ",
+   "wage",
+   "repwage",
+   "hushrs",
+   "husage",
+   "huseduc",
+   "huswage",
+   "faminc",
+   "mtr",
+   "motheduc",
+   "fatheduc",
+   "unem",
+   "city",
+   "exper",
+   "nwifeinc",
+   "lwage",
+   "expersq"
+  ],
+  "nrows": 428,
+  "filter": "inlf == 1"
+ },
+ "settings": {
+  "command": "ivregress 2sls lwage exper expersq (educ = motheduc fatheduc) [, vce(robust)]"
+ },
+ "outputs": {
+  "beta": [
+   [
+    0.0613966286601543
+   ],
+   [
+    0.0441703929487627
+   ],
+   [
+    -0.0008989695881555
+   ],
+   [
+    0.0481003069321736
+   ]
+  ],
+  "se": [
+   [
+    0.0312894503591273
+   ],
+   [
+    0.0133695596073131
+   ],
+   [
+    0.0003998041700956
+   ],
+   [
+    0.3984529943328332
+   ]
+  ],
+  "se_robust": [
+   [
+    0.033182434627164
+   ],
+   [
+    0.015473560925888
+   ],
+   [
+    0.0004280692285057
+   ],
+   [
+    0.4277845981493723
+   ]
+  ],
+  "nobs": [
+   [
+    428.0
+   ]
+  ]
+ },
+ "labels": {
+  "beta": {
+   "rows": [
+    "educ",
+    "exper",
+    "expersq",
+    "_cons"
+   ],
+   "cols": [
+    "y1"
+   ]
+  },
+  "se": {
+   "rows": [
+    "educ",
+    "exper",
+    "expersq",
+    "_cons"
+   ],
+   "cols": [
+    "r1"
+   ]
+  },
+  "se_robust": {
+   "rows": [
+    "educ",
+    "exper",
+    "expersq",
+    "_cons"
+   ],
+   "cols": [
+    "r1"
+   ]
+  },
+  "nobs": {
+   "rows": [
+    "r1"
+   ],
+   "cols": [
+    "c1"
+   ]
+  }
+ },
+ "layout": {
+  "beta": "4 x 1 educ exper expersq _cons (instrumented variable first, constant last)",
+  "se": "4 x 1 classical, divisor N not N-k",
+  "se_robust": "4 x 1 vce(robust)",
+  "nobs": "1 x 1"
+ },
+ "driver": "tests/external_benchmarks/stata/drivers/st_ref_iv_mroz.do",
+ "driver_sha256": "025642b0cd4287db96f6879c07cf7546f022bb6b1ce8c504059db927a05d6aff",
+ "recorded_at": "2026-10-14T02:17:15.559012+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

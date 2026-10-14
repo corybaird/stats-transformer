@@ -1,0 +1,85 @@
+{
+ "case": "panel_grunfeld",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "plm": "2.6.7"
+  }
+ },
+ "data": {
+  "path": "data/examples/regression/grunfeld.csv",
+  "sha256": "45e6892bf942cf2ff61a9fe615b18af86eacbfc863daa9762b958c066b3c8fa7",
+  "sheet": null,
+  "columns": [
+   "invest",
+   "value",
+   "capital",
+   "firm",
+   "year"
+  ],
+  "nrows": 220,
+  "filter": null
+ },
+ "settings": {
+  "call": "plm::plm(invest ~ value + capital, index = c(firm, year), model = within); vcovHC(type = HC1, cluster = group)"
+ },
+ "outputs": {
+  "beta_fe": [
+   [
+    0.11012911902575996
+   ],
+   [
+    0.31003344187500403
+   ]
+  ],
+  "se_fe": [
+   [
+    0.011299843289595202
+   ],
+   [
+    0.016540476519482036
+   ]
+  ],
+  "se_fe_cluster_hc1": [
+   [
+    0.014404865638860924
+   ],
+   [
+    0.050029426610341036
+   ]
+  ],
+  "nobs": 220,
+  "r2_within": 0.7666706515488427
+ },
+ "labels": {
+  "beta_fe": {
+   "rows": [
+    "value",
+    "capital"
+   ],
+   "cols": []
+  },
+  "se_fe": {
+   "rows": [],
+   "cols": []
+  },
+  "se_fe_cluster_hc1": {
+   "rows": [],
+   "cols": []
+  }
+ },
+ "layout": {
+  "beta_fe": "2 x 1 value capital",
+  "se_fe": "2 x 1 classical",
+  "se_fe_cluster_hc1": "2 x 1",
+  "nobs": "scalar",
+  "r2_within": "scalar"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_panel_grunfeld.R",
+ "driver_sha256": "88ab47866150fcb87589773aa345d868b41bbe3e1390b5d435e15cda0e54e3cb",
+ "recorded_at": "2026-10-14T02:17:09.189739+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

@@ -1,0 +1,107 @@
+{
+ "case": "probit_spector",
+ "engine": {
+  "product": "Stata",
+  "version": "19.5",
+  "born_date": "16 Apr 2025",
+  "edition": "MP",
+  "os": "Unix",
+  "machine_type": "Mac (Apple Silicon)"
+ },
+ "data": {
+  "path": "data/examples/discrete/spector.csv",
+  "sha256": "54bf8eefa348d3956f29ba242516d8184179e091a40ea084e6bfa89ca569df9d",
+  "sheet": null,
+  "columns": [
+   "GPA",
+   "TUCE",
+   "PSI",
+   "GRADE"
+  ],
+  "nrows": 32,
+  "filter": null
+ },
+ "settings": {
+  "command": "probit GRADE GPA TUCE PSI"
+ },
+ "outputs": {
+  "beta": [
+   [
+    1.625810038928593
+   ],
+   [
+    0.0517289454509176
+   ],
+   [
+    1.426332341324128
+   ],
+   [
+    -7.452319644676636
+   ]
+  ],
+  "se": [
+   [
+    0.6938824883369161
+   ],
+   [
+    0.0838902614104354
+   ],
+   [
+    0.5950379022122307
+   ],
+   [
+    2.542472320660802
+   ]
+  ],
+  "loglik": [
+   [
+    -12.81880406888944,
+    -20.59172969661729,
+    32.0
+   ]
+  ]
+ },
+ "labels": {
+  "beta": {
+   "rows": [
+    "GRADE:GPA",
+    "GRADE:TUCE",
+    "GRADE:PSI",
+    "GRADE:_cons"
+   ],
+   "cols": [
+    "y1"
+   ]
+  },
+  "se": {
+   "rows": [
+    "GRADE:GPA",
+    "GRADE:TUCE",
+    "GRADE:PSI",
+    "GRADE:_cons"
+   ],
+   "cols": [
+    "r1"
+   ]
+  },
+  "loglik": {
+   "rows": [
+    "r1"
+   ],
+   "cols": [
+    "c1",
+    "c2",
+    "c3"
+   ]
+  }
+ },
+ "layout": {
+  "beta": "4 x 1 GPA TUCE PSI _cons",
+  "se": "4 x 1",
+  "loglik": "1 x 3 ll, ll_0, N"
+ },
+ "driver": "tests/external_benchmarks/stata/drivers/st_ref_probit_spector.do",
+ "driver_sha256": "9f9897e163a8b8f19ceda364f941cf5be9b102a1b81d4132dd7bf43a17b6bebf",
+ "recorded_at": "2026-10-14T02:17:23.160553+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

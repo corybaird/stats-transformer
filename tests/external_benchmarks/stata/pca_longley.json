@@ -1,0 +1,133 @@
+{
+ "case": "pca_longley",
+ "engine": {
+  "product": "Stata",
+  "version": "19.5",
+  "born_date": "16 Apr 2025",
+  "edition": "MP",
+  "os": "Unix",
+  "machine_type": "Mac (Apple Silicon)"
+ },
+ "data": {
+  "path": "data/examples/regression/longley.csv",
+  "sha256": "61e5d64fdfd24e410341d94df094bc6c8f6a8c76adc85bf4acc1d23ac388c0ce",
+  "sheet": null,
+  "columns": [
+   "TOTEMP",
+   "GNPDEFL",
+   "GNP",
+   "UNEMP",
+   "ARMED",
+   "POP",
+   "YEAR"
+  ],
+  "nrows": 16,
+  "filter": null
+ },
+ "settings": {
+  "command": "pca GNPDEFL GNP UNEMP ARMED POP YEAR, components(6)"
+ },
+ "outputs": {
+  "eigenvalues": [
+   [
+    4.603377095768391,
+    1.175340499257148,
+    0.2034253724014345,
+    0.014928258677277,
+    0.0025520657630747,
+    0.0003767081326777
+   ]
+  ],
+  "loadings": [
+   [
+    0.4618348981667718,
+    0.0578427676677561,
+    -0.14911989205308,
+    -0.7928735589035543,
+    0.3379378262071095,
+    -0.1351870706388951
+   ],
+   [
+    0.4615043466790023,
+    0.0532122862362268,
+    -0.2776823268077979,
+    0.1216212251649301,
+    -0.1495731918176807,
+    0.8184808206961
+   ],
+   [
+    0.3213166983065422,
+    -0.5955137627127101,
+    0.7283056857802678,
+    -0.0076457954938011,
+    0.0092319611007767,
+    0.1074526806309022
+   ],
+   [
+    0.2015097418732075,
+    0.7981925479564478,
+    0.5616075237192031,
+    0.0772549790786462,
+    0.0242524723087063,
+    0.0179709602816607
+   ],
+   [
+    0.4622793530415606,
+    -0.0455444698016808,
+    -0.1959845910816258,
+    0.5897449647496684,
+    0.5485781730932198,
+    -0.3115708677630925
+   ],
+   [
+    0.4649402842330697,
+    0.0006187883931807,
+    -0.1281157312486275,
+    0.0522865542202927,
+    -0.7495428355969654,
+    -0.4504088836355863
+   ]
+  ]
+ },
+ "labels": {
+  "eigenvalues": {
+   "rows": [
+    "r1"
+   ],
+   "cols": [
+    "Eigenvalues:Comp1",
+    "Eigenvalues:Comp2",
+    "Eigenvalues:Comp3",
+    "Eigenvalues:Comp4",
+    "Eigenvalues:Comp5",
+    "Eigenvalues:Comp6"
+   ]
+  },
+  "loadings": {
+   "rows": [
+    "GNPDEFL",
+    "GNP",
+    "UNEMP",
+    "ARMED",
+    "POP",
+    "YEAR"
+   ],
+   "cols": [
+    "Comp1",
+    "Comp2",
+    "Comp3",
+    "Comp4",
+    "Comp5",
+    "Comp6"
+   ]
+  }
+ },
+ "layout": {
+  "eigenvalues": "1 x 6 descending, correlation PCA",
+  "loadings": "6 x 6 e(L), rows variables, columns components, signs arbitrary"
+ },
+ "driver": "tests/external_benchmarks/stata/drivers/st_ref_pca_longley.do",
+ "driver_sha256": "00d8c00863d6e71901ae6fc3ccdaf9743192938bc7db23c64dd929f30021a4bc",
+ "recorded_at": "2026-10-14T02:17:17.966573+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

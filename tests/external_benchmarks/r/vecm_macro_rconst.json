@@ -1,0 +1,188 @@
+{
+ "case": "vecm_macro_rconst",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "urca": "1.3.4"
+  }
+ },
+ "data": {
+  "path": "data/examples/timeseries/macrodata.csv",
+  "sha256": "9b42d81d9716ec76766e51ead8a6e3850950bdf451e4e3e6bdd9c72129ec997f",
+  "sheet": null,
+  "columns": [
+   "realgdp",
+   "realcons",
+   "realinv",
+   "year",
+   "quarter"
+  ],
+  "nrows": 202,
+  "filter": null
+ },
+ "settings": {
+  "call": "urca::ca.jo(type = trace, ecdet = const, K = 2, spec = longrun); cajorls(r = 1). Restricted constant, matches statsmodels deterministic = ci"
+ },
+ "outputs": {
+  "lambda": [
+   [
+    0.44455412482095574
+   ],
+   [
+    0.3110870819409208
+   ],
+   [
+    0.16548714601480913
+   ],
+   [
+    1.27675647831893e-15
+   ]
+  ],
+  "trace_stats": [
+   [
+    36.181426556230534
+   ],
+   [
+    110.70950752423079
+   ],
+   [
+    228.30632933836205
+   ]
+  ],
+  "beta_normalized": [
+   [
+    1
+   ],
+   [
+    -2.592556209977794
+   ],
+   [
+    0.27164102460012
+   ],
+   [
+    1.1676133149796268
+   ]
+  ],
+  "alpha": [
+   [
+    -0.30172051623137786
+   ],
+   [
+    0.11434796821604243
+   ],
+   [
+    -2.568829084647905
+   ]
+  ],
+  "rlm_coef": [
+   [
+    -0.30172051623137786,
+    0.11434796821604243,
+    -2.568829084647905
+   ],
+   [
+    -0.7952452925133164,
+    0.07081077707318195,
+    -2.4480028021731135
+   ],
+   [
+    0.5940168670776268,
+    -0.6196641738183037,
+    5.158265630568324
+   ],
+   [
+    -0.02248844488041426,
+    0.012782164423769516,
+    -0.6876890526449266
+   ]
+  ],
+  "Sigma_ml": [
+   [
+    0.6571440527713185,
+    0.3708026079064728,
+    2.277999643613547
+   ],
+   [
+    0.3708026079064728,
+    0.49533279706454586,
+    0.4978116837227891
+   ],
+   [
+    2.277999643613547,
+    0.4978116837227891,
+    15.629713968003076
+   ]
+  ],
+  "nobs": 200
+ },
+ "labels": {
+  "lambda": {
+   "rows": [],
+   "cols": []
+  },
+  "trace_stats": {
+   "rows": [],
+   "cols": []
+  },
+  "beta_normalized": {
+   "rows": [
+    "realgdp.l2",
+    "realcons.l2",
+    "realinv.l2",
+    "constant"
+   ],
+   "cols": [
+    "ect1"
+   ]
+  },
+  "alpha": {
+   "rows": [
+    "realgdp.d",
+    "realcons.d",
+    "realinv.d"
+   ],
+   "cols": []
+  },
+  "rlm_coef": {
+   "rows": [
+    "ect1",
+    "realgdp.dl1",
+    "realcons.dl1",
+    "realinv.dl1"
+   ],
+   "cols": [
+    "realgdp.d",
+    "realcons.d",
+    "realinv.d"
+   ]
+  },
+  "Sigma_ml": {
+   "rows": [
+    "realgdp.d",
+    "realcons.d",
+    "realinv.d"
+   ],
+   "cols": [
+    "realgdp.d",
+    "realcons.d",
+    "realinv.d"
+   ]
+  }
+ },
+ "layout": {
+  "lambda": "eigenvalues",
+  "trace_stats": "trace statistics",
+  "beta_normalized": "4 x 1 realgdp realcons realinv constant, unit on realgdp",
+  "alpha": "3 x 1",
+  "rlm_coef": "short-run coefficients",
+  "Sigma_ml": "3 x 3 divisor T",
+  "nobs": "scalar"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_vecm_macro_rconst.R",
+ "driver_sha256": "a3e2e87ae55bcb96cbdf932ff82925e7dd170fa10ffe8c48d6af8404e9119af2",
+ "recorded_at": "2026-10-14T02:17:11.587107+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}
