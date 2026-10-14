@@ -84,19 +84,20 @@ Define your data sources, pipeline parameters, and model specifications in a `pa
 
 ```yaml
 data:
+  raw_data_file: data/examples/regression/grunfeld.csv
   featurization:
     entity_column: country
-  datasets:
-    - name: macro_data
-      path: data/raw/macro_indicators.csv
-      frequency: Q
+    date_column: date
+    column_mapping:
+      year: date
+      firm: country
 
 model:
   model_type: panel_ols
-  target_variable: gdp_growth
+  target_variable: invest
   independent_variables:
-    - interest_rate
-    - inflation
+    - value
+    - capital
 
 reporting:
   output_dir: reports/visualizations
