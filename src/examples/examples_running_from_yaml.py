@@ -35,9 +35,9 @@ class RunExamplesFromYaml:
                 # Initialize pipeline as shown in README.md
                 pipeline = Pipeline(params_path=str(config_path))
                 
-                print("--- Running regression stage ---")
-                # Using regression stage as an example of pipeline execution
-                model_results = pipeline.run(stage="regression")
+                print("--- Running model stage ---")
+                # Using model stage as an example of pipeline execution
+                model_results = pipeline.run(stage="model")
                 print("Stage completed successfully.")
                 
             except FileNotFoundError as e:

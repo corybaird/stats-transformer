@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Four research stages alignment:** Standardized the pipeline vocabulary across README, paper, docs, notebooks, and code to match the four research stages: `data` (ingest, resample, merge) → `features` (transform) → `model` (estimate, diagnostics, JSON summary) → `reporting` (charts, tables).
+- `Pipeline.run()` is refactored into dedicated stage methods: `run_data()`, `run_features()`, `run_model()`, and `run_reporting()` (along with `run_eda()`).
+- Full pipeline run (`stage=None`) executes the canonical stages in order without duplicating the resample and merge block.
+- Canonical stage names are exposed as `stats_transformer.pipeline.STAGES = ("data", "features", "model", "reporting")`.
+- CLI `--stage` argument updated with choices and descriptive help for canonical stages.
+
+### Deprecated
+
+- Pipeline stages `resample` and `regression` are deprecated in favor of `data` and `model`; they keep working via an alias map that emits a `DeprecationWarning` (mirroring `visualization` → `reporting`).
+
 ## [1.7.0] - 2026-10-13
 
 ### Changed
