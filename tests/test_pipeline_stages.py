@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import pytest
 import yaml
-from stats_transformer.pipeline import Pipeline
+from stats_transformer.pipeline import Pipeline, STAGES
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.iv import IV2SLSModel
 from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
@@ -168,9 +168,14 @@ def test_predict_raises_when_model_not_fitted():
         pipeline.predict()
 
 
-# --- run(): resample stage ---
+def test_pipeline_canonical_stages():
+    assert STAGES == ("data", "features", "model", "reporting")
 
-def test_run_resample_stage_merges_and_writes_parquet(tmp_path, monkeypatch):
+
+# --- run(): data stage (canonical) + legacy "resample" alias + run_data() ---
+
+@pytest.mark.parametrize("stage,is_legacy", [("data", False), ("resample", True)])
+def test_run_data_stage_merges_and_writes_parquet(tmp_path, monkeypatch, stage, is_legacy):
     monkeypatch.chdir(tmp_path)
 
     raw_dir = tmp_path / "raw"
@@ -195,13 +200,158 @@ def test_run_resample_stage_merges_and_writes_parquet(tmp_path, monkeypatch):
     config_path.write_text(yaml.dump(config))
 
     pipeline = Pipeline(params_path=str(config_path))
-    merged = pipeline.run(stage="resample")
+    if is_legacy:
+        with pytest.warns(DeprecationWarning, match='stage "resample"'):
+            merged = pipeline.run(stage=stage)
+    else:
+        merged = pipeline.run(stage=stage)
 
     # resample_dataset suffixes numeric columns with the resample period
     # (e.g. "_Y" for annual), so the merged frame carries gdp_Y/inflation_Y.
     assert output_path.exists()
     assert "gdp_Y" in merged.columns
     assert "inflation_Y" in merged.columns
+
+
+def test_run_data_direct_method(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    raw_dir = tmp_path / "raw"
+    raw_dir.mkdir()
+    df1 = pd.DataFrame({"country": ["USA"], "date": ["2020-01-01"], "gdp": [1.0]})
+    df1.to_csv(raw_dir / "gdp.csv", index=False)
+
+    output_path = tmp_path / "merged.parquet"
+    config = {
+        "model": {"model_type": "ols", "target_variable": "gdp", "independent_variables": ["gdp"]},
+        "data": {
+            "datasets": [
+                {"name": "gdp", "path": str(raw_dir / "gdp.csv"), "entity_column": "country", "date_column": "date", "source_period": "annual", "resample": {"target_period": "annual"}},
+            ],
+            "merge": {"on": ["country", "date"], "how": "outer", "output_path": str(output_path)},
+        },
+    }
+    config_path = tmp_path / "params.yaml"
+    config_path.write_text(yaml.dump(config))
+
+    pipeline = Pipeline(params_path=str(config_path))
+    merged = pipeline.run_data()
+    assert output_path.exists()
+    assert "gdp_Y" in merged.columns
+
+
+# --- run(): model stage (canonical) + legacy "regression" alias + run_model() ---
+
+@pytest.mark.parametrize("stage,is_legacy", [("model", False), ("regression", True)])
+def test_run_model_stage_fits_and_writes_summary(tmp_path, test_df, stage, is_legacy):
+    processed_path = tmp_path / "processed.csv"
+    test_df.to_csv(processed_path, index=False)
+
+    summary_path = tmp_path / "summary.json"
+    config_path = _write_config(
+        tmp_path,
+        model={"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"], "summary_output_path": str(summary_path)},
+        data={"raw_data_file": str(tmp_path / "unused.csv"), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
+    )
+
+    pipeline = Pipeline(params_path=str(config_path))
+    if is_legacy:
+        with pytest.warns(DeprecationWarning, match='stage "regression"'):
+            results = pipeline.run(stage=stage)
+    else:
+        results = pipeline.run(stage=stage)
+
+    assert results is not None
+    assert summary_path.exists()
+
+
+def test_run_model_direct_method(tmp_path, test_df):
+    processed_path = tmp_path / "processed.csv"
+    test_df.to_csv(processed_path, index=False)
+
+    summary_path = tmp_path / "summary.json"
+    config_path = _write_config(
+        tmp_path,
+        model={"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"], "summary_output_path": str(summary_path)},
+        data={"raw_data_file": str(tmp_path / "unused.csv"), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
+    )
+
+    pipeline = Pipeline(params_path=str(config_path))
+    results = pipeline.run_model()
+    assert results is not None
+    assert summary_path.exists()
+
+
+def test_run_features_direct_method(tmp_path, test_df):
+    data_path = tmp_path / "data.csv"
+    test_df.to_csv(data_path, index=False)
+    processed_path = tmp_path / "features.csv"
+
+    config_path = _write_config(
+        tmp_path,
+        model={"model_type": "ols", "target_variable": "y", "independent_variables": ["x1"]},
+        data={"raw_data_file": str(data_path), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
+    )
+
+    pipeline = Pipeline(params_path=str(config_path))
+    transformed = pipeline.run_features()
+    assert transformed is not None
+    assert processed_path.exists()
+
+
+def test_run_reporting_direct_method(tmp_path, test_df):
+    processed_path = tmp_path / "processed.csv"
+    test_df.to_csv(processed_path, index=False)
+
+    config_path = _write_config(
+        tmp_path,
+        model={"model_type": "ols", "target_variable": "y", "independent_variables": ["x1", "x2"]},
+        data={"raw_data_file": str(tmp_path / "unused.csv"), "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)}},
+        reporting={"output_dir": str(tmp_path / "viz")},
+    )
+
+    pipeline = Pipeline(params_path=str(config_path))
+    results = pipeline.run_reporting()
+    assert "time_series" in results
+
+
+# --- run(): full run fits the model on in-memory features ---
+
+def test_full_run_fits_panel_model_on_in_memory_features(tmp_path, monkeypatch):
+    # Regression: fitting on the features CSV re-read from disk turns dates into
+    # strings, which breaks panel estimators; the full run must keep the dtypes.
+    monkeypatch.chdir(tmp_path)
+
+    raw_dir = tmp_path / "raw"
+    raw_dir.mkdir()
+    dates = [f"{y}-01-01" for y in range(2000, 2010)]
+    rows = [{"country": c, "date": d, "gdp": 100.0 + i + j, "infl": 1.0 + ((i * 3 + j) % 5)} for j, c in enumerate(["USA", "FRA"]) for i, d in enumerate(dates)]
+    pd.DataFrame(rows)[["country", "date", "gdp"]].to_csv(raw_dir / "gdp.csv", index=False)
+    pd.DataFrame(rows)[["country", "date", "infl"]].to_csv(raw_dir / "infl.csv", index=False)
+
+    def ds(name):
+        return {"name": name, "path": str(raw_dir / f"{name}.csv"), "entity_column": "country", "date_column": "date", "source_period": "annual", "resample": {"target_period": "annual"}}
+
+    processed_path = tmp_path / "processed.csv"
+    summary_path = tmp_path / "summary.json"
+    config_path = _write_config(
+        tmp_path,
+        model={"model_type": "panel_ols", "target_variable": "gdp_Y", "independent_variables": ["infl_Y"], "summary_output_path": str(summary_path)},
+        data={
+            "datasets": [ds("gdp"), ds("infl")],
+            "merge": {"on": ["country", "date"], "how": "outer", "output_path": str(tmp_path / "merged.parquet")},
+            "featurization": {"entity_column": "country", "date_column": "date", "output_path": str(processed_path)},
+        },
+        reporting={"output_dir": str(tmp_path / "viz")},
+    )
+
+    pipeline = Pipeline(params_path=str(config_path))
+    transformed = pipeline.run()
+
+    assert pd.api.types.is_datetime64_any_dtype(transformed["date"])
+    assert processed_path.exists()
+    assert summary_path.exists()
+    assert pipeline.model_results is not None
 
 
 # --- run(): eda stage ---
