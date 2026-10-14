@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.iv import IV2SLSModel
 from stats_transformer.models.regression.panel_iv import PanelIV2SLSModel
@@ -300,3 +301,42 @@ def test_panel_iv_model():
     assert metadata["summary"]["entity_effects"] is True
     assert metadata["summary"]["time_effects"] is True
     assert metadata["summary"]["cov_type"] == "clustered"
+def _fit_fe_regression_model():
+    df = pd.DataFrame({
+        "x": [1, 2, 3, 4, 5, 6],
+        "entity": ["a", "a", "b", "b", "c", "c"],
+        "y": [5.0, 7.0, 6.0, 8.0, 7.0, 9.0],  # y = 2*x + 3*(entity == "a")
+    })
+    model = RegressionModel(
+        target="y",
+        independent_variables=["x"],
+        add_entity_fixed_effects=True,
+        entity_column="entity",
+    )
+    model.fit(df)
+    return model
+
+def test_regression_model_predict_accepts_series():
+    df = pd.DataFrame({"x1": [1, 2, 3], "x2": [2, 1, 4], "y": [9.0, 8.0, 19.0]})  # y = 1 + 2*x1 + 3*x2
+    model = RegressionModel(target="y", independent_variables=["x1", "x2"])
+    model.fit(df)
+    pred = model.predict(pd.Series({"x1": 2.0, "x2": 3.0}))
+    assert isinstance(pred, pd.Series)
+    assert len(pred) == 1
+    assert np.isclose(pred.iloc[0], 14.0)
+
+def test_regression_model_predict_fixed_effects_seen_entity_from_series():
+    model = _fit_fe_regression_model()
+    pred = model.predict(pd.Series({"x": 2.0, "entity": "a"}))
+    assert len(pred) == 1
+    assert np.isclose(pred.iloc[0], 7.0)
+
+def test_regression_model_predict_fixed_effects_missing_entity_column_raises():
+    model = _fit_fe_regression_model()
+    with pytest.raises(ValueError, match="fixed effects"):
+        model.predict(pd.DataFrame([{"x": 2.0}]))
+
+def test_regression_model_predict_fixed_effects_unseen_entity_raises():
+    model = _fit_fe_regression_model()
+    with pytest.raises(ValueError, match="not seen in training"):
+        model.predict(pd.DataFrame([{"x": 2.0, "entity": "d"}]))

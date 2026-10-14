@@ -117,6 +117,9 @@ class RegressionModel(ModelBase):
 
         params = self.model.params
 
+        if isinstance(new_data, pd.Series):
+            new_data = new_data.to_frame().T
+
         if isinstance(new_data, pd.DataFrame):
             missing = [c for c in self.independent_variables if c not in new_data.columns]
             if missing:
@@ -124,12 +127,28 @@ class RegressionModel(ModelBase):
 
             X_new = new_data[self.independent_variables].copy()
             if self.add_entity_fixed_effects and self.entity_column in new_data.columns:
+                trained_entities = {
+                    col.removeprefix("entity_") for col in params.index if col.startswith("entity_")
+                }
+                unseen = sorted(
+                    {str(v) for v in new_data[self.entity_column]} - trained_entities
+                )
+                if unseen:
+                    raise ValueError(
+                        f"Entities not seen in training: {unseen}. "
+                        "Predictions with entity fixed effects cannot include new entities."
+                    )
                 entity_dummies = pd.get_dummies(new_data[self.entity_column], prefix="entity", dtype=int)
                 X_new = pd.concat([X_new, entity_dummies], axis=1)
                 for col in params.index:
                     if col not in X_new.columns:
                         X_new[col] = 0
                 X_new = X_new[params.index]
+            elif self.add_entity_fixed_effects:
+                raise ValueError(
+                    f"Entity column '{self.entity_column}' is required in new_data because "
+                    "the model was fit with entity fixed effects."
+                )
             else:
                 if "const" in params.index:
                     X_new = sm.add_constant(X_new, has_constant="add")
