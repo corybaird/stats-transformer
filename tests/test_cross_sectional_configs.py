@@ -77,20 +77,45 @@ def test_start_date_without_date_column_raises():
         fe.fit_transform(pd.DataFrame({"x": [1.0, 2.0]}))
 
 
+def _single_series_feature_engineer():
+    return FeatureEngineer(entity_column=None, date_column="date")
+
+
+def test_resample_downsample_without_entity():
+    # Monthly single series -> annual mean; no 'country' column invented.
+    import pandas as pd
+    fe = _single_series_feature_engineer()
+    df = pd.DataFrame({"date": pd.date_range("2020-01-01", periods=24, freq="MS"), "x": range(24)})
+    out = fe.resample_dataset(df, {"date_column": "date", "source_period": "monthly", "resample": {"target_period": "annual", "agg": "mean"}})
+    assert "country" not in out.columns
+    assert list(out.columns) == ["date", "x_Mmean"]
+    assert len(out) == 2  # 2020: months 0-11 (mean 5.5), 2021: months 12-23 (mean 17.5)
+    assert out["x_Mmean"].tolist() == pytest.approx([5.5, 17.5])
+
+
+def test_resample_upsample_without_entity():
+    # Annual single series -> monthly, forward-filled; no 'country' column invented.
+    import pandas as pd
+    fe = _single_series_feature_engineer()
+    df = pd.DataFrame({"date": ["2020", "2021"], "x": [10.0, 20.0]})
+    out = fe.resample_dataset(df, {"date_column": "date", "source_period": "annual", "resample": {"target_period": "monthly", "agg": "ffill"}})
+    assert "country" not in out.columns
+    # asfreq spans only up to the last observed date (2020-01 + 12 months to 2021-01).
+    assert len(out) == 13
+    assert out["x_Yffill"].tolist() == [10.0] * 12 + [20.0]
+
+
+XFAIL_CONFIGS = {
+    "timeseries/identification/structural_restrictions.yaml": "Restrictions-only SVAR input file, not a standalone params.yaml (no data:/model: sections)",
+    "timeseries/reduced_form/local_projections.yaml": "Config declares date_column: date but sofr_surprises.parquet.gzip has no date column",
+}
+
 @pytest.mark.parametrize(
     "config",
-    [
-        pytest.param(
-            "references/configs/timeseries/identification/structural_restrictions.yaml",
-            marks=pytest.mark.xfail(strict=True, reason="Restrictions-only SVAR input file, not a standalone params.yaml (no data:/model: sections)"),
-        ),
-        pytest.param(
-            "references/configs/timeseries/reduced_form/local_projections.yaml",
-            marks=pytest.mark.xfail(strict=True, reason="Config declares date_column: date but sofr_surprises.parquet.gzip has no date column"),
-        ),
-    ] + [pytest.param(os.path.relpath(c, REPO_ROOT), id=os.path.relpath(c, REPO_ROOT))
-         for c in ALL_CONFIGS
-         if os.path.basename(c) not in ("structural_restrictions.yaml", "local_projections.yaml")],
+    [pytest.param(f"references/configs/{rel}", marks=pytest.mark.xfail(strict=True, reason=reason)) for rel, reason in XFAIL_CONFIGS.items()]
+    + [pytest.param(os.path.relpath(c, REPO_ROOT), id=os.path.relpath(c, REPO_ROOT))
+       for c in ALL_CONFIGS
+       if os.path.relpath(c, os.path.join(REPO_ROOT, "references", "configs")) not in XFAIL_CONFIGS],
 )
 def test_config_features_and_model_smoke(config, tmp_path, monkeypatch):
     """Every YAML under references/configs runs the features and model stages.

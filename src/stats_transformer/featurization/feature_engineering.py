@@ -178,7 +178,7 @@ class FeatureEngineer:
         self.logger.info(f"Filtering data from start date: {self.start_date}")
 
         if not self.date_column:
-            error_msg = f"start_date filtering requires a date_column; none is configured."
+            error_msg = "start_date filtering requires a date_column; none is configured."
             self.logger.error(error_msg)
             raise ValueError(error_msg)
         elif self.period == "annual":
@@ -406,8 +406,9 @@ class FeatureEngineer:
         return df.rename(columns=rename_map)
 
     def _upsample_entity(self, group, entity_col, date_col, freq, fill_method):
-        entity_value = group[entity_col].iloc[0]
-        group = group.drop(columns=[entity_col]).set_index(date_col).sort_index()
+        entity_value = group[entity_col].iloc[0] if entity_col else None
+        group = group.drop(columns=[entity_col]) if entity_col else group
+        group = group.set_index(date_col).sort_index()
         upsampled = group.resample(freq).asfreq()
         if fill_method == "interpolate":
             upsampled = upsampled.interpolate()
@@ -416,7 +417,8 @@ class FeatureEngineer:
         else:
             upsampled = upsampled.ffill()
         upsampled = upsampled.reset_index()
-        upsampled[entity_col] = entity_value
+        if entity_col:
+            upsampled[entity_col] = entity_value
         return upsampled
 
     def resample_dataset(self, df, dataset_config):
@@ -437,7 +439,7 @@ class FeatureEngineer:
         df = df.dropna(subset=[date_col])
 
         numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
-        cols_to_keep = list(set([entity_col, date_col] + numeric_cols))
+        cols_to_keep = [c for c in [entity_col, date_col] + numeric_cols if c]
         df = df[cols_to_keep]
 
         source_order = FREQ_ORDER.get(source_period.lower(), 3)
@@ -446,13 +448,17 @@ class FeatureEngineer:
 
         if is_upsampling:
             self.logger.info(f"Upsampling from {source_period} to {target_period} using {agg_method}")
-            resampled_df = df.groupby(entity_col, group_keys=False).apply(self._upsample_entity, entity_col=entity_col, date_col=date_col, freq=freq, fill_method=agg_method).reset_index(drop=True)
+            if entity_col:
+                resampled_df = df.groupby(entity_col, group_keys=False).apply(self._upsample_entity, entity_col=entity_col, date_col=date_col, freq=freq, fill_method=agg_method).reset_index(drop=True)
+            else:
+                # Single series without an entity: resample the whole frame.
+                resampled_df = self._upsample_entity(df, entity_col=None, date_col=date_col, freq=freq, fill_method=agg_method)
         elif source_order == target_order:
             self.logger.info(f"No resampling needed for {source_period} to {target_period}")
             resampled_df = df.copy()
         else:
             self.logger.info(f"Downsampling from {source_period} to {target_period} using {agg_method}")
-            grouper = [entity_col, pd.Grouper(key=date_col, freq=freq)]
+            grouper = [pd.Grouper(key=date_col, freq=freq)] if not entity_col else [entity_col, pd.Grouper(key=date_col, freq=freq)]
             if agg_method == "sum":
                 resampled_df = df.groupby(grouper).sum().reset_index()
             elif agg_method == "first":
@@ -462,7 +468,8 @@ class FeatureEngineer:
             else:
                 resampled_df = df.groupby(grouper).mean().reset_index()
 
-        resampled_df = resampled_df.rename(columns={entity_col: "country", date_col: "date"})
+        rename_map = {entity_col: "country", date_col: "date"}
+        resampled_df = resampled_df.rename(columns={k: v for k, v in rename_map.items() if k and k in resampled_df.columns})
         was_resampled = source_order != target_order
         resampled_df = self._add_frequency_suffix(resampled_df, source_period, agg_method=agg_method, resampled=was_resampled)
         self.logger.info(f"Resampled {dataset_config.get('name', 'dataset')}: {resampled_df.shape}")
