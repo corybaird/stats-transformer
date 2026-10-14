@@ -35,28 +35,28 @@
     - {software: MATLAB, func: mldivide}
     - {software: Python, func: statsmodels}
   status: verified
-  tolerance: relative $10^{-7}$
+  tolerance: $10^{-7}$
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_ols_longley_matches_r_stata_matlab]
 
 - family: Regression
   models: [RobustOLSModel]
   benchmark: {name: Longley, path: data/examples/regression/longley.csv}
   targets:
-    - {software: Stata, func: regress, note: vce(hc1/hc2/hc3)}
+    - {software: Stata, func: "regress, vce(hc1/hc2/hc3)"}
     - {software: R, func: sandwich::vcovHC}
   status: verified
-  tolerance: HC1, HC2, HC3, $10^{-6}$
+  tolerance: HC1--HC3, $10^{-6}$
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_robust_ols_longley_matches_r_and_stata]
 
 - family: Regression
   models: [PanelRegressionModel]
   benchmark: {name: Grunfeld, path: data/examples/regression/grunfeld.csv}
   targets:
-    - {software: Stata, func: xtreg, note: fe}
+    - {software: Stata, func: "xtreg, fe"}
     - {software: R, func: plm::plm}
     - {software: Python, func: statsmodels}
   status: verified
-  tolerance: fixed effects, $10^{-6}$
+  tolerance: $10^{-6}$
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_panel_fe_grunfeld_matches_r_and_stata]
 
 - family: Regression
@@ -97,7 +97,7 @@
 
 - family: Reduced-form time series
   models: [VARModel]
-  benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
+  benchmark: {name: U.S. macro growth rates, path: data/examples/timeseries/macrodata.csv}
   targets:
     - {software: Stata, func: var}
     - {software: R, func: vars::VAR}
@@ -118,7 +118,7 @@
     - {software: R, func: urca::ca.jo}
     - {software: MATLAB, func: vecm}
   status: verified
-  tolerance: rank 1 and rank 3, `ci` and `co`, $10^{-6}$
+  tolerance: rank 1 and rank 3, $10^{-6}$
   tests:
     - tests/test_external_parity/test_wrapper_parity.py::test_vecm_macro_matches_matlab_and_stata
     - tests/test_external_parity/test_wrapper_parity.py::test_vecm_ghysels_ch7_matches_r_and_stata
@@ -126,12 +126,12 @@
 
 - family: Reduced-form time series
   models: [ARIMAModel]
-  benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
+  benchmark: {name: U.S. macro growth rates, path: data/examples/timeseries/macrodata.csv}
   targets:
     - {software: Stata, func: arima}
     - {software: R, func: stats::arima}
   status: verified
-  tolerance: log-likelihood $10^{-7}$
+  tolerance: log-likelihood, $10^{-7}$
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_arima_realgdp_matches_r_and_stata]
 
 - family: Reduced-form time series
@@ -145,9 +145,9 @@
 
 - family: Reduced-form time series
   models: [PandemicBVARModel]
-  benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
+  benchmark: {name: U.S. macro growth rates, path: data/examples/timeseries/macrodata.csv}
   targets:
-    - {software: MATLAB, func: Cascaldi-Garcia (2022), note: driver to record}
+    - {software: MATLAB, desc: "Cascaldi-Garcia (2022) replication code"}
   status: python_tested
   note: Shares the Minnesota prior with BVARModel; a MATLAB driver for the Cascaldi-Garcia (2022) comparison is still pending (benchmarks.md 2.2.4).
 
@@ -169,7 +169,7 @@
     - {software: Stata, func: regress, note: "per horizon, HC3"}
     - {software: Stata, func: ivregress 2sls, note: per horizon}
   status: verified
-  tolerance: level-lead specification, $10^{-6}$
+  tolerance: $10^{-6}$
   tests:
     - tests/test_external_parity/test_wrapper_parity.py::test_local_projections_plain_jt2025_matches_stata
     - tests/test_external_parity/test_wrapper_parity.py::test_local_projections_iv_plain_jt2025_matches_stata
@@ -190,7 +190,7 @@
     path: data/examples/matlab_examples/BQ1989_Data.xlsx
     tex: Blanchard--Quah (1989)
   targets:
-    - {software: MATLAB, func: VAR-Toolbox 4.0}
+    - {software: MATLAB, desc: VAR-Toolbox 4.0}
     - {software: R, func: vars::BQ}
   status: verified
   tolerance: $2.22 \times 10^{-16}$
@@ -198,27 +198,33 @@
 
 - family: Structural and nonlinear time series
   models: [VolatilitySVARModel]
-  benchmark: {name: US macro, path: tests/integration/svar/data_usa.csv}
+  benchmark:
+    name: U.S. macro
+    path: tests/integration/svar/data_usa.csv
+    tex: "---"
   targets:
-    - {software: R, func: svars::id.cv}
+    - {software: R, func: svars::id.cv, note: preserved output}
   status: unresolved
   note: Sorted regime-variance ratios differ from the recorded R output by up to 0.161166; the regime split is under revision (benchmarks.md 2.2.4).
 
 - family: Structural and nonlinear time series
   models: [ProxySVARModel]
-  benchmark: {name: Gertler--Karadi, path: data/examples/matlab_examples/GK2015_Data.xlsx}
+  benchmark: {name: "Gertler--Karadi", path: data/examples/matlab_examples/GK2015_Data.xlsx}
   targets:
-    - {software: MATLAB, func: VAR-Toolbox 4.0, note: gk2015_iv}
+    - {software: MATLAB, desc: VAR-Toolbox 4.0, note: gk2015_iv}
   status: known_issue
   note: The impact column is scaled by sqrt(Sigma_11) instead of the Gertler-Karadi / Mertens-Ravn shock-size formula, and rows with a missing instrument are dropped before the VAR is estimated; strict xfail (benchmarks.md 2.2.1).
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_proxy_svar_gk2015_matches_matlab]
 
 - family: Structural and nonlinear time series
   models: [SignZeroSVARModel, BayesianSignZeroSVARModel, IndependenceSVARModel, CVMSVARModel, NonGaussianSVARModel]
-  benchmark: {name: US macro, path: data/examples/timeseries/macrodata.csv}
+  benchmark:
+    name: U.S. macro
+    path: data/examples/timeseries/macrodata.csv
+    tex: "---"
   targets:
     - {software: R, func: svars}
-    - {software: MATLAB, func: VAR-Toolbox 4.0}
+    - {software: MATLAB, desc: VAR-Toolbox 4.0}
   status: python_tested
   note: Zero restrictions are imposed by construction (Arias, Rubio-Ramirez & Waggoner 2018); ARW importance weights are not applied.
 
@@ -227,22 +233,24 @@
   benchmark: {name: Canada, path: tests/integration/var/canada.csv}
   targets:
     - {software: R, func: vars::SVEC}
-    - {software: MATLAB, func: VAR-Toolbox 4.0}
   status: verified
-  tolerance: $10^{-6}$; column signs aligned
+  tolerance: R `vars::SVEC`, $10^{-6}$
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_svec_canada_matches_r]
 
 - family: Structural and nonlinear time series
   models: [TVARModel]
-  benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
+  benchmark: {name: U.S. macro, path: data/examples/timeseries/macrodata.csv}
   targets:
     - {software: Stata, func: threshold}
-  status: python_tested
-  note: The recorded Stata `threshold` reference reported no discrepancy, so it provides no evidence of agreement; an R `tsDyn::TVAR` driver is planned (benchmarks.md 2.2.4).
+  status: unresolved
+  note: The recorded Stata `threshold` reference evaluates single-equation threshold regressions rather than system TVARs, so it provides no evidence of agreement; an R `tsDyn::TVAR` driver is planned (benchmarks.md 2.2.4).
 
 - family: Structural and nonlinear time series
   models: [TVECMModel, STVARModel]
-  benchmark: {name: Ghysels & Marcellino Ch 7, path: data/examples/timeseries/ghysels_ch7/}
+  benchmark:
+    name: Ghysels & Marcellino Ch 7
+    path: data/examples/timeseries/ghysels_ch7/
+    tex: "---"
   targets:
     - {software: R, func: tsDyn::TVECM}
     - {software: R, func: sstvars::STVAR}
@@ -251,7 +259,10 @@
 
 - family: Discrete choice
   models: [LogitModel]
-  benchmark: {name: Spector & Mazzeo, path: data/examples/discrete/spector.csv}
+  benchmark:
+    name: Spector & Mazzeo
+    path: data/examples/discrete/spector.csv
+    tex: Spector
   targets:
     - {software: Stata, func: logit}
     - {software: R, func: stats::glm}
@@ -262,10 +273,13 @@
 
 - family: Discrete choice
   models: [ProbitModel]
-  benchmark: {name: Spector & Mazzeo, path: data/examples/discrete/spector.csv}
+  benchmark:
+    name: Spector & Mazzeo
+    path: data/examples/discrete/spector.csv
+    tex: Spector
   targets:
-    - {software: Stata, func: probit}
     - {software: R, func: stats::glm, note: probit}
+    - {software: Stata, func: probit}
     - {software: Python, func: statsmodels}
   status: verified
   tolerance: $10^{-5}$
@@ -283,7 +297,10 @@
 
 - family: Unsupervised
   models: [KMeansModel]
-  benchmark: {name: Spector & Mazzeo, path: data/examples/discrete/spector.csv}
+  benchmark:
+    name: Spector & Mazzeo
+    path: data/examples/discrete/spector.csv
+    tex: Spector
   targets:
     - {software: R, func: stats::kmeans}
     - {software: Stata, func: cluster kmeans}

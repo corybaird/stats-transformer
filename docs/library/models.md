@@ -14,7 +14,7 @@
 - **Verification Parity Status**:
   - **Verified**: A wrapper test in `tests/test_external_parity/` asserts parameter point estimates, standard errors, or structural impact matrices against outputs recorded from the reference software (Stata, MATLAB, R), at the tolerance shown. See [Software Parity Benchmarks](../validation/benchmarks.md#2-software-parity-benchmarks-stata-matlab-r).
   - **Implemented**: Class is fully implemented and covered by unit/integration tests in Python, with cross-language benchmarks planned or in development.
-  - **Known mismatch**: A recorded external output disagrees with the wrapper; tracked as a strict `xfail` in `tests/test_external_parity/`.
+  - **Known issue**: A documented library issue tracked as a strict `xfail` in `tests/test_external_parity/` (or an open bug with a recorded failure); see [Software Parity Benchmarks](../validation/benchmarks.md#2-software-parity-benchmarks-stata-matlab-r).
   - **Utility Wrapper**: Helper or grid runner orchestrating underlying model fits.
 
 ### 1.1 Cross-Language Numerically Verified Models
@@ -46,23 +46,23 @@ These models are fully implemented and covered by automated Python unit and inte
 | --- | --- | --- | --- | --- | --- | --- |
 | **Applied Regression** | `PanelIV2SLSModel` | `panel_iv` | `PanelIV2SLSModel` | Grunfeld (`data/examples/regression/grunfeld.csv`) | R `fixest::feols`, Stata `xtivreg` | **Implemented** |
 | **Applied Regression** | `GMMModel` | `gmm` | `GMMModel` | Greenbook (`data/examples/academic/coibion_gorodnichenko_2012/`) | R `gmm::gmm`, Stata `gmm` | **Implemented** |
-| **Applied Regression** | `DiDModel` | `did` | `DiDModel` | Policy Loans (`data/examples/academic/lane_2025/`) | R `did::att_gt`, Stata `csdid` | **Known mismatch** (control variables accepted but unused; standard errors not yet validated, benchmarks.md 2.2.3) |
+| **Applied Regression** | `DiDModel` | `did` | `DiDModel` | Policy Loans (`data/examples/academic/lane_2025/`) | R `did::att_gt`, Stata `csdid` | **Known issue** (control variables accepted but unused; standard errors not yet validated, benchmarks.md 2.2.3) |
 | **Applied Regression** | `SpecificationRunner` | `None` | `SpecificationRunner` | Longley (`data/examples/regression/longley.csv`) | Custom grid runner | **Utility Wrapper** |
 | **Unsupervised Learning** | `KMeansModel` | `kmeans` | `KMeansModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::kmeans`, Stata `cluster kmeans` | **Implemented** |
 | **Reduced-Form Time Series** | `RestrictedVAR` | `None` | `RestrictedVAR` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `vars::restrict`, Stata `var (constrained)` | **Implemented** |
 | **Reduced-Form Time Series** | `BVARModel` | `bvar` | `BVARModel` | FOMC Surprises (`data/examples/academic/jarocinski_karadi_2020/`) | R `BVAR::bvar`, Stata `bayes: var` | **Implemented** |
 | **Reduced-Form Time Series** | `DynamicFactorModel` | `dynamic_factor` | `DynamicFactorModel` | Global Factor (`data/examples/academic/miranda_agrippino_rey_2020/`) | R `MARSS`, Stata `dfactor` | **Implemented** |
 | **Reduced-Form Time Series** | `PandemicBVARModel` | `pandemic_bvar` | `PandemicBVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | Cascaldi-Garcia (2022) | **Implemented** |
-| **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Known mismatch** (MATLAB `gk2015_iv`: shock scaling and sample) |
+| **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Known issue** (MATLAB `gk2015_iv`: shock scaling and sample) |
 | **Structural Identification** | `SignZeroSVARModel` | `sign_restrictions` (`sign_zero`) | `SignZeroSVARModel` | Kilian & Lütkepohl (`data/examples/timeseries/macrodata.csv`) | MATLAB `VAR-Toolbox 4.0`, R `BMR` | **Implemented** (zero restrictions by construction, ARW 2018) |
 | **Structural Identification** | `BayesianSignZeroSVARModel` | `bsvar_sign_zero` (`bayesian_sign_zero`) | `BayesianSignZeroSVARModel` | UK SVAR (`data/examples/timeseries/macrodata.csv`) | Bank of England (Brignone & Piffer 2025), Arias et al. (2018) | **Implemented** (zero restrictions by construction; ARW importance weights not applied) |
-| **Structural Identification** | `VolatilitySVARModel` | `volatility_svar` | `VolatilitySVARModel` | US output gap, inflation, rate (`tests/integration/svar/data_usa.csv`) | R `svars::id.cv` | **Known mismatch** (regime variance ratios differ from R by up to 0.16) |
+| **Structural Identification** | `VolatilitySVARModel` | `volatility_svar` | `VolatilitySVARModel` | US output gap, inflation, rate (`tests/integration/svar/data_usa.csv`) | R `svars::id.cv` | **Unresolved** (regime variance ratios differ from R by up to 0.16) |
 | **Structural Identification** | `IndependenceSVARModel` | `independence_svar` | `IndependenceSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.dc` | **Implemented** |
 | **Structural Identification** | `CVMSVARModel` | `cvm_svar` (`cvm`) | `CVMSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.cvm` | **Implemented** |
 | **Structural Identification** | `NonGaussianSVARModel` | `non_gaussian_svar` (`non_gaussian`) | `NonGaussianSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.ng` | **Implemented** |
 | **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Verified** (R `svec_canada`, $10^{-6}$; column signs aligned) |
 | **Nonlinear Dynamics** | `TVECMModel` | `tvecm` | `TVECMModel` | Cointegration Panel (`data/examples/timeseries/ghysels_ch7/`) | R `tsDyn::TVECM` | **Implemented** (ECT regressor ECT_{t-1}, threshold ECT_{t-d}; empty regime raises) |
-| **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR` | **Implemented** (no recorded reference; empty/undersized regime raises) |
+| **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR` | **Unresolved** (recorded Stata `threshold` comparison provides no evidence of agreement; empty/undersized regime raises) |
 | **Nonlinear Dynamics** | `STVARModel` | `stvar` | `STVARModel` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::STVAR` | **Implemented** |
 | **Nonlinear Dynamics** | `GIRFEngine` | `None` | `GIRFEngine` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::GIRF` | **Implemented** |
 
@@ -282,7 +282,7 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/proxy_svar.py`
 - **Pipeline Access**: `proxy_svar` (direct instantiation: `ProxySVARModel`)
 - **Benchmark Target**: R (`svars`), MATLAB (`VAR-Toolbox 4.0`)
-- **Known Mismatch**: Impact column differs from MATLAB VAR-Toolbox `gk2015_iv` (shock scaling by $\sqrt{\Sigma_{11}}$ and instrument-missing rows dropped before VAR estimation); tracked as a strict `xfail`.
+- **Known Issue**: Impact column differs from MATLAB VAR-Toolbox `gk2015_iv` (shock scaling by $\sqrt{\Sigma_{11}}$ and instrument-missing rows dropped before VAR estimation); tracked as a strict `xfail`.
 
 ### 6.4 Sign, Zero, & Narrative Restrictions (`SignZeroSVARModel`)
 - **Description**: Non-Bayesian set identification imposing directional inequality signs, exact zero impact constraints, and historical narrative restrictions (Antolín-Díaz & Rubio-Ramírez 2018).
@@ -297,7 +297,7 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/volatility.py`
 - **Pipeline Access**: `volatility_svar` (direct instantiation: `VolatilitySVARModel`)
 - **Benchmark Target**: R (`svars::id.cv`)
-- **Known Mismatch**: Sorted regime variance ratios differ from R `svars::id.cv` by up to 0.161; the wrapper test is an `xfail`.
+- **Unresolved**: Sorted regime variance ratios differ from R `svars::id.cv` by up to 0.161; the comparison provides no evidence of numerical agreement.
 
 ### 6.6 Distance Covariance & ICA SVAR (`IndependenceSVARModel`)
 - **Description**: Data-driven structural identification by maximizing statistical independence across shock components via FastICA or distance covariance minimization.

@@ -21,7 +21,7 @@ This section records which `stats-transformer` model wrappers match external sof
 
 - **Recorded outputs**: `tests/external_benchmarks/{matlab,r,stata}/` hold JSON outputs recorded from MATLAB R2025b, R 4.6.1 (Docker image `st-ref-r:1`) and StataNow 19.5 MP, together with the driver scripts and recorders that produced them. None of the recorders import `stats-transformer`.
 - **Wrapper tests**: `tests/test_external_parity/test_wrapper_parity.py` fits each wrapper on the recorded inputs and asserts against the JSON. These tests need no external software and run in CI.
-- **Rule**: a model is **Verified** only when a wrapper test passes against at least one recorded external output at a stated tolerance. A known mismatch is recorded as a strict `xfail` that names the bug, so a fix turns it into a pass.
+- **Rule**: a model is **Verified** only when a wrapper test passes against at least one recorded external output at a stated tolerance. A known issue is recorded as a strict `xfail` that names the bug, so a fix turns it into a pass.
 - **Rerun recordings**: `uv run python -m tests.external_benchmarks.<matlab.record_matlab_refs | r.record_r_refs | stata.record_stata_refs>`; see `tests/external_benchmarks/README.md` and Running the Benchmarks below.
 
 ### 2.1 Verified Models (MATLAB, Stata, R)
@@ -31,24 +31,24 @@ The table below is generated from `docs/validation/model_status.yaml`; edit that
 <!-- BEGIN GENERATED: model-status -->
 | Family | Model | Target Software / Function | Benchmark Dataset | Verification Status & Max Discrepancy |
 | --- | --- | --- | --- | --- |
-| **Regression** | `RegressionModel` | Stata (`regress`), R (`stats::lm`), MATLAB (`mldivide`), Python (`statsmodels`) | Longley (`data/examples/regression/longley.csv`) | **Verified** (relative $10^{-7}$) |
-| **Regression** | `RobustOLSModel` | Stata (`regress`, vce(hc1/hc2/hc3)), R (`sandwich::vcovHC`) | Longley (`data/examples/regression/longley.csv`) | **Verified** (HC1, HC2, HC3, $10^{-6}$) |
-| **Regression** | `PanelRegressionModel` | Stata (`xtreg`, fe), R (`plm::plm`), Python (`statsmodels`) | Grunfeld (`data/examples/regression/grunfeld.csv`) | **Verified** (fixed effects, $10^{-6}$) |
+| **Regression** | `RegressionModel` | Stata (`regress`), R (`stats::lm`), MATLAB (`mldivide`), Python (`statsmodels`) | Longley (`data/examples/regression/longley.csv`) | **Verified** ($10^{-7}$) |
+| **Regression** | `RobustOLSModel` | Stata (`regress, vce(hc1/hc2/hc3)`), R (`sandwich::vcovHC`) | Longley (`data/examples/regression/longley.csv`) | **Verified** (HC1--HC3, $10^{-6}$) |
+| **Regression** | `PanelRegressionModel` | Stata (`xtreg, fe`), R (`plm::plm`), Python (`statsmodels`) | Grunfeld (`data/examples/regression/grunfeld.csv`) | **Verified** ($10^{-6}$) |
 | **Regression** | `IV2SLSModel` | Stata (`ivregress 2sls`), R (`AER::ivreg`) | Mroz (`data/examples/regression/mroz.csv`) | **Verified** ($10^{-6}$) |
-| **Reduced-form time series** | `VARModel` | Stata (`var`), R (`vars::VAR`), Python (`statsmodels`) | US macro growth rates (`data/examples/timeseries/macrodata.csv`) | **Verified** ($10^{-8}$) |
-| **Reduced-form time series** | `VECMModel` | Stata (`vec`), R (`urca::ca.jo`), MATLAB (`vecm`) | Ghysels & Marcellino Ch 7 (`data/examples/timeseries/ghysels_ch7/`), US macro | **Verified** (rank 1 and rank 3, `ci` and `co`, $10^{-6}$) |
-| **Reduced-form time series** | `ARIMAModel` | Stata (`arima`), R (`stats::arima`) | US macro growth rates (`data/examples/timeseries/macrodata.csv`) | **Verified** (log-likelihood $10^{-7}$) |
-| **Reduced-form time series** | `LocalProjectionsModel`, `LocalProjectionsIVModel` | Stata (`regress`, per horizon, HC3), Stata (`ivregress 2sls`, per horizon) | Jorda & Taylor (`data/examples/matlab_examples/JT2025_Data.xlsx`) | **Verified** (level-lead specification, $10^{-6}$) |
+| **Reduced-form time series** | `VARModel` | Stata (`var`), R (`vars::VAR`), Python (`statsmodels`) | U.S. macro growth rates (`data/examples/timeseries/macrodata.csv`) | **Verified** ($10^{-8}$) |
+| **Reduced-form time series** | `VECMModel` | Stata (`vec`), R (`urca::ca.jo`), MATLAB (`vecm`) | Ghysels & Marcellino Ch 7 (`data/examples/timeseries/ghysels_ch7/`), US macro | **Verified** (rank 1 and rank 3, $10^{-6}$) |
+| **Reduced-form time series** | `ARIMAModel` | Stata (`arima`), R (`stats::arima`) | U.S. macro growth rates (`data/examples/timeseries/macrodata.csv`) | **Verified** (log-likelihood, $10^{-7}$) |
+| **Reduced-form time series** | `LocalProjectionsModel`, `LocalProjectionsIVModel` | Stata (`regress`, per horizon, HC3), Stata (`ivregress 2sls`, per horizon) | Jorda & Taylor (`data/examples/matlab_examples/JT2025_Data.xlsx`) | **Verified** ($10^{-6}$) |
 | **Structural and nonlinear time series** | `SVARModel` | R (`vars::SVAR`) | Canada (`tests/integration/var/canada.csv`) | **Verified** (A-model, $10^{-4}$) |
-| **Structural and nonlinear time series** | `BlanchardQuahModel` | MATLAB (`VAR-Toolbox 4.0`), R (`vars::BQ`) | Blanchard & Quah (`data/examples/matlab_examples/BQ1989_Data.xlsx`) | **Verified** ($2.22 \times 10^{-16}$) |
-| **Structural and nonlinear time series** | `SVECModel` | R (`vars::SVEC`), MATLAB (`VAR-Toolbox 4.0`) | Canada (`tests/integration/var/canada.csv`) | **Verified** ($10^{-6}$; column signs aligned) |
+| **Structural and nonlinear time series** | `BlanchardQuahModel` | MATLAB (VAR-Toolbox 4.0), R (`vars::BQ`) | Blanchard & Quah (`data/examples/matlab_examples/BQ1989_Data.xlsx`) | **Verified** ($2.22 \times 10^{-16}$) |
+| **Structural and nonlinear time series** | `SVECModel` | R (`vars::SVEC`) | Canada (`tests/integration/var/canada.csv`) | **Verified** (R `vars::SVEC`, $10^{-6}$) |
 | **Discrete choice** | `LogitModel` | Stata (`logit`), R (`stats::glm`), Python (`statsmodels`) | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | **Verified** ($10^{-5}$) |
-| **Discrete choice** | `ProbitModel` | Stata (`probit`), R (`stats::glm`, probit), Python (`statsmodels`) | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | **Verified** ($10^{-5}$) |
+| **Discrete choice** | `ProbitModel` | R (`stats::glm`, probit), Stata (`probit`), Python (`statsmodels`) | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | **Verified** ($10^{-5}$) |
 | **Unsupervised** | `PCAModel` | Stata (`pca`), R (`stats::prcomp`) | Longley (`data/examples/regression/longley.csv`) | **Verified** ($10^{-8}$) |
 <!-- END GENERATED -->
 ### 2.2 Non-Verified Models
 
-#### 2.2.1 Known Mismatches (strict `xfail`)
+#### 2.2.1 Known Issues (strict `xfail`)
 
 | Model | Cause | Reference |
 | --- | --- | --- |

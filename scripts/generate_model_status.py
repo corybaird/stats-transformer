@@ -29,7 +29,7 @@ MD_HEADER = (
 )
 STATUS_WORDS = {
     "verified": "Verified",
-    "known_issue": "Known mismatch",
+    "known_issue": "Known issue",
     "python_tested": "Python-tested",
     "unresolved": "Unresolved",
     "none": "---",
@@ -51,6 +51,8 @@ def _benchmark_md(entry: dict[str, Any]) -> str:
 
 
 def _target_md(target: dict[str, str]) -> str:
+    if target.get("desc"):
+        return f"{target['software']} ({target['desc']})"
     cell = f"{target['software']} (`{target['func']}`"
     if target.get("note"):
         cell += f", {target['note']}"
@@ -95,9 +97,16 @@ def _benchmark_tex(entry: dict[str, Any]) -> str:
 
 
 def _target_tex(target: dict[str, str]) -> str:
-    cell = f"{target['software']}: \\texttt{{{_tex_escape(target['func'])}}}"
+    if target.get("desc"):
+        cell = f"{target['software']}: {_tex_escape(target['desc'])}"
+    else:
+        cell = f"{target['software']}: \\texttt{{{_tex_escape(target['func'])}}}"
     if target.get("note"):
-        cell += f" ({_tex_escape(target['note'])})"
+        # Single-token notes are code identifiers (e.g. gk2015_iv); prose notes are not.
+        if re.fullmatch(r"\S+", target["note"]):
+            cell += f" (\\texttt{{{_tex_escape(target['note'])}}})"
+        else:
+            cell += f" ({_tex_escape(target['note'])})"
     return cell
 
 
