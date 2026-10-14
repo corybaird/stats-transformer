@@ -370,8 +370,11 @@ class Pipeline:
         explicit_output_path = data_config.get("merge", {}).get("output_path")
         output_path = paths["merged_output_path"]
 
+        datasets = data_config.get("datasets") or []
+        if not datasets:
+            raise ValueError("Data stage requires data.datasets in the config; this config only sets data.raw_data_file, which the features stage consumes directly (a full run skips the data stage automatically).")
         resampled = []
-        for ds_cfg in data_config.get("datasets", []):
+        for ds_cfg in datasets:
             self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
             df = self.feature_engineer.load_data(ds_cfg.get("path"))
             resampled_df = self.feature_engineer.resample_dataset(df, ds_cfg)
@@ -508,11 +511,14 @@ class Pipeline:
         if stage is not None:
             return self._run_stage(stage)
 
-        # Full run (stage is None): data -> features -> model -> reporting
+        # Full run (stage is None): data -> features -> model -> reporting.
+        # Configs without data.datasets feed raw_data_file straight into features.
+        has_datasets = bool(self._get_config().to_dict().get("data", {}).get("datasets"))
         self._run_dir = None
         self._full_run_active = True
         try:
-            self.run_data()
+            if has_datasets:
+                self.run_data()
             transformed_data = self.run_features()
             self.run_model(transformed_data=transformed_data)
             self.run_reporting()
