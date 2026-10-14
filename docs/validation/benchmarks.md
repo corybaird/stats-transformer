@@ -70,9 +70,9 @@ All bugs below are in `stats-transformer`, not in R, Stata or MATLAB. Fix on a d
 | 1 | Cointegration rank fixed at 1 | `vecm.py:32` | flips `test_vecm_ghysels_ch7_uk_rank3_matches_r` |
 | 1 | Proxy SVAR scaling and instrument sample | `proxy_svar.py:49-63` | flips `test_proxy_svar_gk2015_matches_matlab` |
 | 1 | Minnesota prior multiplies by sigma_j squared — FIXED: divides by sigma_j^2 | `bvar.py` (`minnesota_prior_moments`, shared with `pandemic_bvar.py`, `bayesian_sign_zero.py`) | `test_bvar_minnesota_prior_variance_matches_hand_computation`, `test_bvar_posterior_mean_is_scale_equivariant` (both fail on main); exact parity with `bvar_kl_minnesota` NOT expected (Litterman fixed-Sigma prior, different family) |
-| 1 | Sign-zero "exact zeros" use a 1e-10 tolerance | `sign_zero.py:158`, `bayesian_sign_zero.py:121` | deterministic test with an injected rotation |
-| 1 | TVECM error-correction term lag | `tvecm.py:63` | R `tsDyn::TVECM` |
-| 1 | TVAR / TVECM empty-regime fallback | `tvar.py:140`, `tvecm.py:148` | R `tsDyn::TVAR` |
+| 1 | Sign-zero "exact zeros" use a 1e-10 tolerance | `sign_zero.py:158`, `bayesian_sign_zero.py:121` | fixed: zeros imposed by construction (Arias, Rubio-Ramírez & Waggoner 2018, Algorithm 2); tests in `tests/test_models/test_structural_restrictions.py` and `tests/test_models/test_bayesian_sign_zero.py` (acceptance-rate tests fail on `origin/main`) |
+| 1 | TVECM error-correction term lag | `tvecm.py:63` | fixed: regressor is ECT_{t-1}, threshold variable is ECT_{t-d} (Hansen & Seo 2002); alignment tests in `tests/test_models/test_nonlinear_models.py` (statsmodels VECM design comparison fails on `origin/main`, which uses ECT_{t-2} even at d = 1) |
+| 1 | TVAR / TVECM empty-regime fallback | `tvar.py:140`, `tvecm.py:148` | fixed: an empty or below-minimum regime raises `ValueError`; tests in `tests/test_models/test_nonlinear_models.py` (fail on `origin/main`, which silently estimates both "regimes" on the full sample) |
 | 2 | DiD controls unused, standard errors | `did.py:14` | R `did::att_gt`, Stata `csdid` |
 | 2 | Ghysels Ch 7 example uses `co` on 500 rows; book uses `ci` on rows 1 to 400 | `src/examples/timeseries/ghysels_chap7.py` | existing `vecm_ghysels_ch7` references |
 
@@ -84,11 +84,11 @@ Legend: **Code** new driver or test, **Data** dataset to add or move, **Lib** wr
 | --- | --- | --- | --- | --- |
 | `VolatilitySVARModel` | R `svars::id.cv` driver | move `tests/integration/svar/data_usa.csv` | fix regime split | `svars` |
 | `IndependenceSVARModel`, `CVMSVARModel`, `NonGaussianSVARModel` | R `id.dc`, `id.cvm`, `id.ngml` drivers | `data_usa.csv` | fixed start or seed option | `svars` |
-| `TVARModel` | R `tsDyn::TVAR` driver | US macro | empty-regime fix | `tsDyn` |
-| `TVECMModel` | R `tsDyn::TVECM` driver | Ghysels Ch 7 | ECT lag fix | `tsDyn` |
+| `TVARModel` | R `tsDyn::TVAR` driver | US macro | none (empty-regime fallback fixed: now raises) | `tsDyn` |
+| `TVECMModel` | R `tsDyn::TVECM` driver | Ghysels Ch 7 | none (ECT lag fixed) | `tsDyn` |
 | `BVARModel` | R `BVAR` driver with fixed hyperparameters | US macro | prior fix; optional Litterman variant | `BVAR` |
 | `PandemicBVARModel` | MATLAB driver | Cascaldi-Garcia (2022) code and data | none | download |
-| `SignZeroSVARModel`, `BayesianSignZeroSVARModel` | fixed-rotation tests; MATLAB `Replic/Uhlig2005`, `ADRR2018` for medians | present | rotation or seed injection; zero tolerance fix | none |
+| `SignZeroSVARModel`, `BayesianSignZeroSVARModel` | fixed-rotation tests; MATLAB `Replic/Uhlig2005`, `ADRR2018` for medians | present | none (zero restrictions imposed by construction); ARW importance weights not applied (see models.md) | none |
 | `LocalProjectionsModel`, `LocalProjectionsIVModel` (paper spec) | wrapper tests against MATLAB `lp_jt2025`, `lpiv_jt2025` | present | long-difference and lagged-control options | none |
 | `KMeansModel` | MATLAB and R drivers with fixed starts | Longley or Spector | accept initial centres | none |
 | `PanelIV2SLSModel` | Stata `xtivreg, fe`, R `plm` drivers | panel IV dataset | none | none |

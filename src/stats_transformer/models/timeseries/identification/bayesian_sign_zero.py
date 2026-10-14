@@ -5,8 +5,18 @@ from itertools import permutations
 from scipy.stats import invwishart
 from stats_transformer.models.base import ModelBase
 from stats_transformer.models.timeseries.reduced_form.bvar import minnesota_prior_moments
+from stats_transformer.models.timeseries.identification.sign_zero import _zero_restriction_bases, _sample_zero_restricted_q
 
 class BayesianSignZeroSVARModel(ModelBase):
+    """
+    Bayesian SVAR identified with sign, zero and narrative restrictions.
+
+    Zero restrictions are imposed by construction following Arias, Rubio-Ramírez
+    & Waggoner (2018), Algorithm 2 / Section 4, instead of accept/reject testing
+    with a 1e-10 tolerance. NOTE: the importance weights of Arias et al. (2018)
+    are NOT applied, so draws with zero restrictions come from the ARW proposal
+    distribution and are not from the exact sign-and-zero-restriction posterior.
+    """
     _is_multivariate = True
 
     def __init__(self, target_variables=None, config_path=None, date_column=None, lags=1, lambda1=0.2, lambda2=0.5, lambda3=1.0, lambda4=100.0, n_draws=500, max_rotations_per_draw=20, required_accepts=50, enable_permutation=True, seed=42, **kwargs):
@@ -102,8 +112,12 @@ class BayesianSignZeroSVARModel(ModelBase):
                     if r["value"] == "-" and val >= 0:
                         return False
                 elif r_type == "zero":
-                    if abs(val) > 1e-10:
-                        return False
+                    # Zero restrictions are imposed by construction (Arias et
+                    # al. 2018); this checks the construction, it does not
+                    # filter accepts.
+                    assert abs(val) <= 1e-10, (
+                        f"Constructed rotation violates zero restriction: |{val}| > 1e-10"
+                    )
         return True
 
     def _check_narrative(self, Q, p_chol_inv, residuals, shock_to_idx):
@@ -157,11 +171,23 @@ class BayesianSignZeroSVARModel(ModelBase):
         return self.model
 
     def _sample_and_identify(self, X, y, n_vars, p):
+        """
+        Draws posterior parameters and identifies rotations.
+
+        With zero restrictions, rotations are imposed by construction (Arias,
+        Rubio-Ramírez & Waggoner 2018, Algorithm 2): each rotation satisfies the
+        zero restrictions exactly and column j corresponds to shock j (the
+        permutation search is skipped). These draws are from the ARW proposal
+        distribution; their importance weights are not applied, so they are not
+        from the exact sign-and-zero posterior. Without zero restrictions,
+        behaviour and draws for a fixed seed are unchanged.
+        """
         rng = np.random.default_rng(self.seed)
         k_dim = self.posterior_B_mean.shape[0]
         chol_V = np.linalg.cholesky(self.posterior_V)
         var_to_idx = {v: i for i, v in enumerate(self.target_variables)}
         shock_to_idx = {s: i for i, s in enumerate(self.shocks)} if self.shocks else {v: i for i, v in enumerate(self.target_variables)}
+        has_zero_restrictions = any(r.get("type") == "zero" for r in self.restrictions)
         max_h = 0
         for r in self.restrictions:
             h_val = r.get("horizon", 0)
@@ -183,33 +209,47 @@ class BayesianSignZeroSVARModel(ModelBase):
             u_resid = y - X @ B_d
             p_chol = np.linalg.cholesky(Sigma_d)
             p_chol_inv = np.linalg.inv(p_chol)
+            zero_bases = _zero_restriction_bases(self.restrictions, shock_to_idx, var_to_idx, phis, p_chol, n_vars) if has_zero_restrictions else None
             for _ in range(self.max_rotations_per_draw):
-                W = rng.normal(size=(n_vars, n_vars))
-                Q, R = np.linalg.qr(W)
-                Q = Q @ np.diag(np.sign(np.diag(R)))
-                impact = p_chol @ Q
-                candidate_irfs = np.zeros((steps, n_vars, n_vars))
-                for h in range(steps):
-                    candidate_irfs[h] = phis[h] @ impact
-                matched_Q = None
-                matched_irfs = None
-                if not self.restrictions:
-                    matched_Q = Q
-                    matched_irfs = candidate_irfs
-                elif self._evaluate_candidate(candidate_irfs, shock_to_idx, var_to_idx):
-                    matched_Q = Q
-                    matched_irfs = candidate_irfs
-                elif self.enable_permutation and n_vars <= 8:
-                    for perm in permutations(range(n_vars)):
-                        perm_Q = Q[:, perm]
-                        perm_impact = p_chol @ perm_Q
-                        perm_irfs = np.zeros((steps, n_vars, n_vars))
-                        for h in range(steps):
-                            perm_irfs[h] = phis[h] @ perm_impact
-                        if self._evaluate_candidate(perm_irfs, shock_to_idx, var_to_idx):
-                            matched_Q = perm_Q
-                            matched_irfs = perm_irfs
-                            break
+                if zero_bases is not None:
+                    # Zero restrictions imposed by construction (Arias et al. 2018);
+                    # column j already corresponds to shock j, no permutation search.
+                    Q = _sample_zero_restricted_q(zero_bases, n_vars, rng)
+                    impact = p_chol @ Q
+                    candidate_irfs = np.zeros((steps, n_vars, n_vars))
+                    for h in range(steps):
+                        candidate_irfs[h] = phis[h] @ impact
+                    matched_Q, matched_irfs = None, None
+                    if self._evaluate_candidate(candidate_irfs, shock_to_idx, var_to_idx):
+                        matched_Q = Q
+                        matched_irfs = candidate_irfs
+                else:
+                    W = rng.normal(size=(n_vars, n_vars))
+                    Q, R = np.linalg.qr(W)
+                    Q = Q @ np.diag(np.sign(np.diag(R)))
+                    impact = p_chol @ Q
+                    candidate_irfs = np.zeros((steps, n_vars, n_vars))
+                    for h in range(steps):
+                        candidate_irfs[h] = phis[h] @ impact
+                    matched_Q = None
+                    matched_irfs = None
+                    if not self.restrictions:
+                        matched_Q = Q
+                        matched_irfs = candidate_irfs
+                    elif self._evaluate_candidate(candidate_irfs, shock_to_idx, var_to_idx):
+                        matched_Q = Q
+                        matched_irfs = candidate_irfs
+                    elif self.enable_permutation and n_vars <= 8:
+                        for perm in permutations(range(n_vars)):
+                            perm_Q = Q[:, perm]
+                            perm_impact = p_chol @ perm_Q
+                            perm_irfs = np.zeros((steps, n_vars, n_vars))
+                            for h in range(steps):
+                                perm_irfs[h] = phis[h] @ perm_impact
+                            if self._evaluate_candidate(perm_irfs, shock_to_idx, var_to_idx):
+                                matched_Q = perm_Q
+                                matched_irfs = perm_irfs
+                                break
                 if matched_Q is not None:
                     valid_narrative = True
                     if self.narrative_restrictions:

@@ -54,15 +54,15 @@ These models are fully implemented and covered by automated Python unit and inte
 | **Reduced-Form Time Series** | `DynamicFactorModel` | `dynamic_factor` | `DynamicFactorModel` | Global Factor (`data/examples/academic/miranda_agrippino_rey_2020/`) | R `MARSS`, Stata `dfactor` | **Implemented** |
 | **Reduced-Form Time Series** | `PandemicBVARModel` | `pandemic_bvar` | `PandemicBVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | Cascaldi-Garcia (2022) | **Implemented** |
 | **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Known mismatch** (MATLAB `gk2015_iv`: shock scaling and sample) |
-| **Structural Identification** | `SignZeroSVARModel` | `sign_restrictions` (`sign_zero`) | `SignZeroSVARModel` | Kilian & Lütkepohl (`data/examples/timeseries/macrodata.csv`) | MATLAB `VAR-Toolbox 4.0`, R `BMR` | **Implemented** |
-| **Structural Identification** | `BayesianSignZeroSVARModel` | `bsvar_sign_zero` (`bayesian_sign_zero`) | `BayesianSignZeroSVARModel` | UK SVAR (`data/examples/timeseries/macrodata.csv`) | Bank of England (Brignone & Piffer 2025), Arias et al. (2018) | **Implemented** |
+| **Structural Identification** | `SignZeroSVARModel` | `sign_restrictions` (`sign_zero`) | `SignZeroSVARModel` | Kilian & Lütkepohl (`data/examples/timeseries/macrodata.csv`) | MATLAB `VAR-Toolbox 4.0`, R `BMR` | **Implemented** (zero restrictions by construction, ARW 2018) |
+| **Structural Identification** | `BayesianSignZeroSVARModel` | `bsvar_sign_zero` (`bayesian_sign_zero`) | `BayesianSignZeroSVARModel` | UK SVAR (`data/examples/timeseries/macrodata.csv`) | Bank of England (Brignone & Piffer 2025), Arias et al. (2018) | **Implemented** (zero restrictions by construction; ARW importance weights not applied) |
 | **Structural Identification** | `VolatilitySVARModel` | `volatility_svar` | `VolatilitySVARModel` | US output gap, inflation, rate (`tests/integration/svar/data_usa.csv`) | R `svars::id.cv` | **Known mismatch** (regime variance ratios differ from R by up to 0.16) |
 | **Structural Identification** | `IndependenceSVARModel` | `independence_svar` | `IndependenceSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.dc` | **Implemented** |
 | **Structural Identification** | `CVMSVARModel` | `cvm_svar` (`cvm`) | `CVMSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.cvm` | **Implemented** |
 | **Structural Identification** | `NonGaussianSVARModel` | `non_gaussian_svar` (`non_gaussian`) | `NonGaussianSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.ng` | **Implemented** |
 | **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Verified** (R `svec_canada`, $10^{-6}$; column signs aligned) |
-| **Nonlinear Dynamics** | `TVECMModel` | `tvecm` | `TVECMModel` | Cointegration Panel (`data/examples/timeseries/ghysels_ch7/`) | R `tsDyn::TVECM` | **Implemented** |
-| **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR` | **Implemented** (no recorded reference) |
+| **Nonlinear Dynamics** | `TVECMModel` | `tvecm` | `TVECMModel` | Cointegration Panel (`data/examples/timeseries/ghysels_ch7/`) | R `tsDyn::TVECM` | **Implemented** (ECT regressor ECT_{t-1}, threshold ECT_{t-d}; empty regime raises) |
+| **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR` | **Implemented** (no recorded reference; empty/undersized regime raises) |
 | **Nonlinear Dynamics** | `STVARModel` | `stvar` | `STVARModel` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::STVAR` | **Implemented** |
 | **Nonlinear Dynamics** | `GIRFEngine` | `None` | `GIRFEngine` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::GIRF` | **Implemented** |
 
@@ -286,7 +286,7 @@ These models are fully implemented and covered by automated Python unit and inte
 
 ### 6.4 Sign, Zero, & Narrative Restrictions (`SignZeroSVARModel`)
 - **Description**: Non-Bayesian set identification imposing directional inequality signs, exact zero impact constraints, and historical narrative restrictions (Antolín-Díaz & Rubio-Ramírez 2018).
-- **Algorithm**: QR decomposition of random orthonormal rotation matrices $Q$ with acceptance rejection loop.
+- **Algorithm**: QR decomposition of random orthonormal rotation matrices $Q$ with acceptance rejection loop. Zero restrictions are imposed by construction (Arias, Rubio-Ramírez & Waggoner 2018, Algorithm 2): the restricted shocks are ordered first and each column of $Q$ is drawn from the null space of the stacked zero-restriction matrix $Z_j F(\theta)$, so the zero-restricted responses are exactly zero; sign and narrative restrictions are then checked as usual. Without zero restrictions the draws are unchanged (Haar rotations for a fixed seed). Tested deterministically (`tests/test_models/test_structural_restrictions.py`); the acceptance-rate test with a zero restriction fails on `origin/main`, where zeros were accept/reject with a 1e-10 tolerance.
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/sign_zero.py`
 - **Pipeline Access**: `sign_restrictions` (alias: `sign_zero`)
 - **Benchmark Target**: MATLAB (`VAR-Toolbox 4.0`), R (`BMR`)
@@ -327,6 +327,7 @@ These models are fully implemented and covered by automated Python unit and inte
 ### 6.10 Bayesian Sign & Zero Restrictions SVAR (`BayesianSignZeroSVARModel`)
 - **Description**: Bayesian Structural VAR identification combining Minnesota prior parameter draws with simultaneous sign, zero, and narrative restrictions via Haar/QR rotation sampling and Chan et al. (2025) column-permutation efficiency acceleration.
 - **Specification**: $Y_t = c + \sum_{i=1}^p A_i Y_{t-i} + u_t$ with $u_t = P Q \epsilon_t$, where $P = \text{chol}(\Sigma^{(d)})$ and $Q$ is an orthonormal rotation matrix drawn conditionally across posterior draws.
+- **Zero restrictions**: imposed by construction (Arias, Rubio-Ramírez & Waggoner 2018, Algorithm 2), one rotation per posterior draw; the ARW importance weights are NOT applied, so these draws are from the ARW proposal distribution, not the exact sign-and-zero-restriction posterior. Tested deterministically (`tests/test_models/test_bayesian_sign_zero.py`); the test with a zero restriction fails on `origin/main`.
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/bayesian_sign_zero.py`
 - **Pipeline Access**: `bsvar_sign_zero` (alias: `bayesian_sign_zero`)
 - **Benchmark Target**: Bank of England (Brignone & Piffer 2025), Arias et al. (2018), Chan et al. (2025)
@@ -342,9 +343,11 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Pipeline Access**: `tvar` (direct instantiation: `TVARModel`)
 - **Benchmark Target**: R (`tsDyn::TVAR`), Stata (`threshold`)
 - **Verified Discrepancy**: None recorded. Stata `threshold` is a single-equation threshold regression and does not check a TVAR; R `tsDyn::TVAR` driver is planned.
+- **Behaviour**: a user-supplied gamma that leaves either regime empty or below the minimum (`max(num_regressors + 2, floor(trim * T_eff))` observations) raises `ValueError`; previously both regimes were silently estimated on the full sample. Tested in `tests/test_models/test_nonlinear_models.py`.
 
 ### 7.2 Threshold VECM (`TVECMModel`)
 - **Description**: Threshold cointegrated vector error correction model switching regimes based on error correction deviation magnitude.
+- **Alignment**: ECT regressor is ECT_{t-1} regardless of the threshold delay; the threshold variable is ECT_{t-d} (Hansen & Seo 2002; tsDyn::TVECM). A user-supplied gamma that leaves either regime empty or below the minimum raises `ValueError` (previously a silent full-sample fallback). Tested in `tests/test_models/test_nonlinear_models.py`.
 - **Module Location**: `src/stats_transformer/models/timeseries/nonlinear/tvecm.py`
 - **Pipeline Access**: `tvecm` (direct instantiation: `TVECMModel`)
 - **Benchmark Target**: R (`tsDyn::TVECM`)
