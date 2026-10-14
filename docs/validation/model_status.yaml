@@ -1,0 +1,296 @@
+# Single source of truth for model validation status.
+# One entry per row of the paper's Table 1 (model inventory). Every row in
+# docs/validation/benchmarks.md section 2.1 (Verified Models) is generated from
+# the `verified` entries by scripts/generate_model_status.py; the LaTeX rows of
+# the paper's Table 1 are generated from all entries.
+#
+# Statuses:
+#   verified      a wrapper test in tests/test_external_parity/ passes against a
+#                 recorded external-software output at the stated tolerance
+#   known_issue   a strict xfail records a documented library bug (or a planned fix)
+#   python_tested implemented and covered by Python tests; no external parity yet
+#   unresolved    comparison attempted without evidence of numerical agreement
+#
+# Fields:
+#   family       Table 1 family group
+#   models       Python classes on this row
+#   benchmark    dataset shown in benchmarks.md (name, optional path and extra
+#                text) and in Table 1 (optional `tex` override)
+#   targets      reference software: `software`, `func`, optional `note`
+#   status       one of the four statuses above; `none` renders as `---`
+#   tolerance    discrepancy text (may contain $...$ math and `code` spans)
+#   tests        pytest node ids backing a `verified` or `known_issue` status
+#   note         one-line known-issue note
+#
+# After editing, run: uv run python scripts/generate_model_status.py
+# Tests in tests/test_docs/test_model_status_docs.py fail if checked-in
+# documentation or test ids drift from this file.
+
+- family: Regression
+  models: [RegressionModel]
+  benchmark: {name: Longley, path: data/examples/regression/longley.csv}
+  targets:
+    - {software: Stata, func: regress}
+    - {software: R, func: stats::lm}
+    - {software: MATLAB, func: mldivide}
+    - {software: Python, func: statsmodels}
+  status: verified
+  tolerance: relative $10^{-7}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_ols_longley_matches_r_stata_matlab]
+
+- family: Regression
+  models: [RobustOLSModel]
+  benchmark: {name: Longley, path: data/examples/regression/longley.csv}
+  targets:
+    - {software: Stata, func: regress, note: vce(hc1/hc2/hc3)}
+    - {software: R, func: sandwich::vcovHC}
+  status: verified
+  tolerance: HC1, HC2, HC3, $10^{-6}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_robust_ols_longley_matches_r_and_stata]
+
+- family: Regression
+  models: [PanelRegressionModel]
+  benchmark: {name: Grunfeld, path: data/examples/regression/grunfeld.csv}
+  targets:
+    - {software: Stata, func: xtreg, note: fe}
+    - {software: R, func: plm::plm}
+    - {software: Python, func: statsmodels}
+  status: verified
+  tolerance: fixed effects, $10^{-6}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_panel_fe_grunfeld_matches_r_and_stata]
+
+- family: Regression
+  models: [IV2SLSModel]
+  benchmark: {name: Mroz, path: data/examples/regression/mroz.csv}
+  targets:
+    - {software: Stata, func: ivregress 2sls}
+    - {software: R, func: AER::ivreg}
+  status: verified
+  tolerance: $10^{-6}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_iv2sls_mroz_matches_r_and_stata]
+
+- family: Regression
+  models: [PanelIV2SLSModel]
+  benchmark: {name: Grunfeld, path: data/examples/regression/grunfeld.csv}
+  targets:
+    - {software: R, func: fixest::feols}
+    - {software: Stata, func: xtivreg}
+  status: python_tested
+
+- family: Regression
+  models: [GMMModel]
+  benchmark: {name: Greenbook data, path: data/examples/academic/coibion_gorodnichenko_2012/}
+  targets:
+    - {software: R, func: gmm}
+    - {software: Stata, func: gmm}
+  status: python_tested
+
+- family: Regression
+  models: [DiDModel]
+  benchmark: {name: Policy-loans panel, path: data/examples/academic/lane_2025/}
+  targets:
+    - {software: R, func: did::att_gt}
+    - {software: Stata, func: csdid}
+  status: known_issue
+  note: Control variables are accepted but unused and standard errors are not yet validated against reference implementations (benchmarks.md 2.2.3, priority 2).
+  tests: [tests/test_models/test_did_model.py::test_did_recovers_known_homogeneous_att]
+
+- family: Reduced-form time series
+  models: [VARModel]
+  benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
+  targets:
+    - {software: Stata, func: var}
+    - {software: R, func: vars::VAR}
+    - {software: Python, func: statsmodels}
+  status: verified
+  tolerance: $10^{-8}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_var_macro_matches_r_and_stata]
+
+- family: Reduced-form time series
+  models: [VECMModel]
+  benchmark:
+    name: Ghysels & Marcellino Ch 7
+    path: data/examples/timeseries/ghysels_ch7/
+    extra: ", US macro"
+    tex: U.S. macro; Ghysels--Marcellino Ch.\ 7
+  targets:
+    - {software: Stata, func: vec}
+    - {software: R, func: urca::ca.jo}
+    - {software: MATLAB, func: vecm}
+  status: verified
+  tolerance: rank 1 and rank 3, `ci` and `co`, $10^{-6}$
+  tests:
+    - tests/test_external_parity/test_wrapper_parity.py::test_vecm_macro_matches_matlab_and_stata
+    - tests/test_external_parity/test_wrapper_parity.py::test_vecm_ghysels_ch7_matches_r_and_stata
+    - tests/test_external_parity/test_wrapper_parity.py::test_vecm_ghysels_ch7_uk_rank3_matches_r
+
+- family: Reduced-form time series
+  models: [ARIMAModel]
+  benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
+  targets:
+    - {software: Stata, func: arima}
+    - {software: R, func: stats::arima}
+  status: verified
+  tolerance: log-likelihood $10^{-7}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_arima_realgdp_matches_r_and_stata]
+
+- family: Reduced-form time series
+  models: [BVARModel]
+  benchmark: {name: FOMC surprises, path: data/examples/academic/jarocinski_karadi_2020/}
+  targets:
+    - {software: R, func: BVAR}
+    - {software: Stata, func: "bayes: var"}
+  status: python_tested
+  note: The recorded MATLAB `bvar_kl_minnesota` reference uses a Litterman fixed-Sigma prior, a different prior family from the wrapper's natural-conjugate Minnesota prior (benchmarks.md 2.2.2).
+
+- family: Reduced-form time series
+  models: [PandemicBVARModel]
+  benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
+  targets:
+    - {software: MATLAB, func: Cascaldi-Garcia (2022), note: driver to record}
+  status: python_tested
+  note: Shares the Minnesota prior with BVARModel; a MATLAB driver for the Cascaldi-Garcia (2022) comparison is still pending (benchmarks.md 2.2.4).
+
+- family: Reduced-form time series
+  models: [DynamicFactorModel]
+  benchmark: {name: Global factor, path: data/examples/academic/miranda_agrippino_rey_2020/}
+  targets:
+    - {software: R, func: MARSS}
+    - {software: Stata, func: dfactor}
+  status: python_tested
+
+- family: Reduced-form time series
+  models: [LocalProjectionsModel, LocalProjectionsIVModel]
+  benchmark:
+    name: Jorda & Taylor
+    path: data/examples/matlab_examples/JT2025_Data.xlsx
+    tex: "Jord\\`a--Taylor"
+  targets:
+    - {software: Stata, func: regress, note: "per horizon, HC3"}
+    - {software: Stata, func: ivregress 2sls, note: per horizon}
+  status: verified
+  tolerance: level-lead specification, $10^{-6}$
+  tests:
+    - tests/test_external_parity/test_wrapper_parity.py::test_local_projections_plain_jt2025_matches_stata
+    - tests/test_external_parity/test_wrapper_parity.py::test_local_projections_iv_plain_jt2025_matches_stata
+
+- family: Structural and nonlinear time series
+  models: [SVARModel]
+  benchmark: {name: Canada, path: tests/integration/var/canada.csv}
+  targets:
+    - {software: R, func: vars::SVAR}
+  status: verified
+  tolerance: A-model, $10^{-4}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_svar_a_model_canada_matches_r]
+
+- family: Structural and nonlinear time series
+  models: [BlanchardQuahModel]
+  benchmark:
+    name: Blanchard & Quah
+    path: data/examples/matlab_examples/BQ1989_Data.xlsx
+    tex: Blanchard--Quah (1989)
+  targets:
+    - {software: MATLAB, func: VAR-Toolbox 4.0}
+    - {software: R, func: vars::BQ}
+  status: verified
+  tolerance: $2.22 \times 10^{-16}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_blanchard_quah_matches_matlab_and_r]
+
+- family: Structural and nonlinear time series
+  models: [VolatilitySVARModel]
+  benchmark: {name: US macro, path: tests/integration/svar/data_usa.csv}
+  targets:
+    - {software: R, func: svars::id.cv}
+  status: unresolved
+  note: Sorted regime-variance ratios differ from the recorded R output by up to 0.161166; the regime split is under revision (benchmarks.md 2.2.4).
+
+- family: Structural and nonlinear time series
+  models: [ProxySVARModel]
+  benchmark: {name: Gertler--Karadi, path: data/examples/matlab_examples/GK2015_Data.xlsx}
+  targets:
+    - {software: MATLAB, func: VAR-Toolbox 4.0, note: gk2015_iv}
+  status: known_issue
+  note: The impact column is scaled by sqrt(Sigma_11) instead of the Gertler-Karadi / Mertens-Ravn shock-size formula, and rows with a missing instrument are dropped before the VAR is estimated; strict xfail (benchmarks.md 2.2.1).
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_proxy_svar_gk2015_matches_matlab]
+
+- family: Structural and nonlinear time series
+  models: [SignZeroSVARModel, BayesianSignZeroSVARModel, IndependenceSVARModel, CVMSVARModel, NonGaussianSVARModel]
+  benchmark: {name: US macro, path: data/examples/timeseries/macrodata.csv}
+  targets:
+    - {software: R, func: svars}
+    - {software: MATLAB, func: VAR-Toolbox 4.0}
+  status: python_tested
+  note: Zero restrictions are imposed by construction (Arias, Rubio-Ramirez & Waggoner 2018); ARW importance weights are not applied.
+
+- family: Structural and nonlinear time series
+  models: [SVECModel]
+  benchmark: {name: Canada, path: tests/integration/var/canada.csv}
+  targets:
+    - {software: R, func: vars::SVEC}
+    - {software: MATLAB, func: VAR-Toolbox 4.0}
+  status: verified
+  tolerance: $10^{-6}$; column signs aligned
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_svec_canada_matches_r]
+
+- family: Structural and nonlinear time series
+  models: [TVARModel]
+  benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
+  targets:
+    - {software: Stata, func: threshold}
+  status: unresolved
+  note: The recorded Stata threshold reference reports no discrepancy, so it provides no evidence of agreement; an R `tsDyn::TVAR` driver is planned (benchmarks.md 2.2.4).
+
+- family: Structural and nonlinear time series
+  models: [TVECMModel, STVARModel]
+  benchmark: {name: Ghysels & Marcellino Ch 7, path: data/examples/timeseries/ghysels_ch7/}
+  targets:
+    - {software: R, func: tsDyn::TVECM}
+    - {software: R, func: sstvars::STVAR}
+  status: python_tested
+  note: The TVECM error-correction regressor (ECT_{t-1}) and threshold variable (ECT_{t-d}) alignment is covered by Python tests; an R tsDyn driver is planned.
+
+- family: Discrete choice
+  models: [LogitModel]
+  benchmark: {name: Spector & Mazzeo, path: data/examples/discrete/spector.csv}
+  targets:
+    - {software: Stata, func: logit}
+    - {software: R, func: stats::glm}
+    - {software: Python, func: statsmodels}
+  status: verified
+  tolerance: $10^{-5}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_binary_choice_spector_matches_r_and_stata]
+
+- family: Discrete choice
+  models: [ProbitModel]
+  benchmark: {name: Spector & Mazzeo, path: data/examples/discrete/spector.csv}
+  targets:
+    - {software: Stata, func: probit}
+    - {software: R, func: stats::glm, note: probit}
+    - {software: Python, func: statsmodels}
+  status: verified
+  tolerance: $10^{-5}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_binary_choice_spector_matches_r_and_stata]
+
+- family: Unsupervised
+  models: [PCAModel]
+  benchmark: {name: Longley, path: data/examples/regression/longley.csv}
+  targets:
+    - {software: Stata, func: pca}
+    - {software: R, func: stats::prcomp}
+  status: verified
+  tolerance: $10^{-8}$
+  tests: [tests/test_external_parity/test_wrapper_parity.py::test_pca_longley_matches_r_and_stata]
+
+- family: Unsupervised
+  models: [KMeansModel]
+  benchmark: {name: Spector & Mazzeo, path: data/examples/discrete/spector.csv}
+  targets:
+    - {software: R, func: stats::kmeans}
+    - {software: Stata, func: cluster kmeans}
+  status: python_tested
+
+- family: Data and reporting
+  models: []
+  label: Resampling, merging, feature engineering, EDA, tables, charts
+  targets: []
+  status: none
