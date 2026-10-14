@@ -6,12 +6,13 @@ from stats_transformer.models.base import ModelBase
 class VECMModel(ModelBase):
     _is_multivariate = True
 
-    def __init__(self, target_variables=None, date_column=None, k_ar_diff=1, deterministic='n', **kwargs):
+    def __init__(self, target_variables=None, date_column=None, k_ar_diff=1, coint_rank=1, deterministic='n', **kwargs):
         super().__init__(**kwargs)
         model_params = self.params.get("model", {})
         self.target_variables = target_variables or getattr(self, "target_variables", []) or model_params.get("target_variables") or model_params.get("independent_variables", [])
         self.date_column = date_column or model_params.get("date_column")
         self.k_ar_diff = model_params.get("k_ar_diff", k_ar_diff)
+        self.coint_rank = model_params.get("coint_rank", coint_rank)
         self.deterministic = model_params.get("deterministic", deterministic)
 
     def _get_required_columns(self):
@@ -29,7 +30,7 @@ class VECMModel(ModelBase):
             
         self.y = self.df_clean[self.target_variables]
         
-        self.vecm_spec = VECM(self.y, k_ar_diff=self.k_ar_diff, deterministic=self.deterministic)
+        self.vecm_spec = VECM(self.y, k_ar_diff=self.k_ar_diff, coint_rank=self.coint_rank, deterministic=self.deterministic)
         self.model = self.vecm_spec.fit()
         return self.model
 

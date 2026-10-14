@@ -239,9 +239,17 @@ def test_vecm_ghysels_ch7_matches_r_and_stata(key, path, cols, rows, k_ar_diff):
     np.testing.assert_allclose(_vec(m.model.alpha) * beta[0], _vec(_ref("stata", "vecm_ghysels_ch7")[key + "_alpha"]), rtol=1e-6)
 
 
-@pytest.mark.xfail(reason="VECMModel fixes the cointegration rank at 1 (vecm.py:32); the UK term structure needs rank 3", strict=True)
 def test_vecm_ghysels_ch7_uk_rank3_matches_r():
     cols = ["r1", "r3", "r6", "r24"]
     m = VECMModel(target_variables=cols, k_ar_diff=2, deterministic="ci", coint_rank=3)
     m.fit(_csv("data/examples/timeseries/ghysels_ch7/dataonly_uktermstructure.csv").iloc[:216][cols].reset_index(drop=True))
-    assert np.asarray(m.model.beta).shape[1] == 3
+    beta = np.asarray(m.model.beta, dtype=float)
+    beta_const = np.asarray(m.model.det_coef_coint, dtype=float)
+    got = np.vstack([beta, beta_const])
+    # R fixes the top rows of each cointegrating vector to the identity (same as statsmodels)
+    ref = np.asarray(_ref("r", "vecm_ghysels_ch7")["uk_r3_beta"])
+    np.testing.assert_allclose(got, ref, atol=1e-8)
+    np.testing.assert_allclose(np.asarray(m.model.alpha, dtype=float).T, np.asarray(_ref("r", "vecm_ghysels_ch7")["uk_r3_alpha"]), atol=1e-8)
+    assert got.shape == (5, 3)
+
+
