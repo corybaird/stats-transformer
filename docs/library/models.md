@@ -220,7 +220,7 @@ These models are fully implemented and covered by automated Python unit and inte
 
 ### 5.5 Analytical Conjugate Bayesian VAR (`BVARModel`)
 - **Description**: Conjugate Normal-Inverse-Wishart prior BVAR with Minnesota prior moments, estimated analytically in closed form without MCMC dependencies.
-- **Specification**: $B | \Sigma \sim \mathcal{MN}(\bar B, \Sigma \otimes \bar V)$, $\Sigma \sim \mathcal{IW}(\bar S, \bar\nu)$.
+- **Specification**: $B | \Sigma \sim \mathcal{MN}(\bar B, \Sigma \otimes \bar V)$, $\Sigma \sim \mathcal{IW}(\bar S, \bar\nu)$. Because equation $i$'s coefficient prior covariance is $\sigma_i^2 \bar V$ (Kadiyala & Karlsson 1997), the Minnesota scaling $\sigma_i^2/\sigma_j^2$ lives entirely in $\bar V$: the diagonal entry for $y_j$ at lag $l$ is blended own/cross tightness ($\lambda_1/l^{\lambda_3}$, cross part times $\lambda_2^2$) divided by $\hat\sigma_j^2$.
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/bvar.py`
 - **Pipeline Access**: `bvar` (direct instantiation: `BVARModel`)
 - **Benchmark Target**: R (`BVAR::bvar`)
