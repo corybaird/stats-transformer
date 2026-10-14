@@ -16,8 +16,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def _write_full_config(tmp_path, with_explicit_paths=False, with_processed=False):
     raw_dir = tmp_path / "raw"
     raw_dir.mkdir(exist_ok=True)
-    df1 = pd.DataFrame({"country": ["USA", "CAN"], "date": ["2020-01-01", "2020-01-01"], "y": [10.0, 9.0]})
-    df2 = pd.DataFrame({"country": ["USA", "CAN"], "date": ["2020-01-01", "2020-01-01"], "x1": [2.0, 1.0]})
+    dates = ["2020-01-01", "2021-01-01", "2022-01-01"]
+    df1 = pd.DataFrame({"country": ["USA", "USA", "USA", "CAN", "CAN", "CAN"], "date": dates * 2, "y": [10.0, 11.0, 12.0, 9.0, 10.0, 11.0]})
+    df2 = pd.DataFrame({"country": ["USA", "USA", "USA", "CAN", "CAN", "CAN"], "date": dates * 2, "x1": [2.0, 3.0, 4.0, 1.0, 2.0, 3.0]})
     df1.to_csv(raw_dir / "y.csv", index=False)
     df2.to_csv(raw_dir / "x1.csv", index=False)
 
@@ -25,8 +26,8 @@ def _write_full_config(tmp_path, with_explicit_paths=False, with_processed=False
     processed_path = tmp_path / "processed.csv"
     if with_processed:
         pd.DataFrame({
-            "country": ["USA", "CAN"], "date": ["2020-01-01", "2020-01-01"],
-            "y_Y": [10.0, 9.0], "x1_Y": [2.0, 1.0],
+            "country": ["USA"] * 3 + ["CAN"] * 3, "date": dates * 2,
+            "y_Y": [10.0, 11.0, 12.0, 9.0, 10.0, 11.0], "x1_Y": [2.0, 3.0, 4.0, 1.0, 2.0, 3.0],
         }).to_csv(processed_path, index=False)
 
     data = {
@@ -122,6 +123,24 @@ def test_run_writes_nothing_outside_tmp_path(tmp_path, monkeypatch, stage):
 
     after_status, after_files = _repo_snapshot()
     # Snapshot covers tracked files, ignored dirs (data/pipeline/, reports/) and mtimes
+    assert after_status == before_status, f"repo tree changed:\n{after_status}"
+    assert {name for name, _ in after_files} == {name for name, _ in before_files}
+    assert after_files == before_files
+
+
+def test_run_with_repo_cwd_writes_nothing_into_repo(tmp_path, monkeypatch):
+    # Mirrors the leak that produced the stray CSVs in reports/: tests whose config
+    # lives in tmp_path but whose CWD stays at the repo root. On main,
+    # run_model() wrote reports/transformed_data_*.csv (+ data/pipeline/...
+    # resampled_merged.parquet) relative to the repo CWD; these writes must go to
+    # the output.root run folder instead. Deliberately does not chdir.
+    before_status, before_files = _repo_snapshot()
+
+    config_path, _ = _write_full_config(tmp_path)
+    pipeline = Pipeline(params_path=str(config_path))
+    pipeline.run()
+
+    after_status, after_files = _repo_snapshot()
     assert after_status == before_status, f"repo tree changed:\n{after_status}"
     assert {name for name, _ in after_files} == {name for name, _ in before_files}
     assert after_files == before_files
