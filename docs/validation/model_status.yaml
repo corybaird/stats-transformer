@@ -237,8 +237,8 @@
   benchmark: {name: US macro growth rates, path: data/examples/timeseries/macrodata.csv}
   targets:
     - {software: Stata, func: threshold}
-  status: unresolved
-  note: The recorded Stata threshold reference reports no discrepancy, so it provides no evidence of agreement; an R `tsDyn::TVAR` driver is planned (benchmarks.md 2.2.4).
+  status: python_tested
+  note: The recorded Stata `threshold` reference reported no discrepancy, so it provides no evidence of agreement; an R `tsDyn::TVAR` driver is planned (benchmarks.md 2.2.4).
 
 - family: Structural and nonlinear time series
   models: [TVECMModel, STVARModel]

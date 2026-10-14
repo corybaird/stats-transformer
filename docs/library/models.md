@@ -46,7 +46,7 @@ These models are fully implemented and covered by automated Python unit and inte
 | --- | --- | --- | --- | --- | --- | --- |
 | **Applied Regression** | `PanelIV2SLSModel` | `panel_iv` | `PanelIV2SLSModel` | Grunfeld (`data/examples/regression/grunfeld.csv`) | R `fixest::feols`, Stata `xtivreg` | **Implemented** |
 | **Applied Regression** | `GMMModel` | `gmm` | `GMMModel` | Greenbook (`data/examples/academic/coibion_gorodnichenko_2012/`) | R `gmm::gmm`, Stata `gmm` | **Implemented** |
-| **Applied Regression** | `DiDModel` | `did` | `DiDModel` | Policy Loans (`data/examples/academic/lane_2025/`) | R `did::att_gt`, Stata `csdid` | **Implemented** |
+| **Applied Regression** | `DiDModel` | `did` | `DiDModel` | Policy Loans (`data/examples/academic/lane_2025/`) | R `did::att_gt`, Stata `csdid` | **Known mismatch** (control variables accepted but unused; standard errors not yet validated, benchmarks.md 2.2.3) |
 | **Applied Regression** | `SpecificationRunner` | `None` | `SpecificationRunner` | Longley (`data/examples/regression/longley.csv`) | Custom grid runner | **Utility Wrapper** |
 | **Unsupervised Learning** | `KMeansModel` | `kmeans` | `KMeansModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::kmeans`, Stata `cluster kmeans` | **Implemented** |
 | **Reduced-Form Time Series** | `RestrictedVAR` | `None` | `RestrictedVAR` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `vars::restrict`, Stata `var (constrained)` | **Implemented** |
