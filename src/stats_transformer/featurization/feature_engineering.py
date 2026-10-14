@@ -439,7 +439,7 @@ class FeatureEngineer:
         df = df.dropna(subset=[date_col])
 
         numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
-        cols_to_keep = [c for c in [entity_col, date_col] + numeric_cols if c]
+        cols_to_keep = list(dict.fromkeys(c for c in [entity_col, date_col] + numeric_cols if c))
         df = df[cols_to_keep]
 
         source_order = FREQ_ORDER.get(source_period.lower(), 3)

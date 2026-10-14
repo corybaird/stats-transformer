@@ -105,6 +105,16 @@ def test_resample_upsample_without_entity():
     assert out["x_Yffill"].tolist() == [10.0] * 12 + [20.0]
 
 
+def test_resample_no_duplicate_columns_for_numeric_entity_id():
+    # A numeric entity column is also in numeric_cols; make sure it is not selected twice.
+    import pandas as pd
+    fe = FeatureEngineer(entity_column="firm", date_column="year")
+    df = pd.DataFrame({"firm": [1, 1, 2, 2], "year": [2020, 2021, 2020, 2021], "inv": [1.0, 2.0, 3.0, 4.0]})
+    out = fe.resample_dataset(df, {"entity_column": "firm", "date_column": "year", "source_period": "annual", "resample": {"target_period": "annual"}})
+    assert len(out.columns) == len(set(out.columns))
+    assert [c for c in out.columns if c == "country"] == ["country"]
+
+
 XFAIL_CONFIGS = {
     "timeseries/identification/structural_restrictions.yaml": "Restrictions-only SVAR input file, not a standalone params.yaml (no data:/model: sections)",
     "timeseries/reduced_form/local_projections.yaml": "Config declares date_column: date but sofr_surprises.parquet.gzip has no date column",
