@@ -137,9 +137,13 @@ class TVARModel(ModelBase):
         mask1 = th_eff <= self.gamma
         mask2 = ~mask1
 
-        if np.sum(mask1) == 0 or np.sum(mask2) == 0:
-            mask1 = np.ones(T_eff, dtype=bool)
-            mask2 = np.ones(T_eff, dtype=bool)
+        min_obs = max(X_eff.shape[1] + 2, int(np.floor(self.trim * T_eff)))
+        n1, n2 = int(np.sum(mask1)), int(np.sum(mask2))
+        if n1 < min_obs or n2 < min_obs:
+            raise ValueError(
+                f"Threshold gamma={self.gamma:g} leaves regime sizes ({n1}, {n2}); "
+                f"each regime needs at least {min_obs} observations (trim={self.trim})"
+            )
 
         p1, r1, cov1 = self._estimate_regime_ols(Y_eff[mask1], X_eff[mask1])
         p2, r2, cov2 = self._estimate_regime_ols(Y_eff[mask2], X_eff[mask2])
