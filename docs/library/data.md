@@ -27,6 +27,7 @@ data/
 - **Tracked in Version Control**: The datasets listed in the table below are committed under `data/examples/`. The separately sourced `data/examples/academic/ghysels_2018/` directory is ignored and is not available in a clean checkout.
 - **Packaged with the Library**: `src/stats_transformer/data/macrodb_gdp_inflation.parquet` and all tracked datasets under `data/examples/` are included in source and wheel distributions. The ignored `academic/ghysels_2018/` directory is deliberately excluded.
 - **Ignored in Version Control**: Local pipeline intermediates (`data/pipeline/`), final panel outputs (`data/final/`), temporary working files (`data/temp/`), and external raw downloads (`data/raw/`) are ignored via `.gitignore` to prevent repository bloat.
+- **Data versioning**: DVC is deliberately not used — all tracked fixtures and benchmark inputs are well under 2MB, so git history with SHA-256 hashes in the benchmark manifests (see `tests/external_benchmarks/README.md`) is sufficient. Revisit only if large binary datasets (e.g. full historical macro panels in the 100+ MB range) need version pinning.
 
 ---
 
