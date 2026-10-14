@@ -36,12 +36,13 @@ This section records which `stats-transformer` model wrappers match external sof
 | **Discrete** | `ProbitModel` | R (`stats::glm`), Stata (`probit`) | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | **Verified** ($10^{-5}$) |
 | **Unsupervised** | `PCAModel` | R (`stats::prcomp`), Stata (`pca`) | Longley (`data/examples/regression/longley.csv`) | **Verified** ($10^{-8}$) |
 | **Time Series** | `VARModel` | R (`vars::VAR`), Stata (`var`) | US macro growth rates (`data/examples/timeseries/macrodata.csv`) | **Verified** ($10^{-8}$) |
-| **Time Series** | `VECMModel` | R (`urca::ca.jo`), Stata (`vec`), MATLAB (`vecm`) | Ghysels & Marcellino Ch 7 (`data/examples/timeseries/ghysels_ch7/`), US macro | **Verified** (rank 1, `ci` and `co`, $10^{-6}$) |
+| **Time Series** | `VECMModel` | R (`urca::ca.jo`), Stata (`vec`), MATLAB (`vecm`) | Ghysels & Marcellino Ch 7 (`data/examples/timeseries/ghysels_ch7/`), US macro | **Verified** (rank 1 and rank 3, `ci` and `co`, $10^{-6}$) |
 | **Time Series** | `ARIMAModel` | R (`stats::arima`), Stata (`arima`) | US macro growth rates (`data/examples/timeseries/macrodata.csv`) | **Verified** (log-likelihood $10^{-7}$) |
 | **Time Series** | `LocalProjectionsModel` | Stata (`regress` per horizon, HC3) | Jorda & Taylor (`data/examples/matlab_examples/JT2025_Data.xlsx`) | **Verified** (level-lead specification, $10^{-6}$) |
 | **Time Series** | `LocalProjectionsIVModel` | Stata (`ivregress 2sls` per horizon) | Jorda & Taylor (`data/examples/matlab_examples/JT2025_Data.xlsx`) | **Verified** (level-lead specification, $10^{-6}$) |
 | **Time Series** | `BlanchardQuahModel` | MATLAB (`VAR-Toolbox 4.0`), R (`vars::BQ`) | Blanchard & Quah (`data/examples/matlab_examples/BQ1989_Data.xlsx`) | **Verified** ($2.22 \times 10^{-16}$ vs MATLAB) |
 | **Time Series** | `SVARModel` | R (`vars::SVAR`) | Canada (`tests/integration/var/canada.csv`) | **Verified** (A-model, $10^{-4}$) |
+| **Time Series** | `SVECModel` | R (`vars::SVEC`) | Canada (`tests/integration/var/canada.csv`) | **Verified** ($10^{-6}$; column signs aligned) |
 
 ### 2.2 Non-Verified Models
 
@@ -50,7 +51,6 @@ This section records which `stats-transformer` model wrappers match external sof
 | Model | Cause | Reference |
 | --- | --- | --- |
 | `ProxySVARModel` | impact column scaled by sqrt(Sigma_11) instead of the Gertler-Karadi / Mertens-Ravn shock-size formula; rows with a missing instrument are dropped before the VAR is estimated | MATLAB `gk2015_iv` |
-| `VECMModel` rank above 1 | cointegration rank fixed at 1 | R and Stata `vecm_ghysels_ch7` (UK term structure, rank 3) |
 
 #### 2.2.2 Recorded References Not Yet Usable
 
@@ -59,7 +59,6 @@ This section records which `stats-transformer` model wrappers match external sof
 | MATLAB `lp_jt2025`, `lpiv_jt2025` | paper spec uses long differences and lagged controls, which the LP wrappers do not support |
 | MATLAB `bvar_kl_minnesota` | Litterman fixed-Sigma prior; `BVARModel` uses a natural-conjugate prior |
 | MATLAB `svar_keating` | Keating (1992) model with an equality restriction; MATLAB only, Stata and R did not converge |
-| R `svec_canada` | waiting on the SVEC fallback fix |
 | MATLAB `gk2015_short`, `sw2001_short` | Cholesky SVAR outputs; no wrapper test written yet |
 
 #### 2.2.3 Library Bug Fixes (separate branch)
@@ -72,7 +71,6 @@ All bugs below are in `stats-transformer`, not in R, Stata or MATLAB. Fix on a d
 | 1 | Proxy SVAR scaling and instrument sample | `proxy_svar.py:49-63` | flips `test_proxy_svar_gk2015_matches_matlab` |
 | 1 | Minnesota prior multiplies by sigma_j squared — FIXED: divides by sigma_j^2 | `bvar.py` (`minnesota_prior_moments`, shared with `pandemic_bvar.py`, `bayesian_sign_zero.py`) | `test_bvar_minnesota_prior_variance_matches_hand_computation`, `test_bvar_posterior_mean_is_scale_equivariant` (both fail on main); exact parity with `bvar_kl_minnesota` NOT expected (Litterman fixed-Sigma prior, different family) |
 | 1 | Sign-zero "exact zeros" use a 1e-10 tolerance | `sign_zero.py:158`, `bayesian_sign_zero.py:121` | deterministic test with an injected rotation |
-| 1 | SVEC Nelder-Mead fallback | `svec.py:150` | R `svec_canada` |
 | 1 | TVECM error-correction term lag | `tvecm.py:63` | R `tsDyn::TVECM` |
 | 1 | TVAR / TVECM empty-regime fallback | `tvar.py:140`, `tvecm.py:148` | R `tsDyn::TVAR` |
 | 2 | DiD controls unused, standard errors | `did.py:14` | R `did::att_gt`, Stata `csdid` |
@@ -88,7 +86,6 @@ Legend: **Code** new driver or test, **Data** dataset to add or move, **Lib** wr
 | `IndependenceSVARModel`, `CVMSVARModel`, `NonGaussianSVARModel` | R `id.dc`, `id.cvm`, `id.ngml` drivers | `data_usa.csv` | fixed start or seed option | `svars` |
 | `TVARModel` | R `tsDyn::TVAR` driver | US macro | empty-regime fix | `tsDyn` |
 | `TVECMModel` | R `tsDyn::TVECM` driver | Ghysels Ch 7 | ECT lag fix | `tsDyn` |
-| `SVECModel` | wrapper test against R `svec_canada` | move `tests/integration/var/canada.csv` | fallback fix | none |
 | `BVARModel` | R `BVAR` driver with fixed hyperparameters | US macro | prior fix; optional Litterman variant | `BVAR` |
 | `PandemicBVARModel` | MATLAB driver | Cascaldi-Garcia (2022) code and data | none | download |
 | `SignZeroSVARModel`, `BayesianSignZeroSVARModel` | fixed-rotation tests; MATLAB `Replic/Uhlig2005`, `ADRR2018` for medians | present | rotation or seed injection; zero tolerance fix | none |
