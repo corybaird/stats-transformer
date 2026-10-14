@@ -17,6 +17,11 @@ class LocalProjectionsModel(ModelBase):
         cov_kwds=None,
         **kwargs
     ):
+        if cumulative not in (False, None, True, "cumulative", "baseline", "diff", "change"):
+            raise ValueError(
+                f"cumulative must be True, None, False, 'cumulative', 'baseline', 'diff' or 'change', "
+                f"got {cumulative!r}"
+            )
         super().__init__(target=target, independent_variables=[shock_var] + (controls or []), **kwargs)
         self.shock_var = shock_var
         self.horizon = horizon
@@ -43,6 +48,15 @@ class LocalProjectionsModel(ModelBase):
                     x[f"{c}_lag{lag}"] = self.df_clean[c].shift(lag)
         return sm.add_constant(x)
 
+    def _target_at_horizon(self, y, h):
+        """Outcome at horizon h: levels, cumulative (vs pre-shock baseline y_{t-1}),
+        or diff/change (vs contemporaneous y_t)."""
+        if self.cumulative is True or self.cumulative in ("cumulative", "baseline"):
+            return y.shift(-h) - y.shift(1)
+        if self.cumulative in ("diff", "change"):
+            return y.shift(-h) - y
+        return y.shift(-h)
+
     def build_model(self):
         self.irf_results = []
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -51,12 +65,7 @@ class LocalProjectionsModel(ModelBase):
         x = self._build_design_matrix()
         
         for h in range(self.horizon + 1):
-            if self.cumulative is True or self.cumulative == "cumulative":
-                y_h = y.shift(-h) - y.shift(1)
-            elif self.cumulative in ("diff", "change"):
-                y_h = y.shift(-h) - y
-            else:
-                y_h = y.shift(-h)
+            y_h = self._target_at_horizon(y, h)
 
             valid_idx = y_h.notna() & x.notna().all(axis=1)
             y_valid = y_h[valid_idx]
@@ -65,8 +74,12 @@ class LocalProjectionsModel(ModelBase):
             # Resolve covariance type
             cov_type_norm = self.cov_type.upper() if isinstance(self.cov_type, str) else str(self.cov_type)
             if cov_type_norm in ("HAC", "NW", "NEWEY_WEST", "NEWEYWEST"):
+                # Newey-West: bandwidth defaults to h + 1; user-supplied maxlags applies to every horizon
                 cov_type_actual = "HAC"
-                cov_kwds_h = dict(self.cov_kwds) if self.cov_kwds else {"maxlags": h + 1}
+                cov_kwds_h = {"maxlags": h + 1, **(self.cov_kwds or {})}
+            elif cov_type_norm == "STANDARD":
+                cov_type_actual = "nonrobust"
+                cov_kwds_h = None
             else:
                 cov_type_actual = self.cov_type
                 cov_kwds_h = dict(self.cov_kwds) if self.cov_kwds else None
@@ -100,12 +113,7 @@ class LocalProjectionsModel(ModelBase):
         x_controls = x_full.drop(columns=[self.shock_var], errors="ignore")
         
         for h in range(self.horizon + 1):
-            if self.cumulative is True or self.cumulative == "cumulative":
-                y_h = y.shift(-h) - y.shift(1)
-            elif self.cumulative in ("diff", "change"):
-                y_h = y.shift(-h) - y
-            else:
-                y_h = y.shift(-h)
+            y_h = self._target_at_horizon(y, h)
 
             valid_idx = y_h.notna() & x_full.notna().all(axis=1)
             y_valid = y_h[valid_idx]

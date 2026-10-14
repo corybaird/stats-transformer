@@ -229,9 +229,9 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Benchmark Target**: R (`lpirfs::lp_lin`), Stata (`jorda`)
 - **Verified Discrepancy**: Per-horizon coefficient and HC3 standard error agree with Stata `regress F(h).y x controls, vce(hc3)` to $10^{-6}$ on the Jordà & Taylor Example 5 sample.
 - **Enhancements**:
-  - `cumulative`: Boolean or string (`True` or `"baseline"` for $y_{t+h} - y_{t-1}$, `"diff"` for $y_{t+h} - y_t$) enabling cumulative IRF estimation (e.g. cumulative price/output responses to monetary shocks as in Nakamura & Steinsson 2018b).
+  - `cumulative`: Boolean or string (`True`, `"cumulative"`, or `"baseline"` for $y_{t+h} - y_{t-1}$; `"diff"` or `"change"` for $y_{t+h} - y_t$) enabling cumulative IRF estimation (e.g. cumulative price/output responses to monetary shocks as in Nakamura & Steinsson 2018b). Unknown string values raise `ValueError`.
   - `lags`: Integer $P \ge 0$ injecting lag blocks of target, shock, and control variables ($t-1, \dots, t-P$) into each horizon regression.
-  - `cov_type`: Covariance estimator selection, supporting `"HAC"` (Newey-West autocorrelation-consistent standard errors with automatic bandwidth $h+1$), `"HC0"`, `"HC1"`, `"HC2"`, `"HC3"`, or `"standard"`.
+  - `cov_type`: Covariance estimator selection, supporting `"HAC"` (Newey-West autocorrelation-consistent standard errors with bandwidth defaulting to $h+1$ per horizon; a user-supplied `maxlags` in `cov_kwds` applies to every horizon), `"HC0"`, `"HC1"`, `"HC2"`, `"HC3"`, or `"standard"` (classical OLS standard errors).
 
 ### 5.8 Local Projections IV (`LocalProjectionsIVModel`)
 - **Description**: Instrumented local projections (Stock & Watson 2018) using external narrative or high-frequency surprises as instruments for policy treatments.

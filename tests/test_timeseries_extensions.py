@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import pandas as pd
 from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
 from stats_transformer.models.timeseries.identification.proxy_svar import ProxySVARModel
@@ -73,6 +74,57 @@ def test_local_projections_model():
     assert len(irf) == 4
     assert list(irf.columns) == ["horizon", "effect", "stderr", "lower_ci", "upper_ci", "pvalue"]
     assert irf["horizon"].tolist() == [0, 1, 2, 3]
+
+def test_local_projections_cumulative_baseline_matches_true():
+    df = create_synthetic_data()
+    irf_true = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, cumulative=True)
+    irf_true.fit(df)
+    irf_true = irf_true.compute_irf()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, cumulative="baseline")
+    model.fit(df)
+    irf_baseline = model.compute_irf()
+    # "baseline" must behave like cumulative=True (y_{t+h} - y_{t-1}), not fall back to levels
+    assert np.allclose(irf_baseline["effect"].to_numpy(), irf_true["effect"].to_numpy())
+    assert np.allclose(irf_baseline["stderr"].to_numpy(), irf_true["stderr"].to_numpy())
+
+def test_local_projections_cumulative_rejects_unknown_string():
+    df = create_synthetic_data()
+    with pytest.raises(ValueError, match="cumulative"):
+        LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, cumulative="nope").fit(df)
+
+def test_local_projections_cov_type_standard_maps_to_nonrobust():
+    df = create_synthetic_data()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, cov_type="standard")
+    model.fit(df)
+    irf = model.compute_irf()
+    classic = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, cov_type="nonrobust")
+    classic.fit(df)
+    assert np.allclose(irf["stderr"].to_numpy(), classic.compute_irf()["stderr"].to_numpy())
+
+def test_local_projections_hac_merges_default_maxlags_with_user_cov_kwds():
+    import statsmodels.api as sm
+    df = create_synthetic_data()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, cov_type="HAC", cov_kwds={"use_t": False})
+    model.fit(df)
+    irf = model.compute_irf()
+    # Default bandwidth h + 1 must still apply when the user supplies other cov_kwds
+    y = model.df_clean["y1"]
+    x = model._build_design_matrix()
+    for h in range(3):
+        y_h = y.shift(-h)
+        valid = y_h.notna() & x.notna().all(axis=1)
+        expected = sm.OLS(y_h[valid], x.loc[valid]).fit(cov_type="HAC", cov_kwds={"maxlags": h + 1, "use_t": False})
+        actual = irf.loc[irf["horizon"] == h, "stderr"].iloc[0]
+        assert np.isclose(actual, expected.bse["y2"])
+
+def test_local_projections_hac_user_maxlags_applies_to_all_horizons():
+    df = create_synthetic_data()
+    model = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, cov_type="HAC", cov_kwds={"maxlags": 1})
+    model.fit(df)
+    plain = LocalProjectionsModel(target="y1", shock_var="y2", horizon=2, cov_type="HAC")
+    plain.fit(df)
+    # A fixed maxlags=1 must differ from the default h + 1 at horizons where h + 1 != 1
+    assert not np.allclose(model.compute_irf()["stderr"].to_numpy(), plain.compute_irf()["stderr"].to_numpy())
 
 def test_local_projections_model_keeps_date_column():
     df = create_synthetic_data()
