@@ -5,19 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.8.0] - 2026-10-14
 
 ### Changed
 
-- **Four research stages alignment:** Standardized the pipeline vocabulary across README, paper, docs, notebooks, and code to match the four research stages: `data` (ingest, resample, merge) → `features` (transform) → `model` (estimate, diagnostics, JSON summary) → `reporting` (charts, tables).
-- `Pipeline.run()` is refactored into dedicated stage methods: `run_data()`, `run_features()`, `run_model()`, and `run_reporting()` (along with `run_eda()`).
-- Full pipeline run (`stage=None`) executes the canonical stages in order without duplicating the resample and merge block.
-- Canonical stage names are exposed as `stats_transformer.pipeline.STAGES = ("data", "features", "model", "reporting")`.
-- CLI `--stage` argument updated with choices and descriptive help for canonical stages.
+- **Four research stages: `data`, `features`, `model`, `reporting`.** README, docs, notebook, and code now use one vocabulary: data (ingest, resample, merge) → features (transform) → model (estimate, diagnostics, JSON summary) → reporting (charts, tables). The canonical names are exported as `stats_transformer.pipeline.STAGES`.
+- `Pipeline.run()` is split into one method per stage: `run_data()`, `run_features()`, `run_model()`, `run_reporting()`, plus `run_eda()`. The methods can be called directly without going through `run()`. A full run (`stage=None`) calls them in order instead of duplicating the resample and merge block; return values and output files are unchanged.
+- CLI `--stage` validates its value and lists the canonical stages in `--help`.
+- `docs/library/architecture.md`, the agent skill, and `notebooks/0-overall-pipeline.ipynb` use the new stage names.
 
 ### Deprecated
 
-- Pipeline stages `resample` and `regression` are deprecated in favor of `data` and `model`; they keep working via an alias map that emits a `DeprecationWarning` (mirroring `visualization` → `reporting`).
+These keep working in 1.8.0 but emit a `DeprecationWarning` and will be removed in a future release:
+
+- `pipeline.run(stage="resample")`; use `"data"`.
+- `pipeline.run(stage="regression")`; use `"model"`.
 
 ## [1.7.0] - 2026-10-13
 
