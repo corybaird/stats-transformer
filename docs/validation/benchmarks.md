@@ -58,7 +58,7 @@ The table below is generated from `docs/validation/model_status.yaml`; edit that
 
 | Reference | Why not |
 | --- | --- |
-| MATLAB `lp_jt2025`, `lpiv_jt2025` | paper spec uses long differences and lagged controls, which the LP wrappers do not support |
+| MATLAB `lp_jt2025`, `lpiv_jt2025` | paper spec uses long differences and lagged controls; `cumulative="diff"` and `lags` now cover both, but no wrapper test has been written yet |
 | MATLAB `bvar_kl_minnesota` | Litterman fixed-Sigma prior; `BVARModel` uses a natural-conjugate prior |
 | MATLAB `svar_keating` | Keating (1992) model with an equality restriction; MATLAB only, Stata and R did not converge |
 | MATLAB `gk2015_short`, `sw2001_short` | Cholesky SVAR outputs; no wrapper test written yet |
@@ -91,7 +91,7 @@ Legend: **Code** new driver or test, **Data** dataset to add or move, **Lib** wr
 | `BVARModel` | R `BVAR` driver with fixed hyperparameters | US macro | prior fix; optional Litterman variant | `BVAR` |
 | `PandemicBVARModel` | MATLAB driver | Cascaldi-Garcia (2022) code and data | none | download |
 | `SignZeroSVARModel`, `BayesianSignZeroSVARModel` | fixed-rotation tests; MATLAB `Replic/Uhlig2005`, `ADRR2018` for medians | present | none (zero restrictions imposed by construction); ARW importance weights not applied (see models.md) | none |
-| `LocalProjectionsModel`, `LocalProjectionsIVModel` (paper spec) | wrapper tests against MATLAB `lp_jt2025`, `lpiv_jt2025` | present | long-difference and lagged-control options | none |
+| `LocalProjectionsModel`, `LocalProjectionsIVModel` (paper spec) | wrapper tests against MATLAB `lp_jt2025`, `lpiv_jt2025` | present | none (`cumulative="diff"` and `lags` cover long differences and lagged controls) | none |
 | `KMeansModel` | MATLAB and R drivers with fixed starts | Longley or Spector | accept initial centres | none |
 | `PanelIV2SLSModel` | Stata `xtivreg, fe`, R `plm` drivers | panel IV dataset | none | none |
 | `GMMModel` | Stata `gmm`, R `gmm` drivers | Mroz or Coibion-Gorodnichenko | clarify weight matrix | R `gmm` |
