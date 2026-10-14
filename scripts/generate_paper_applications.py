@@ -90,7 +90,7 @@ def fmt(value) -> str:
     if "e" in text:  # tiny/huge estimates: keep 3 significant figures in math mode
         mantissa, exponent = text.split("e")
         return f"${mantissa}\\times 10^{{{int(exponent)}}}$"
-    return text
+    return f"${text}$"
 
 
 def fmt_count(value) -> str:
@@ -213,7 +213,7 @@ def _estimator_se(app: dict, record: dict) -> str:
     """Estimator / SE cell, generated from the config and the fit."""
     if app["config"] is None:
         effective = record["country_panel"]["summary"]["metrics"]["num_observations"]
-        return f"var({record['country_panel']['maxlags']}) + const, {fmt(effective)} effective obs"
+        return f"VAR({record['country_panel']['maxlags']}), constant, {fmt_count(effective)} effective obs"
     model_type = record["model_type"]
     if model_type == "robust_ols":
         return f"{_code(model_type)}, {_code(record['cov_type'])}"
@@ -222,7 +222,7 @@ def _estimator_se(app: dict, record: dict) -> str:
         effects = " + ".join(e for e, on in (("entity", fe["entity_effects"]), ("time", fe["time_effects"])) if on)
         return f"{_code(model_type)}, {effects} FE"
     if model_type == "var":
-        return f"var({record['maxlags']}) + const"
+        return f"VAR({record['maxlags']}), constant"
     return _code(model_type)
 
 
@@ -255,13 +255,13 @@ def _data_cell(app: dict, record: dict) -> str:
 def render_rows(records: list[tuple[dict, dict]]) -> str:
     """Booktabs body rows of the applications table.
 
-    The last body row is a \multicolumn note disclosing any estimates that
+    The last body row is a \\multicolumn note disclosing any estimates that
     did not come from the pipeline run (the paper owns the table environment).
     """
     rows, notes = [], []
     for app, record in records:
         label = app["label"] + (f" {app['footnote']}" if app.get("footnote") else "")
-        config_cell = _code(app["config"]) if app["config"] else "Python API"
+        config_cell = _code(Path(app["config"]).name) if app["config"] else "Python API"
         outputs = ", ".join(_code(f) for f in record["run_files"]) or "---"
         cells = [label, _data_cell(app, record), config_cell, _estimator_se(app, record), _key_estimates(app, record), outputs, app["checked"]]
         rows.append(" & ".join(cells) + " \\\\")

@@ -55,6 +55,9 @@ def test_generator_writes_one_row_per_application(tmp_path, monkeypatch):
     # The Macro VAR row is marked and a note row discloses the API fallback.
     assert "\\dag~Macro VAR key estimates were fitted through the Python API" in tex
     assert "multivariate configs" in tex
+    # Config cells print basenames only; the appendix holds the full paths.
+    assert "references/configs" not in tex
+    assert tex.count("VAR(2), constant") == 2
     # The four YAML applications have flow strips; every config appears in the
     # appendix, in table order.
     for app in gen.APPLICATIONS:
@@ -69,8 +72,8 @@ def test_estimates_have_three_significant_figures_and_math_wrapped_scientific_no
     estimates = COUNT.sub("", tex)  # counts are exact by test above
     worst = max(sig_figs(match) for match in NUM.findall(estimates))
     assert worst <= 3, tex
-    # \times and ^ may appear only inside math mode.
-    for match in re.finditer(r"\\times|\^", tex):
+    # \times, ^ and any minus directly before a digit may appear only in math mode.
+    for match in re.finditer(r"\\times|\^|-(?=\d)", tex):
         assert tex[: match.start()].count("$") % 2 == 1, tex
 
 
@@ -121,9 +124,10 @@ def test_key_estimates_equal_summary_values_rounded_by_fmt3(tmp_path, monkeypatc
 
 
 def test_fmt3_and_counts_are_the_fixed_rounding_rules():
-    assert gen.fmt(0.08534893684706603) == "0.0853"
-    assert gen.fmt(0.16986) == "0.17"
+    assert gen.fmt(0.08534893684706603) == "$0.0853$"
+    assert gen.fmt(0.16986) == "$0.17$"
+    assert gen.fmt(-0.474) == "$-0.474$"
     assert gen.fmt(1.234e-05) == "$1.23\\times 10^{-5}$"
-    assert gen.fmt(220) == "220"
+    assert gen.fmt(220) == "$220$"
     assert gen.fmt_count(526) == "526"
     assert gen.fmt_count(11490) == "11{,}490"
