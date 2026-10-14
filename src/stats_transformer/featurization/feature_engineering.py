@@ -127,7 +127,15 @@ class FeatureEngineer:
         return df
 
     def _validate_data_structure(self, df):
-        required_columns = [self.entity_column, self.date_column] + self.data_columns
+        # Only require columns that are configured and actually needed: the
+        # entity column (if any) and the date column only when start_date
+        # filtering is requested.
+        required_columns = []
+        if self.entity_column:
+            required_columns.append(self.entity_column)
+        if self.start_date:
+            required_columns.append(self.date_column)
+        required_columns += self.data_columns
         missing_columns = [col for col in required_columns if col not in df.columns]
 
         if missing_columns:
@@ -136,6 +144,10 @@ class FeatureEngineer:
             raise ValueError(error_msg)
 
     def truncate_data(self, df):
+        if self.country_list and not self.entity_column:
+            error_msg = "country_list requires an entity_column; none is configured."
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
         if not self.country_list:
             self.logger.info("No country list specified, skipping truncation")
             return df
@@ -165,7 +177,11 @@ class FeatureEngineer:
 
         self.logger.info(f"Filtering data from start date: {self.start_date}")
 
-        if self.period == "annual":
+        if not self.date_column:
+            error_msg = f"start_date filtering requires a date_column; none is configured."
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
+        elif self.period == "annual":
             datetime_format = "%Y"
         elif self.period == "monthly":
             datetime_format = "%Y-%m"
@@ -333,8 +349,13 @@ class FeatureEngineer:
             raise ValueError(error_msg)
 
         try:
-            grouped = df.groupby(self.entity_column, group_keys=False)
-            transformed_df = grouped.apply(self._apply_entity_transformations).reset_index(drop=True)
+            if self.entity_column:
+                grouped = df.groupby(self.entity_column, group_keys=False)
+                transformed_df = grouped.apply(self._apply_entity_transformations).reset_index(drop=True)
+            else:
+                # Cross-sectional data: apply transformations on the whole frame
+                # in row order (no entity, no sorting).
+                transformed_df = self._apply_entity_transformations(df.copy())
             
             self.logger.info("Feature transformations completed.")
             return transformed_df
@@ -347,7 +368,7 @@ class FeatureEngineer:
             self.logger.info("Starting feature engineering pipeline.")
             df = self._apply_column_mapping(df)
             if not self.data_columns:
-                exclude_cols = [self.entity_column, self.date_column]
+                exclude_cols = [c for c in [self.entity_column, self.date_column] if c]
                 numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
                 self.data_columns = [col for col in numeric_cols if col not in exclude_cols]
             
