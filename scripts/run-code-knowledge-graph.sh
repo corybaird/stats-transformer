@@ -7,7 +7,7 @@ tool_version="2.3.9"
 graph_dir="$repo_root/.code-review-graph"
 
 usage() {
-  printf 'Usage: %s build|update|status|clean|install-mcp <claude|codex|cursor|...>\n' "$0" >&2
+  printf 'Usage: %s build|update|status|detect-changes|clean|install-mcp <claude|codex|cursor|...>\n' "$0" >&2
   exit 2
 }
 
@@ -36,6 +36,9 @@ case "$1" in
     if [ -d "$graph_dir" ]; then
       du -sh "$graph_dir"
     fi
+    ;;
+  detect-changes)
+    run_tool detect-changes --brief
     ;;
   clean)
     rm -rf "$graph_dir"
