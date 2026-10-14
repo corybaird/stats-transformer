@@ -13,12 +13,23 @@ from stats_transformer.models.base import ModelBase
 class UnsupervisedModel(ModelBase):
     # Base class for unsupervised models bypassing some statsmodels assumptions
 
-    def __init__(self, params_path: Optional[str] = None, features: Optional[List[str]] = None, n_components: int = 2, model_type: str = "pca", **kwargs: Any) -> None:
+    def __init__(
+        self,
+        params_path: Optional[str] = None,
+        features: Optional[List[str]] = None,
+        n_components: int = 2,
+        model_type: str = "pca",
+        standardize: bool = True,
+        with_mean: bool = True,
+        **kwargs: Any
+    ) -> None:
         super().__init__(params_path=params_path, target=features[0] if features else "dummy", independent_variables=features, **kwargs)
         self.features = self.independent_variables
         self.n_components = n_components
         self.model_type = model_type
-        self.scaler = StandardScaler()
+        self.standardize = standardize
+        self.with_mean = with_mean
+        self.scaler = StandardScaler(with_mean=self.with_mean, with_std=self.standardize)
 
     def _get_required_columns(self) -> List[str]:
         return self.features
@@ -52,8 +63,24 @@ class UnsupervisedModel(ModelBase):
 class PCAModel(UnsupervisedModel):
     # Principal Component Analysis
 
-    def __init__(self, params_path: Optional[str] = None, features: Optional[List[str]] = None, n_components: int = 2, **kwargs: Any) -> None:
-        super().__init__(params_path=params_path, features=features, n_components=n_components, model_type="PCA", **kwargs)
+    def __init__(
+        self,
+        params_path: Optional[str] = None,
+        features: Optional[List[str]] = None,
+        n_components: int = 2,
+        standardize: bool = True,
+        with_mean: bool = True,
+        **kwargs: Any
+    ) -> None:
+        super().__init__(
+            params_path=params_path,
+            features=features,
+            n_components=n_components,
+            model_type="PCA",
+            standardize=standardize,
+            with_mean=with_mean,
+            **kwargs
+        )
 
     def build_model(self) -> PCA:
         assert self.df_clean is not None  # set by load_data, called via fit() before build_model()

@@ -273,6 +273,22 @@ EXAMPLE_DATASETS = {
         "Monthly",
         "Uhlig (2005)",
     ),
+    "vanderwel_2026": _single(
+        "academic/vanderwel_2026/LW_monthly.csv",
+        "Monthly smoothed Gürkaynak-Sack-Wright Treasury yield curve maturities (1 to 120 months)",
+        "Monthly (1971-08 to 2018-12)",
+        "Hoogteijling, Martens, and van der Wel (2026)",
+    ),
+    "nakamura_steinsson_2018_b": {
+        "description": "Monthly macro series, Romer-Romer shocks, and benchmark IRF paths for local projections",
+        "time_period": "Monthly (1969-01 to 1996-12)",
+        "source": "Nakamura and Steinsson (2018b)",
+        "files": {
+            "macro_data": _file("academic/nakamura_steinsson_2018_b/MonetaryData.txt", sep=r"\s+", header=0, names=None),
+            "shocks": _file("academic/nakamura_steinsson_2018_b/RomerShock.txt", sep=r"\s+", header=0, names=None),
+            "published_irfs": _file("academic/nakamura_steinsson_2018_b/RomerJordaIRF.dta"),
+        },
+    },
 }
 
 

@@ -49,6 +49,8 @@ The table below catalogs every registered `load_example()` key, grouped into log
 | `global_factor` | `academic/miranda_agrippino_rey_2020/global_factor.parquet.gzip` | Monthly | Dynamic Factor Model comparison | Miranda-Agrippino & Rey (2020) |
 | `var_panel` | `academic/miranda_agrippino_rey_2020/var_panel.parquet.gzip` | Monthly | Dynamic Factor Model pipeline input | Miranda-Agrippino & Rey (2020) |
 | `nakamura_steinsson_2018` | `academic/nakamura_steinsson_2018/` | Event / Mixed | High-frequency monetary shock PCA and macro controls | Nakamura & Steinsson (2018) |
+| `nakamura_steinsson_2018_b` | `academic/nakamura_steinsson_2018_b/` | Monthly | Macro series, Romer shocks, & Jorda LP benchmark IRFs | Nakamura & Steinsson (2018b) |
+| `vanderwel_2026` | `academic/vanderwel_2026/LW_monthly.csv` | Monthly | Smoothed Treasury yields (maturities 1-120m) | Hoogteijling, Martens & van der Wel (2026) |
 | `synthetic_nakamura` | `academic/synthetic_nakamura.csv` | Synthetic | PCA example input | Nakamura & Steinsson-inspired synthetic data |
 | `ghysels_ch1` | `regression/ghysels_ch1/` | Mixed / Synthetic | Regression and forecasting exercises | Ghysels & Marcellino (2018), Chapter 1 |
 | `ghysels_ch2` | `regression/ghysels_ch2/` | Mixed / Synthetic | Misspecification and regression diagnostics | Ghysels & Marcellino (2018), Chapter 2 |

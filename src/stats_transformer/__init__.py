@@ -6,7 +6,27 @@ except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
 
 from .featurization import FeatureEngineer, EventStudyBuilder
-from .models import RegressionModel, IV2SLSModel, PanelIV2SLSModel
+from .models import (
+    RegressionModel,
+    RobustOLSModel,
+    IV2SLSModel,
+    PanelRegressionModel,
+    PanelIV2SLSModel,
+    PCAModel,
+    VARModel,
+    SVARModel,
+    ProxySVARModel,
+    SignZeroSVARModel,
+    BlanchardQuahModel,
+    VECMModel,
+    BVARModel,
+    DynamicFactorModel,
+    TVARModel,
+    VARForecaster,
+    VARLagSelector,
+    LocalProjectionsModel,
+    LocalProjectionsIVModel,
+)
 from .pipeline import Pipeline
 from .reporting import (
     BaseVisualizer, DataVisualizer, ModelVisualizer, RegressionVisualizer, TimeSeriesVisualizer,
@@ -16,15 +36,27 @@ from .reporting import (
     HistoricalDecompositionChart, ImpulseResponseChart, VarianceDecompositionChart,
     ReportExporter, TimeSeriesReporter
 )
-from .reporting.tables import TableGenerator
-from .models.timeseries.reduced_form.local_projections import LocalProjectionsModel
-from .models.timeseries.reduced_form.local_projections_iv import LocalProjectionsIVModel
-
 __all__ = [
     "FeatureEngineer",
     "RegressionModel",
+    "RobustOLSModel",
     "IV2SLSModel",
+    "PanelRegressionModel",
     "PanelIV2SLSModel",
+    "PCAModel",
+    "VARModel",
+    "SVARModel",
+    "ProxySVARModel",
+    "SignZeroSVARModel",
+    "BlanchardQuahModel",
+    "VECMModel",
+    "BVARModel",
+    "DynamicFactorModel",
+    "TVARModel",
+    "VARForecaster",
+    "VARLagSelector",
+    "LocalProjectionsModel",
+    "LocalProjectionsIVModel",
     "Pipeline",
     "BaseVisualizer",
     "DataVisualizer",
@@ -44,7 +76,6 @@ __all__ = [
     "ImpulseResponseChart",
     "VarianceDecompositionChart",
     "TableGenerator",
-    "LocalProjectionsModel",
     "EventStudyBuilder",
     "ReportExporter",
     "TimeSeriesReporter",

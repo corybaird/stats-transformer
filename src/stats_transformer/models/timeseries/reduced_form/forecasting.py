@@ -124,3 +124,51 @@ class VARForecaster:
         Phi_s = sum_{j=1}^s Phi_{s-j} A_j  (where A_j are the VAR coefficient matrices)
         """
         return compute_ma_rep(self.params, k_ar=self.k_ar, k_trend=self.k_trend, neqs=len(self.names), steps=steps)
+
+    @staticmethod
+    def forecast_direct(
+        data: pd.DataFrame,
+        target_variables: list[str],
+        lags: int = 1,
+        steps: int = 10,
+        trend: str = "c",
+    ) -> pd.DataFrame:
+        """Direct multi-step forecasting for each variable and horizon.
+
+        For each horizon h in 1..steps and each variable y_i:
+            y_{i, t+h} = alpha_h + sum_{j=1}^K sum_{l=0}^{p-1} beta_{h,j,l} y_{j, t-l} + e_{i, t+h}
+        Returns DataFrame of point forecasts for t+1 .. t+steps indexed by horizon.
+        """
+        import statsmodels.api as sm
+
+        df = data[target_variables].dropna().copy()
+        T, K = df.shape
+        if T <= lags + steps:
+            raise ValueError(f"Data length ({T}) must exceed lags ({lags}) + steps ({steps}).")
+
+        # Build design matrix of contemporaneous and lagged values: [y_t, y_{t-1}, ..., y_{t-p+1}]
+        X_cols = []
+        X_df = pd.DataFrame(index=df.index)
+        for p in range(lags):
+            for col in target_variables:
+                name = f"{col}_lag{p}" if p > 0 else col
+                X_df[name] = df[col].shift(p)
+                X_cols.append(name)
+
+        if trend == "c":
+            X_with_const = sm.add_constant(X_df[X_cols])
+        else:
+            X_with_const = X_df[X_cols]
+
+        latest_X = X_with_const.iloc[-1:]
+
+        forecasts = np.zeros((steps, K))
+        for h in range(1, steps + 1):
+            for i, target in enumerate(target_variables):
+                y_h = df[target].shift(-h)
+                valid = y_h.notna() & X_with_const.notna().all(axis=1)
+                model = sm.OLS(y_h[valid], X_with_const[valid]).fit()
+                pred = model.predict(latest_X)
+                forecasts[h - 1, i] = pred.iloc[0]
+
+        return pd.DataFrame(forecasts, index=range(1, steps + 1), columns=target_variables)

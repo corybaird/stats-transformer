@@ -36,6 +36,7 @@ EXPECTED_EXAMPLES = {
     "mincer_wage",
     "mroz",
     "nakamura_steinsson_2018",
+    "nakamura_steinsson_2018_b",
     "news_sentiment",
     "okuns_law",
     "pmu_data",
@@ -46,6 +47,7 @@ EXPECTED_EXAMPLES = {
     "synthetic_nakamura",
     "tariffs",
     "uhlig_2005",
+    "vanderwel_2026",
     "var_panel",
 }
 
