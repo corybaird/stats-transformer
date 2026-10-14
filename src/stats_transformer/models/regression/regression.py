@@ -94,7 +94,7 @@ class RegressionModel(ModelBase):
         self.model = sm.OLS(self.y, self.X).fit()
         return self.model
 
-    def fit(self, df: pd.DataFrame, drop_na: bool = True) -> Dict[str, Any]:
+    def fit(self, df: pd.DataFrame, drop_na: bool = True, compute_metrics: bool = True) -> Dict[str, Any]:
         required_cols = self._get_required_columns()
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -108,7 +108,43 @@ class RegressionModel(ModelBase):
             self.df_clean = self.df_clean.dropna(subset=required_cols)
 
         self.build_model(drop_na=False)
-        return self.get_model_metrics()
+        return self.get_model_metrics() if compute_metrics else {}
+
+    def predict(self, new_data: Any) -> pd.Series:
+        """Generate predictions for new_data using fitted model coefficients."""
+        if self.model is None:
+            raise ValueError("Model not trained. Call fit() before predict().")
+
+        params = self.model.params
+
+        if isinstance(new_data, pd.DataFrame):
+            missing = [c for c in self.independent_variables if c not in new_data.columns]
+            if missing:
+                raise ValueError(f"Missing independent variables in new_data: {missing}")
+
+            X_new = new_data[self.independent_variables].copy()
+            if self.add_entity_fixed_effects and self.entity_column in new_data.columns:
+                entity_dummies = pd.get_dummies(new_data[self.entity_column], prefix="entity", dtype=int)
+                X_new = pd.concat([X_new, entity_dummies], axis=1)
+                for col in params.index:
+                    if col not in X_new.columns:
+                        X_new[col] = 0
+                X_new = X_new[params.index]
+            else:
+                if "const" in params.index:
+                    X_new = sm.add_constant(X_new, has_constant="add")
+                X_new = X_new[params.index]
+
+            preds = np.dot(X_new.values, params.values)
+            return pd.Series(preds, index=new_data.index, name="prediction")
+        elif isinstance(new_data, (np.ndarray, list)):
+            arr = np.asarray(new_data)
+            if "const" in params.index and arr.shape[-1] == len(params) - 1:
+                arr = sm.add_constant(arr, has_constant="add")
+            preds = np.dot(arr, params.values)
+            return pd.Series(preds, name="prediction")
+        else:
+            raise TypeError(f"Unsupported data type for predict: {type(new_data)}")
 
     def get_summary(self) -> str:
         if self.model is None:

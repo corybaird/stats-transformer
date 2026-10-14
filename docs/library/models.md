@@ -77,6 +77,8 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Pipeline Access**: `ols` (direct instantiation: `RegressionModel`)
 - **Benchmark Target**: R (`stats::lm`), Stata (`regress`), MATLAB (`mldivide`)
 - **Verified Discrepancy**: Relative agreement $10^{-7}$ with R, Stata and MATLAB on Longley (collinear; coefficients agree to about $10^{-12}$ between R and MATLAB).
+- **Out-of-Sample Prediction**: Exposes `.predict(new_data)` accepting DataFrames or NumPy matrices, automatically appending constant terms when the fitted model includes an intercept.
+- **Performance Optimization**: `.fit(data, compute_metrics=False)` allows bypassing diagnostic calculations (F-statistic, AIC/BIC, condition number) for high-frequency rolling forecasts.
 
 ### 2.2 Robust OLS (`RobustOLSModel`)
 - **Description**: OLS regression with heteroskedasticity-consistent (HC0, HC1, HC2, HC3) or autocorrelation-consistent (HAC / Newey-West) standard errors.
@@ -148,27 +150,13 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Benchmark Target**: R (`stats::glm(family=binomial(link="probit"))`), Stata (`probit`)
 - **Verified Discrepancy**: Coefficients and log-likelihood agree with R and Stata to $10^{-5}$; R uses expected information so its standard errors differ by up to 0.03, while Stata matches the observed-information standard errors.
 
-### 3.3 Principal Component Analysis (`PCAModel`)
-- **Description**: Standardized PCA feature extraction producing factor loadings, scree variance shares, and orthogonal latent components.
-- **Specification**: Spectral decomposition of correlation matrix $\Sigma_X = V \Lambda V'$.
-- **Module Location**: `src/stats_transformer/models/unsupervised/pca.py`
-- **Pipeline Access**: `pca` (direct instantiation: `PCAModel`)
-- **Benchmark Target**: R (`stats::prcomp`), Stata (`pca`)
-- **Verified Discrepancy**: Variance shares and absolute loadings agree with R `prcomp` and Stata `pca` to $10^{-8}$ on Longley (component signs are arbitrary).
-
-### 3.4 K-Means Clustering (`KMeansModel`)
-- **Description**: Standardized K-means clustering algorithm partitioning observations into $K$ disjoint clusters by minimizing within-cluster sum of squares.
-- **Specification**: $\arg\min_S \sum_{i=1}^K \sum_{x \in S_i} \| x - \mu_i \|^2$
-- **Module Location**: `src/stats_transformer/models/unsupervised/kmeans.py`
-- **Pipeline Access**: `kmeans` (direct instantiation: `KMeansModel`)
-- **Benchmark Target**: R (`stats::kmeans`), Stata (`cluster kmeans`)
-
 ---
 ## 4. Unsupervised Learning Models
 
 ### 4.1 Principal Component Analysis (`PCAModel`)
-- **Description**: Standardized PCA feature extraction producing factor loadings, scree variance shares, and orthogonal latent components.
-- **Specification**: Spectral decomposition of correlation matrix $\Sigma_X = V \Lambda V'$.
+- **Description**: Standardized or demean-only PCA feature extraction producing factor loadings, scree variance shares, and orthogonal latent components.
+- **Specification**: Spectral decomposition of correlation or covariance matrix $\Sigma_X = V \Lambda V'$.
+- **Parameters**: `standardize: bool = True` (set `standardize=False` for demean-only/covariance PCA preserving relative variance scale across variables, e.g. for yield curves or macroeconomic factor models), `with_mean: bool = True`.
 - **Module Location**: `src/stats_transformer/models/unsupervised/pca.py`
 - **Pipeline Access**: `pca` (direct instantiation: `PCAModel`)
 - **Benchmark Target**: R (`stats::prcomp`), Stata (`pca`)
@@ -235,11 +223,15 @@ These models are fully implemented and covered by automated Python unit and inte
 
 ### 5.7 Local Projections (`LocalProjectionsModel`)
 - **Description**: Jordà (2005) multi-horizon direct regression estimating impulse response functions robust to misspecification of lag dynamics.
-- **Specification**: $y_{t+h} = \alpha_h + \beta_h x_t + \sum_{i=1}^p \gamma_{h,i} W_{t-i} + \epsilon_{t+h}$ for $h = 0, 1, \dots, H$.
+- **Specification**: $y_{t+h} = \alpha_h + \beta_h x_t + \sum_{i=1}^p \gamma_{h,i} W_{t-i} + \epsilon_{t+h}$ for $h = 0, 1, \dots, H$, with optional cumulative transforms $y_{t+h} - y_{t-1}$.
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/local_projections.py`
 - **Pipeline Access**: `local_projections` (direct instantiation: `LocalProjectionsModel`)
 - **Benchmark Target**: R (`lpirfs::lp_lin`), Stata (`jorda`)
-- **Verified Discrepancy**: Per-horizon coefficient and HC3 standard error agree with Stata `regress F(h).y x controls, vce(hc3)` to $10^{-6}$ on the Jordà & Taylor Example 5 sample. This is a level-lead regression with contemporaneous controls; the paper's long-difference, lagged-control specification (MATLAB `LPmodel`) is not implemented.
+- **Verified Discrepancy**: Per-horizon coefficient and HC3 standard error agree with Stata `regress F(h).y x controls, vce(hc3)` to $10^{-6}$ on the Jordà & Taylor Example 5 sample.
+- **Enhancements**:
+  - `cumulative`: Boolean or string (`True` or `"baseline"` for $y_{t+h} - y_{t-1}$, `"diff"` for $y_{t+h} - y_t$) enabling cumulative IRF estimation (e.g. cumulative price/output responses to monetary shocks as in Nakamura & Steinsson 2018b).
+  - `lags`: Integer $P \ge 0$ injecting lag blocks of target, shock, and control variables ($t-1, \dots, t-P$) into each horizon regression.
+  - `cov_type`: Covariance estimator selection, supporting `"HAC"` (Newey-West autocorrelation-consistent standard errors with automatic bandwidth $h+1$), `"HC0"`, `"HC1"`, `"HC2"`, `"HC3"`, or `"standard"`.
 
 ### 5.8 Local Projections IV (`LocalProjectionsIVModel`)
 - **Description**: Instrumented local projections (Stock & Watson 2018) using external narrative or high-frequency surprises as instruments for policy treatments.
@@ -376,6 +368,6 @@ These models are fully implemented and covered by automated Python unit and inte
 | `StabilityDiagnostics` | `src/stats_transformer/models/timeseries/diagnostics/stability.py` | Companion matrix eigenvalue modulus calculations and unit circle plots |
 | `StationarityDiagnostics` | `src/stats_transformer/models/timeseries/diagnostics/stationarity.py` | Augmented Dickey-Fuller (ADF) and KPSS unit root testing |
 | `VARLagSelector` | `src/stats_transformer/models/timeseries/reduced_form/lag_selection.py` | Information criteria evaluation across lag orders ($AIC, HQ, SC/BIC, FPE$) |
-| `VARForecaster` | `src/stats_transformer/models/timeseries/reduced_form/forecasting.py` | Iterative point forecasting with analytical confidence intervals |
+| `VARForecaster` | `src/stats_transformer/models/timeseries/reduced_form/forecasting.py` | Iterative and direct multi-step point forecasting with analytical confidence intervals |
 | `ForecastEvaluator` | `src/stats_transformer/models/timeseries/analysis/forecast_evaluation.py` | Out-of-sample RMSE, MAE, and directional forecast evaluation |
 | `TimeSeriesDecompositions` | `src/stats_transformer/models/timeseries/structural/decompositions.py` | Historical shock decomposition and forecast error variance decomposition |

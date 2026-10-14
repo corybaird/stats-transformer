@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-10-14
+
+### Added
+
+- **Local Projections cumulative IRFs, lag augmentation, and HAC standard errors (`LocalProjectionsModel`).**
+  - Added `cumulative=True` (or `"baseline"`, `"diff"`) to estimate cumulative impulse response functions ($y_{t+h} - y_{t-1}$ or $y_{t+h} - y_t$), enabling replication of cumulative macroeconomic responses to structural shocks (e.g., Nakamura & Steinsson 2018b).
+  - Added `lags=P` parameter to automatically construct and append lag blocks ($t-1, \dots, t-P$) for the dependent variable, shock variable, and control covariates.
+  - Added `cov_type="HAC"` with automatic Newey-West bandwidth $h+1$, alongside `"HC0"`, `"HC1"`, `"HC2"`, `"HC3"`, and `"standard"`.
+- **Demean-only / covariance PCA (`PCAModel`).**
+  - Added `standardize: bool = True` and `with_mean: bool = True` (with YAML configuration support). Setting `standardize=False` skips unit-variance normalization, essential for yield curve decompositions (Diebold & Li 2006, Vanderwel et al. 2026) and macroeconomic factor models where variance scale reflects economic signal.
+- **Out-of-sample prediction and high-speed estimation (`RegressionModel`).**
+  - Implemented `.predict(new_data)` accepting DataFrames, Series, and 2D arrays, with automatic constant term handling.
+  - Added `fit(..., compute_metrics=True)` flag allowing callers to pass `compute_metrics=False` to bypass heavy diagnostics (F-stat, AIC/BIC, condition numbers) during high-frequency rolling regressions.
+  - `Pipeline.predict()` now delegates directly to `self.model.predict()` when supported.
+- **Direct multi-step forecasting (`VARForecaster.forecast_direct`).**
+  - Added `forecast_direct(data, target_variables, lags, steps, trend)` to estimate direct multi-step horizon autoregressions robust to lag order misspecification.
+- **Academic replication datasets and benchmarks.**
+  - Added `vanderwel_2026` dataset and replication example (`src/examples/academic/vanderwel_2026.py`), reproducing Table 2 Diebold-Li out-of-sample $R^2$ benchmarks from Vanderwel et al. (2026, IJF).
+  - Added `nakamura_steinsson_2018_b` dataset and replication example (`src/examples/academic/nakamura_steinsson_2018b_jorda.py`), reproducing Jordà local projection monetary policy multipliers from Nakamura & Steinsson (2018b, QJE).
+  - Added test suite in `tests/test_academic_replications.py`.
+- **Top-level model exports in `stats_transformer`.**
+  - Directly exported `VARModel`, `SVARModel`, `ProxySVARModel`, `SignZeroSVARModel`, `PCAModel`, `VARForecaster`, `BVARModel`, `DynamicFactorModel`, `TVARModel`, `VARLagSelector`, `LocalProjectionsModel`, and `LocalProjectionsIVModel` from the top-level package namespace.
+
 ## [1.9.1] - 2026-10-14
 
 ### Fixed

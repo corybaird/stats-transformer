@@ -274,7 +274,7 @@ class Pipeline:
             data_to_predict = self.feature_engineer.transform(data_to_predict)
 
         if not hasattr(self.model, "predict"):
-            raise NotImplementedError(f"{type(self.model).__name__} does not implement predict(); no model in stats_transformer currently does.")
+            raise NotImplementedError(f"{type(self.model).__name__} does not implement predict.")
         return self.model.predict(data_to_predict)
 
     def save_results(self, output_dir: str = "reports") -> Dict[str, str]:

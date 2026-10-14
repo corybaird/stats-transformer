@@ -125,15 +125,24 @@ def test_pipeline_raises_on_unknown_stage(project_root):
         pipeline.run(stage="regresion")
 
 
-def test_pipeline_predict_raises_not_implemented_for_unsupported_model(project_root, test_df):
-    # No model in stats_transformer currently implements predict(); calling
-    # Pipeline.predict() must fail explicitly rather than with a confusing
-    # AttributeError from inside the model.
+def test_pipeline_predict_raises_not_implemented_for_unsupported_model(test_df):
+    class UnsupportedModel:
+        model = object()
+
+    pipeline = Pipeline(target="y", features=["x1", "x2"])
+    pipeline.model = UnsupportedModel()
+    pipeline.transformed_data = test_df
+    with pytest.raises(NotImplementedError, match="does not implement predict"):
+        pipeline.predict(test_df)
+
+
+def test_pipeline_predict_succeeds_for_regression_model(project_root, test_df):
     config_path = project_root / "references" / "configs" / "test_pipeline.yaml"
     pipeline = Pipeline(params_path=str(config_path))
     pipeline.fit_transform(test_df)
-    with pytest.raises(NotImplementedError, match="does not implement predict"):
-        pipeline.predict(test_df)
+    preds = pipeline.predict(test_df)
+    assert preds is not None
+    assert len(preds) == len(test_df)
 
 
 def test_models_star_import_does_not_raise():
