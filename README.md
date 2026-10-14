@@ -14,16 +14,17 @@
 
 ---
 
-## 1. Overview 
+## 1. Overview
 
 `stats-transformer` is a Python library for data transformation, econometric modeling, and visualization. It automates feature engineering, model estimation, and reporting across time-series, panel, and cross-sectional datasets using a reproducible configuration workflow.
 
-- **Reproducible Workflows:** All research decisions from data ingestion to model estimation are produced and tracked via single source of truth (`params.yaml`)
-  - **Data stage:** Data ingestion, resampling, merging (integration resampling to align frequencies)
-  - **Transformation stage:** feature construction
-  - **Modeling stage:** estimation, diagnostics, and publication ready outputs
+- **Reproducible Workflows:** All research decisions from data ingestion to publication output are produced and tracked via single source of truth (`params.yaml`), in four stages
+  - **Data stage:** ingest, resample, merge
+  - **Features stage:** transform into analysis variables
+  - **Model stage:** estimate with diagnostics and a JSON summary
+  - **Reporting stage:** charts and publication tables
 - **Broad Econometric Coverage:** Covers cross-sectional (OLS, robust OLS), panel (fixed effects), time-series (VAR, VECM, SVAR, local projections), IV (2SLS), discrete choice (Logit), and unsupervised methods (PCA, KMeans).
-	- **Validated via legacy software**: Model estimation and transformation validated against MATLAB, R, and Stata
+  - **Validated via legacy software**: Model estimation and transformation validated against MATLAB, R, and Stata
 
 ---
 
@@ -113,9 +114,9 @@ Or drive the same configuration programmatically:
 from stats_transformer import Pipeline
 
 pipeline = Pipeline(params_path="params.yaml")
-merged_data = pipeline.run(stage="resample")
+merged_data = pipeline.run(stage="data")
 transformed_data = pipeline.run(stage="features")
-model_results = pipeline.run(stage="regression")
+model_results = pipeline.run(stage="model")
 pipeline.run(stage="reporting")
 ```
 
