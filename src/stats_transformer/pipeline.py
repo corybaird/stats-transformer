@@ -363,6 +363,11 @@ class Pipeline:
         paths = self._resolve_paths()
         assert self.feature_engineer is not None  # set by _resolve_paths via _initialize_from_params
         data_config = paths["params"].get("data", {})
+        # Validate before _begin_run(): a data stage without datasets must not
+        # leave an empty run folder behind.
+        datasets = data_config.get("datasets") or []
+        if not datasets:
+            raise ValueError("Data stage requires data.datasets in the config; this config only sets data.raw_data_file, which the features stage consumes directly (a full run skips the data stage automatically).")
         run_dir = self._begin_run()
         # The canonical chaining location stays exactly as on main: the explicit
         # merge output_path, or the data/pipeline default. The run folder also
@@ -371,7 +376,7 @@ class Pipeline:
         output_path = paths["merged_output_path"]
 
         resampled = []
-        for ds_cfg in data_config.get("datasets", []):
+        for ds_cfg in datasets:
             self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
             df = self.feature_engineer.load_data(ds_cfg.get("path"))
             resampled_df = self.feature_engineer.resample_dataset(df, ds_cfg)
@@ -508,11 +513,14 @@ class Pipeline:
         if stage is not None:
             return self._run_stage(stage)
 
-        # Full run (stage is None): data -> features -> model -> reporting
+        # Full run (stage is None): data -> features -> model -> reporting.
+        # Configs without data.datasets feed raw_data_file straight into features.
+        has_datasets = bool(self._get_config().to_dict().get("data", {}).get("datasets"))
         self._run_dir = None
         self._full_run_active = True
         try:
-            self.run_data()
+            if has_datasets:
+                self.run_data()
             transformed_data = self.run_features()
             self.run_model(transformed_data=transformed_data)
             self.run_reporting()

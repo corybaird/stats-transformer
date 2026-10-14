@@ -6,7 +6,10 @@ entity nor date columns.
 """
 
 import glob
+import json
 import os
+
+import pandas as pd
 import yaml
 import pytest
 from stats_transformer import FeatureEngineer, Pipeline
@@ -48,6 +51,36 @@ def test_mincer_wage_features_and_model(tmp_path, monkeypatch):
     assert coefficients["educ"]["value"] > 0
     assert coefficients["expersq"]["value"] < 0
     assert results["metrics"]["num_observations"] == 526
+
+
+def test_mincer_wage_full_run(tmp_path, monkeypatch):
+    """Configs without data.datasets must run the full pipeline off raw_data_file.
+
+    Regression: a full run always called run_data(), which crashed with
+    IndexError on resampled[0] when no datasets were configured.
+    """
+    config_path = _prepare_config(tmp_path, "references/configs/regression/mincer_wage.yaml")
+    monkeypatch.chdir(tmp_path)  # all outputs land in tmp_path relative to CWD
+    pipeline = Pipeline(params_path=str(config_path))
+    transformed = pipeline.run()
+    assert isinstance(transformed, pd.DataFrame)
+    assert transformed.shape[1] > 4
+    # Model summary in the per-run folder, manifest lists exactly what ran.
+    run_dir = next(iter((tmp_path / "data" / "pipeline" / "params").iterdir()))
+    assert (run_dir / "03_model" / "model_summary.json").is_file()
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["stages_run"] == ["features", "model", "reporting"]
+
+
+def test_run_data_stage_without_datasets_raises(tmp_path, monkeypatch):
+    config_path = _prepare_config(tmp_path, "references/configs/regression/mincer_wage.yaml")
+    monkeypatch.chdir(tmp_path)
+    pipeline = Pipeline(params_path=str(config_path))
+    with pytest.raises(ValueError, match="data.datasets"):
+        pipeline.run(stage="data")
+    # The failed stage leaves nothing behind: no run folder, no output file.
+    assert not (tmp_path / "data").exists()
+    assert not list(tmp_path.rglob("manifest.json"))
 
 
 def test_transform_whole_frame_without_entity():
@@ -120,13 +153,18 @@ XFAIL_CONFIGS = {
     "timeseries/reduced_form/local_projections.yaml": "Config declares date_column: date but sofr_surprises.parquet.gzip has no date column",
 }
 
-@pytest.mark.parametrize(
-    "config",
-    [pytest.param(f"references/configs/{rel}", marks=pytest.mark.xfail(strict=True, reason=reason)) for rel, reason in XFAIL_CONFIGS.items()]
-    + [pytest.param(os.path.relpath(c, REPO_ROOT), id=os.path.relpath(c, REPO_ROOT))
-       for c in ALL_CONFIGS
-       if os.path.relpath(c, os.path.join(REPO_ROOT, "references", "configs")) not in XFAIL_CONFIGS],
-)
+
+def _config_params():
+    return [
+        pytest.param(f"references/configs/{rel}", marks=pytest.mark.xfail(strict=True, reason=reason))
+        for rel, reason in XFAIL_CONFIGS.items()
+    ] + [
+        pytest.param(os.path.relpath(c, REPO_ROOT), id=os.path.relpath(c, REPO_ROOT))
+        for c in ALL_CONFIGS
+        if os.path.relpath(c, os.path.join(REPO_ROOT, "references", "configs")) not in XFAIL_CONFIGS
+    ]
+
+@pytest.mark.parametrize("config", _config_params())
 def test_config_features_and_model_smoke(config, tmp_path, monkeypatch):
     """Every YAML under references/configs runs the features and model stages.
 
@@ -138,3 +176,11 @@ def test_config_features_and_model_smoke(config, tmp_path, monkeypatch):
     pipeline = Pipeline(params_path=str(config_path))
     pipeline.run_features()
     pipeline.run_model()
+
+
+@pytest.mark.parametrize("config", _config_params())
+def test_config_full_run_smoke(config, tmp_path, monkeypatch):
+    """Every YAML under references/configs also runs the full pipeline (stage=None)."""
+    config_path = _prepare_config(tmp_path, config)
+    monkeypatch.chdir(tmp_path)
+    Pipeline(params_path=str(config_path)).run()
