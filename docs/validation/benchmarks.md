@@ -70,7 +70,7 @@ All bugs below are in `stats-transformer`, not in R, Stata or MATLAB. Fix on a d
 | --- | --- | --- | --- |
 | 1 | Cointegration rank fixed at 1 | `vecm.py:32` | flips `test_vecm_ghysels_ch7_uk_rank3_matches_r` |
 | 1 | Proxy SVAR scaling and instrument sample | `proxy_svar.py:49-63` | flips `test_proxy_svar_gk2015_matches_matlab` |
-| 1 | Minnesota prior multiplies by sigma_j squared | `bvar.py:120`, `pandemic_bvar.py:71`, `bayesian_sign_zero.py:91` | prior variance check against `bvar_kl_minnesota`; R `BVAR` with fixed hyperparameters |
+| 1 | Minnesota prior multiplies by sigma_j squared — FIXED: divides by sigma_j^2 (shared `minnesota_prior_moments` in `bvar.py`, used by `pandemic_bvar.py`, `bayesian_sign_zero.py`) | see Verification hooks | `test_bvar_minnesota_prior_variance_matches_hand_computation`, `test_bvar_posterior_mean_is_scale_equivariant` (both fail on main); exact parity with `bvar_kl_minnesota` NOT expected (Litterman fixed-Sigma prior, different family) |
 | 1 | Sign-zero "exact zeros" use a 1e-10 tolerance | `sign_zero.py:158`, `bayesian_sign_zero.py:121` | deterministic test with an injected rotation |
 | 1 | SVEC Nelder-Mead fallback | `svec.py:150` | R `svec_canada` |
 | 1 | TVECM error-correction term lag | `tvecm.py:63` | R `tsDyn::TVECM` |
