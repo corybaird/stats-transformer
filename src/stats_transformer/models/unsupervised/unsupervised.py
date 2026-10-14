@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from stats_transformer.models.base import ModelBase
@@ -60,6 +60,22 @@ class UnsupervisedModel(ModelBase):
             "metrics": self.get_model_metrics()
         }
 
+class _UncenteredPCA(TruncatedSVD):
+    # TruncatedSVD.explained_variance_ratio_ divides by the per-feature variance of the
+    # input, which is only meaningful for centered data. Rescale to the PCA convention
+    # sigma_i^2 / sum_j sigma_j^2 for uncentered matrices.
+    def fit(self, X, y=None):
+        return self.fit_transform(X, y)
+
+    def fit_transform(self, X, y=None):
+        Xtr = super().fit_transform(X, y)
+        X = np.asarray(X, dtype=float)
+        total_ss = float(np.sum(X**2))
+        sv2 = np.asarray(self.singular_values_) ** 2
+        self.explained_variance_ = sv2 / (X.shape[0] - 1)
+        self.explained_variance_ratio_ = sv2 / total_ss
+        return Xtr
+
 class PCAModel(UnsupervisedModel):
     # Principal Component Analysis
 
@@ -82,9 +98,13 @@ class PCAModel(UnsupervisedModel):
             **kwargs
         )
 
-    def build_model(self) -> PCA:
+    def build_model(self):
         assert self.df_clean is not None  # set by load_data, called via fit() before build_model()
-        self.model = PCA(n_components=self.n_components)
+        if self.with_mean:
+            self.model = PCA(n_components=self.n_components)
+        else:
+            # sklearn PCA always centers, so with_mean=False uses SVD on the uncentered matrix
+            self.model = _UncenteredPCA(n_components=self.n_components, random_state=0)
         self.transformed_X = self.model.fit_transform(self.X_scaled)
         for i in range(self.n_components):
             self.df_clean[f'pca_{i+1}'] = self.transformed_X[:, i]

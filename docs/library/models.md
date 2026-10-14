@@ -156,7 +156,7 @@ These models are fully implemented and covered by automated Python unit and inte
 ### 4.1 Principal Component Analysis (`PCAModel`)
 - **Description**: Standardized or demean-only PCA feature extraction producing factor loadings, scree variance shares, and orthogonal latent components.
 - **Specification**: Spectral decomposition of correlation or covariance matrix $\Sigma_X = V \Lambda V'$.
-- **Parameters**: `standardize: bool = True` (set `standardize=False` for demean-only/covariance PCA preserving relative variance scale across variables, e.g. for yield curves or macroeconomic factor models), `with_mean: bool = True`.
+- **Parameters**: `standardize: bool = True` (set `standardize=False` for demean-only/covariance PCA preserving relative variance scale across variables, e.g. for yield curves or macroeconomic factor models), `with_mean: bool = True` (set `with_mean=False` to skip centering: `PCAModel` then performs non-centered SVD, since sklearn `PCA` always centers).
 - **Module Location**: `src/stats_transformer/models/unsupervised/pca.py`
 - **Pipeline Access**: `pca` (direct instantiation: `PCAModel`)
 - **Benchmark Target**: R (`stats::prcomp`), Stata (`pca`)
