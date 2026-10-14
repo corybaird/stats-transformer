@@ -267,15 +267,16 @@ def test_svec_canada_matches_r():
     m = SVECModel(target_variables=cols, k_ar_diff=2, coint_rank=1, deterministic="coli", SR=SR, LR=LR)
     m.fit(_csv("tests/integration/var/canada.csv")[cols].reset_index(drop=True))
     ref = _ref("r", "svec_canada")
-
-    def colnorm(sr, lr):
-        # B's columns are only identified up to scaling/sign; fix sign on the
-        # diagonal of SR and scale columns to unit norm on both sides
-        f = np.array([np.sign(sr[j, j]) / np.linalg.norm(sr[:, j]) for j in range(4)])
-        return sr * f, lr * f
-
-    got_sr, got_lr = colnorm(np.asarray(m.svec_fit.SR_est, dtype=float), np.asarray(m.svec_fit.LR_est, dtype=float))
-    ref_sr, ref_lr = colnorm(np.asarray(ref["SR"], dtype=float), np.asarray(ref["LR"], dtype=float))
-    np.testing.assert_allclose(got_sr, ref_sr, atol=1e-4)
-    np.testing.assert_allclose(got_lr, ref_lr, atol=1e-4)
+    # Compare raw matrices; the scale of each column is identified here (the
+    # ML optimum pins B B' to Sigma_u), so only the free sign is aligned by
+    # flipping a column whose diagonal sign differs.
+    got_sr = np.asarray(m.svec_fit.SR_est, dtype=float).copy()
+    got_lr = np.asarray(m.svec_fit.LR_est, dtype=float).copy()
+    ref_sr = np.asarray(ref["SR"], dtype=float)
+    for j in range(4):
+        if np.sign(got_sr[j, j]) != np.sign(ref_sr[j, j]):
+            got_sr[:, j] *= -1
+            got_lr[:, j] *= -1
+    np.testing.assert_allclose(got_sr, ref_sr, atol=1e-6)
+    np.testing.assert_allclose(got_lr, np.asarray(ref["LR"], dtype=float), atol=1e-6)
     assert m.svec_fit.max_restriction_violation <= m.svec_fit.restr_tol

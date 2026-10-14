@@ -60,7 +60,7 @@ These models are fully implemented and covered by automated Python unit and inte
 | **Structural Identification** | `IndependenceSVARModel` | `independence_svar` | `IndependenceSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.dc` | **Implemented** |
 | **Structural Identification** | `CVMSVARModel` | `cvm_svar` (`cvm`) | `CVMSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.cvm` | **Implemented** |
 | **Structural Identification** | `NonGaussianSVARModel` | `non_gaussian_svar` (`non_gaussian`) | `NonGaussianSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.ng` | **Implemented** |
-| **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Verified** (R `svec_canada`, up to per-column normalisation, $10^{-4}$) |
+| **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Verified** (R `svec_canada`, $10^{-9}$; column signs aligned) |
 | **Nonlinear Dynamics** | `TVECMModel` | `tvecm` | `TVECMModel` | Cointegration Panel (`data/examples/timeseries/ghysels_ch7/`) | R `tsDyn::TVECM` | **Implemented** |
 | **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR` | **Implemented** (no recorded reference) |
 | **Nonlinear Dynamics** | `STVARModel` | `stvar` | `STVARModel` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::STVAR` | **Implemented** |
@@ -322,7 +322,7 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Module Location**: `src/stats_transformer/models/timeseries/structural/svec.py`
 - **Pipeline Access**: `svec` (direct instantiation: `SVECModel`)
 - **Benchmark Target**: R (`vars::SVEC`), MATLAB (`VAR-Toolbox 4.0`)
-- **Verified Discrepancy**: Restricted $B$ and $LR = \Xi B$ agree with R `vars::SVEC` (Canada example, `svec_canada`) to $10^{-4}$ after per-column sign/normalisation; the identifying restrictions are enforced with a multi-start SLSQP fit and the max violation is exposed as `SVEC.max_restriction_violation`.
+- **Verified Discrepancy**: Restricted $B$ and $LR = \Xi B$ agree with R `vars::SVEC` (Canada example, `svec_canada`) to $10^{-9}$ with only column signs aligned (the estimated scale is identified because the ML optimum pins $B B^T$ to $\hat\Sigma_u$). For a just-identified restriction set the ML system {restrictions, $B B^T = \hat\Sigma_u$} is solved directly; otherwise the concentrated likelihood is maximised in the free directions from several deterministic starts, and the max restriction violation is exposed as `SVEC.max_restriction_violation`.
 
 ### 6.10 Bayesian Sign & Zero Restrictions SVAR (`BayesianSignZeroSVARModel`)
 - **Description**: Bayesian Structural VAR identification combining Minnesota prior parameter draws with simultaneous sign, zero, and narrative restrictions via Haar/QR rotation sampling and Chan et al. (2025) column-permutation efficiency acceleration.

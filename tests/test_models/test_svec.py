@@ -45,17 +45,47 @@ def test_svec_model_pipeline_interface():
 def test_svec_raises_when_all_starts_fail(monkeypatch):
     import stats_transformer.models.timeseries.structural.svec as svec_mod
 
-    class _Failed:
-        success = False
-        fun = np.inf
-        x = np.zeros(4)
-
-    monkeypatch.setattr(svec_mod, "minimize", lambda *a, **k: _Failed())
     np.random.seed(42)
     y1 = np.cumsum(np.random.randn(120))
     y2 = y1 * 0.5 + np.random.randn(120)
     data = pd.DataFrame({"y1": y1, "y2": y2})
     vecm_result = VECM(data, k_ar_diff=1, coint_rank=1).fit()
     SR = np.array([[np.nan, 0.0], [np.nan, np.nan]])
-    with pytest.raises(RuntimeError, match="restrictions"):
+
+    class _Failed:
+        success = False
+        fun = np.inf
+        x = np.zeros(3)
+
+    monkeypatch.setattr(svec_mod, "minimize", lambda *a, **k: _Failed())
+    monkeypatch.setattr(svec_mod, "root", lambda *a, **k: _Failed())
+    with pytest.raises(RuntimeError):
         SVEC(vecm_result, SR=SR)
+
+
+def test_svec_raises_on_restriction_violation(monkeypatch):
+    import stats_transformer.models.timeseries.structural.svec as svec_mod
+
+    np.random.seed(42)
+    y1 = np.cumsum(np.random.randn(120))
+    y2 = y1 * 0.5 + np.random.randn(120)
+    data = pd.DataFrame({"y1": y1, "y2": y2})
+    vecm_result = VECM(data, k_ar_diff=1, coint_rank=1).fit()
+    SR = np.array([[np.nan, 0.0], [np.nan, np.nan]])
+
+    class _Violating:  # claims success but violates the SR[0, 1] = 0 restriction
+        success = True
+        fun = 1.0
+        x = np.ones(4)  # root() sees full vec(B); violates SR[0, 1] = 0
+
+    monkeypatch.setattr(svec_mod, "root", lambda *a, **k: _Violating())
+
+    class _Failed:  # the free-direction fallback finds nothing either
+        success = False
+        fun = np.inf
+        x = np.zeros(3)
+
+    monkeypatch.setattr(svec_mod, "minimize", lambda *a, **k: _Failed())
+    with pytest.raises(RuntimeError, match="restrictions") as excinfo:
+        SVEC(vecm_result, SR=SR)
+    assert excinfo.value.max_restriction_violation > 0.0

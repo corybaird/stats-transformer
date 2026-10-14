@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize
-from scipy.linalg import cholesky
+from scipy.optimize import minimize, root
+from scipy.linalg import cholesky, null_space
 from statsmodels.tsa.vector_ar.vecm import VECM
 from stats_transformer.models.base import ModelBase
 
@@ -102,11 +102,31 @@ class SVEC:
             eigvals = np.maximum(eigvals, 1e-6)
             L = eigvecs @ np.diag(np.sqrt(eigvals))
 
-        # Deterministic starts for SLSQP: Cholesky factor and scaled identity.
+        # Deterministic starts plus seeded random starts.
+        rng = np.random.default_rng(0)
         starts = [
             L.flatten(),
             np.diag(np.sqrt(np.maximum(np.diag(sigma_u), 0.0))).flatten(),
+            rng.normal(0, 1, K * K),
+            rng.normal(0, 1, K * K),
         ]
+
+        # Restriction matrix on vec(B) (row-major): unit rows for SR zeros,
+        # rows of Xi at the affected column block for LR zeros.
+        E = np.zeros((0, K * K))
+        for i in range(K):
+            for j in range(K):
+                if lr_mask[i, j]:
+                    row = np.zeros(K * K)
+                    row[j * K:(j + 1) * K] = Xi[i, :]
+                    E = np.vstack([E, row])
+                if sr_mask[i, j]:
+                    row = np.zeros(K * K)
+                    row[i * K + j] = 1.0
+                    E = np.vstack([E, row])
+        # Free directions of vec(B); parametrising on them removes any
+        # linear dependence between the restrictions.
+        Sb = null_space(E) if E.shape[0] else np.eye(K * K)
 
         def objective(b_flat):
             B = b_flat.reshape((K, K))
@@ -120,68 +140,82 @@ class SVEC:
             except (np.linalg.LinAlgError, ValueError):
                 return 1e10
 
-        constraints = []
-        for i in range(K):
-            for j in range(K):
-                if sr_mask[i, j]:
-                    target_val = float(self.SR[i, j])
-                    idx = i * K + j
-                    constraints.append({
-                        "type": "eq",
-                        "fun": lambda b, idx=idx, target_val=target_val: b[idx] - target_val
-                    })
-
-        for i in range(K):
-            for j in range(K):
-                if lr_mask[i, j]:
-                    target_val = float(self.LR[i, j])
-                    row_xi = Xi[i, :]
-                    col_j = j
-                    constraints.append({
-                        "type": "eq",
-                        "fun": lambda b, row_xi=row_xi, col_j=col_j, target_val=target_val: np.dot(row_xi, b.reshape((K, K))[:, col_j]) - target_val
-                    })
+        def restriction_violation(b_flat):
+            B = b_flat.reshape((K, K))
+            violations = [abs(B[i, j] - float(self.SR[i, j])) for i in range(K) for j in range(K) if sr_mask[i, j]]
+            violations += [abs((Xi @ B)[i, j] - float(self.LR[i, j])) for i in range(K) for j in range(K) if lr_mask[i, j]]
+            return max(violations, default=0.0)
 
         self.restr_tol = 1e-6
+        candidates = []  # (objective, vec(B)) of restriction-satisfying fits
+        best_viol = np.inf
+        # Just identified: the concentrated likelihood only depends on B B', whose
+        # unique minimum over positive-definite choices is B B' = sigma_u, so the
+        # ML solution solves the system {restrictions, B B' = sigma_u} directly.
+        if Sb.shape[1] == K * (K + 1) // 2:
+            def direct_residuals(b_flat):
+                B = b_flat.reshape((K, K))
+                out = []
+                for i in range(K):
+                    for j in range(K):
+                        if sr_mask[i, j]:
+                            out.append(B[i, j] - float(self.SR[i, j]))
+                        if lr_mask[i, j]:
+                            out.append((Xi @ B)[i, j] - float(self.LR[i, j]))
+                triu = np.triu_indices(K)
+                out.extend((B @ B.T)[triu] - sigma_u[triu])
+                return np.array(out)
 
-        opt_res = None
-        for b0 in starts:
-            opt_res = minimize(
-                objective,
-                b0,
-                method="SLSQP",
-                constraints=constraints,
-                options={"maxiter": self.max_iter, "ftol": 1e-9}
+            for b0 in starts:
+                sol = root(direct_residuals, b0, method="lm")
+                if not sol.success:
+                    continue
+                viol = restriction_violation(sol.x)
+                best_viol = min(best_viol, viol)
+                if viol <= self.restr_tol:
+                    candidates.append((objective(sol.x), sol.x))
+
+        # Fallback (over-identified, or the system solve failed): minimise the
+        # concentrated likelihood along the free directions with a Newton-type
+        # method from several deterministic starts, keeping the best fit.
+        free_starts = [np.linalg.lstsq(Sb, s0, rcond=None)[0] for s0 in starts[:2]]
+        rng = np.random.default_rng(0)
+        free_starts += [rng.normal(0.0, 1.0, Sb.shape[1]) for _ in range(2)]
+        for g0 in free_starts:
+            fit_res = minimize(lambda g: objective(Sb @ g), g0, method="BFGS", options={"maxiter": self.max_iter, "gtol": 1e-10})
+            if not fit_res.success:
+                continue
+            b_flat = Sb @ fit_res.x
+            viol = restriction_violation(b_flat)
+            best_viol = min(best_viol, viol)
+            if viol <= self.restr_tol and objective(b_flat) < 1e10:
+                candidates.append((objective(b_flat), b_flat))
+
+        if not candidates:
+            self.max_restriction_violation = best_viol
+            reason = (
+                "all optimiser runs failed"
+                if not np.isfinite(best_viol)
+                else f"best violation {best_viol:.3g}"
             )
-            if opt_res.success:
-                break
+            err = RuntimeError(
+                f"SVEC estimation failed: no start satisfied the identifying "
+                f"restrictions to {self.restr_tol:g} ({reason}); "
+                f"tried {len(free_starts)} deterministic starts"
+            )
+            err.max_restriction_violation = best_viol
+            raise err
 
-        B_est = opt_res.x.reshape((K, K))
+        _, b_flat = min(candidates, key=lambda c: c[0])
+        B_est = b_flat.reshape((K, K))
+        self.max_restriction_violation = restriction_violation(b_flat)
         for i in range(K):
             for j in range(K):
                 if sr_mask[i, j]:
                     B_est[i, j] = self.SR[i, j]
 
-        LR_est = Xi @ B_est
-        violations = []
-        for i in range(K):
-            for j in range(K):
-                if sr_mask[i, j]:
-                    violations.append(abs(B_est[i, j] - float(self.SR[i, j])))
-                if lr_mask[i, j]:
-                    violations.append(abs(LR_est[i, j] - float(self.LR[i, j])))
-        self.max_restriction_violation = max(violations, default=0.0)
-        if not opt_res.success or self.max_restriction_violation > self.restr_tol:
-            raise RuntimeError(
-                f"SVEC estimation failed: SLSQP did not satisfy the identifying "
-                f"restrictions to {self.restr_tol:g} "
-                f"(max violation {self.max_restriction_violation:.3e}); "
-                f"tried {len(starts)} deterministic starts"
-            )
-
         self.SR_est = B_est
-        self.LR_est = LR_est
-        self.opt_res = opt_res
+        self.LR_est = Xi @ B_est
         self.bse = np.full((K, K), np.nan)
 
         try:

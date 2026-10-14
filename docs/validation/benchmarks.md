@@ -42,7 +42,7 @@ This section records which `stats-transformer` model wrappers match external sof
 | **Time Series** | `LocalProjectionsIVModel` | Stata (`ivregress 2sls` per horizon) | Jorda & Taylor (`data/examples/matlab_examples/JT2025_Data.xlsx`) | **Verified** (level-lead specification, $10^{-6}$) |
 | **Time Series** | `BlanchardQuahModel` | MATLAB (`VAR-Toolbox 4.0`), R (`vars::BQ`) | Blanchard & Quah (`data/examples/matlab_examples/BQ1989_Data.xlsx`) | **Verified** ($2.22 \times 10^{-16}$ vs MATLAB) |
 | **Time Series** | `SVARModel` | R (`vars::SVAR`) | Canada (`tests/integration/var/canada.csv`) | **Verified** (A-model, $10^{-4}$) |
-| **Time Series** | `SVECModel` | R (`vars::SVEC`) | Canada (`tests/integration/var/canada.csv`) | **Verified** (up to per-column normalisation, $10^{-4}$) |
+| **Time Series** | `SVECModel` | R (`vars::SVEC`) | Canada (`tests/integration/var/canada.csv`) | **Verified** ($10^{-9}$; column signs aligned) |
 
 ### 2.2 Non-Verified Models
 
