@@ -41,7 +41,7 @@ APPLICATIONS = [
         "source": "Wooldridge wage1",
         "frequency": "cross-section",
         "key": [("educ", None), ("exper", None)],
-        "checked": "\\texttt{test\\_robust\\_ols\\_longley\\_matches\\_r\\_and\\_stata} (HC3)",
+        "checked": "statsmodels OLS (HC3), same design matrix",
     },
     {
         "name": "okuns_law",
@@ -50,7 +50,7 @@ APPLICATIONS = [
         "source": "FRED UNRATE + real GDP",
         "frequency": "quarterly",
         "key": [("gdp_pct_change", None)],
-        "checked": "\\texttt{test\\_robust\\_ols\\_longley\\_matches\\_r\\_and\\_stata} (HC3)",
+        "checked": "statsmodels OLS (HC3), same design matrix",
     },
     {
         "name": "grunfeld_panel",
@@ -59,7 +59,7 @@ APPLICATIONS = [
         "source": "Grunfeld",
         "frequency": "annual",
         "key": [("value", None), ("capital", None)],
-        "checked": "R plm / Stata xtreg (\\texttt{test\\_panel\\_fe\\_grunfeld\\_matches\\_r\\_and\\_stata})",
+        "checked": "R plm / Stata xtreg, one-way FE parity (\\texttt{test\\_panel\\_fe\\_grunfeld\\_matches\\_r\\_and\\_stata})",
     },
     {
         "name": "macro_var",
@@ -69,6 +69,8 @@ APPLICATIONS = [
         "frequency": "quarterly",
         "key": [("L1.realgdp", "realgdp"), ("L1.realcons", "realgdp")],
         "checked": "\\texttt{test\\_var\\_macro\\_matches\\_r\\_and\\_stata}",
+        "footnote": "\\dag",  # marked in the table row, explained in the note row
+        "note": "Macro VAR key estimates were fitted through the Python API; the pipeline's model stage does not yet fit multivariate configs.",
     },
     {
         "name": "country_panel_var",
@@ -83,12 +85,17 @@ APPLICATIONS = [
 
 
 def fmt(value) -> str:
-    """Fixed 3-significant-figure rule for every number in the generated .tex."""
-    value = float(value)
-    text = f"{value:.3g}"
-    # Large counts (e.g. MacroDB's 11490 rows) keep 3 significant figures in
-    # scientific notation instead of rounding to a wrong-looking integer.
-    return re.sub(r"e([+-])0*(\d+)$", lambda m: f"\\times 10^{{{'-' if m.group(1) == '-' else ''}{int(m.group(2))}}}", text)
+    """Fixed 3-significant-figure rule for estimates and statistics in the generated .tex."""
+    text = f"{float(value):.3g}"
+    if "e" in text:  # tiny/huge estimates: keep 3 significant figures in math mode
+        mantissa, exponent = text.split("e")
+        return f"${mantissa}\\times 10^{{{int(exponent)}}}$"
+    return text
+
+
+def fmt_count(value) -> str:
+    """Counts (observations, countries, ...) are exact integers with a thousands separator."""
+    return f"{int(value):,}".replace(",", "{,}")
 
 
 def _tex_escape(text: str) -> str:
@@ -227,7 +234,7 @@ def _key_estimates(app: dict, record: dict) -> str:
     for term, equation in app["key"]:
         if equation is not None:
             entry = coefficients[equation][term]
-            name = f"\\texttt{{{_tex_escape(term)}}} $\\rightarrow$ {_tex_escape(equation)}"
+            name = f"{_code(term)} $\\rightarrow$ {_code(equation)}"
         else:
             entry = coefficients[term]
             name = _code(term)
@@ -239,30 +246,41 @@ def _data_cell(app: dict, record: dict) -> str:
     if app["config"] is None:
         country = record["country_panel"]
         return (
-            f"{_tex_escape(app['source'])}, {fmt(country['n_raw'])} obs "
-            f"({country['n_countries']} countries), {fmt(country['n_annual'])} annual"
+            f"{_tex_escape(app['source'])}, {fmt_count(country['n_raw'])} obs "
+            f"({fmt_count(country['n_countries'])} countries), {fmt_count(country['n_annual'])} annual"
         )
-    return f"{_tex_escape(app['source'])}, {fmt(record['n_obs'])} obs, {app['frequency']}"
+    return f"{_tex_escape(app['source'])}, {fmt_count(record['n_obs'])} obs, {app['frequency']}"
 
 
-def render_row(app: dict, record: dict) -> str:
-    """One booktabs body row of the applications table."""
-    config_cell = _code(app["config"]) if app["config"] else "Python API"
-    outputs = ", ".join(_code(f) for f in record["run_files"]) or "---"
-    cells = [app["label"], _data_cell(app, record), config_cell, _estimator_se(app, record), _key_estimates(app, record), outputs, app["checked"]]
-    return " & ".join(cells) + " \\\\"
+def render_rows(records: list[tuple[dict, dict]]) -> str:
+    """Booktabs body rows of the applications table.
+
+    The last body row is a \multicolumn note disclosing any estimates that
+    did not come from the pipeline run (the paper owns the table environment).
+    """
+    rows, notes = [], []
+    for app, record in records:
+        label = app["label"] + (f" {app['footnote']}" if app.get("footnote") else "")
+        config_cell = _code(app["config"]) if app["config"] else "Python API"
+        outputs = ", ".join(_code(f) for f in record["run_files"]) or "---"
+        cells = [label, _data_cell(app, record), config_cell, _estimator_se(app, record), _key_estimates(app, record), outputs, app["checked"]]
+        rows.append(" & ".join(cells) + " \\\\")
+        if app.get("footnote"):
+            notes.append(f"\\multicolumn{{7}}{{l}}{{\\footnotesize {app['footnote']}~{app['note']}}} \\\\")
+    return "\n".join(rows + notes) + "\n"
 
 
 def render_flow(app: dict, record: dict) -> str:
-    """Compact tikzpicture: config -> data -> stages that ran -> output files."""
-    nodes = [_code(app["config"]), _code(record["data_rel"])]
+    """Compact tikzpicture: config -> data -> stages that ran -> output files.
+    Basenames only; the full repository paths live in the config appendix."""
+    nodes = [_code(Path(app["config"]).name), _code(Path(record["data_rel"]).name)]
     nodes += [_tex_escape(stage) for stage in record["manifest"]["stages_run"]]
-    nodes += ["outputs: " + ", ".join(_tex_escape(f) for f in record["run_files"])]
+    nodes += ["outputs:" + "\\\\".join(("", *(_tex_escape(Path(f).name) for f in record["run_files"])))]
     lines = [
         f"% Generated by scripts/generate_paper_applications.py for {_tex_escape(app['config'])}:",
         "% stages and output files come from the run's manifest.json.",
-        "\\begin{tikzpicture}[>=Stealth, node distance=4mm,",
-        "  box/.style={draw, rounded corners=1pt, font=\\tiny, align=center, inner sep=2pt, text width=1.75cm}]",
+        "\\begin{tikzpicture}[>=Stealth, node distance=2mm,",
+        "  box/.style={draw, rounded corners=1pt, font=\\tiny, align=center, inner sep=1pt, text width=1.75cm}]",
         f"\\node[box] (n0) {{{nodes[0]}}};",
     ]
     for i, label in enumerate(nodes[1:], start=1):
@@ -295,8 +313,7 @@ def main(argv=None) -> None:
     with tempfile.TemporaryDirectory(prefix="paper_applications_") as tmp:
         records = build_records(Path(tmp))
 
-    rows = "\n".join(render_row(app, record) for app, record in records)
-    (out_dir / "applications.tex").write_text(rows + "\n")
+    (out_dir / "applications.tex").write_text(render_rows(records))
     for app, record in records:
         if app["config"]:  # flow strips need a manifest; the API application has none
             (out_dir / f"app_{app['name']}_flow.tex").write_text(render_flow(app, record))
