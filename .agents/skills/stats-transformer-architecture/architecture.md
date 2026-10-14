@@ -70,7 +70,7 @@ Pipeline                       (src/stats_transformer/pipeline.py:15)
 ## Data lifecycle (cookie-cutter layout)
 
 - `data/raw/` — immutable original data dumps.
-- `data/pipeline/` — `resampled_merged.parquet` intermediate produced by the `resample` stage.
+- `data/pipeline/` — `resampled_merged.parquet` intermediate produced by the `data` stage.
 - `data/final/` — featurized panel produced by the `features` stage.
 - `data/temp/` — scratch space for tests and debugging (e.g. `data/temp/test_summary.json` in `references/configs/test_pipeline.yaml:13`).
 
