@@ -4,6 +4,54 @@ import pytest
 from pathlib import Path
 from stats_transformer.models.timeseries.identification.bayesian_sign_zero import BayesianSignZeroSVARModel
 
+def test_bayesian_zero_restrictions_by_construction(tmp_path):
+    """With zero restrictions, rotations are built by construction (Arias et al.
+    2018): accepted draws satisfy the zeros to 1e-10 and are accepted at a
+    reasonable rate (on origin/main the sampler accepts essentially never)."""
+    np.random.seed(42)
+    T = 80
+    y1 = np.random.randn(T)
+    y2 = 0.4 * y1 + np.random.randn(T)
+    y3 = -0.2 * y1 + 0.3 * y2 + np.random.randn(T)
+    dates = pd.date_range("2010-01-01", periods=T, freq="QE")
+    df = pd.DataFrame({"y1": y1, "y2": y2, "y3": y3, "date": dates})
+    config_content = """
+shocks:
+  - s1
+  - s2
+  - s3
+restrictions:
+  - shock: s1
+    response: y3
+    type: zero
+    horizon: 0
+  - shock: s1
+    response: y1
+    type: sign
+    value: "+"
+    horizon: 0
+  - shock: s2
+    response: y3
+    type: sign
+    value: "+"
+    horizon: 0
+"""
+    config_path = tmp_path / "bsvar_zero_config.yaml"
+    config_path.write_text(config_content)
+    model = BayesianSignZeroSVARModel(
+        target_variables=["y1", "y2", "y3"], config_path=str(config_path), date_column="date",
+        lags=1, n_draws=30, max_rotations_per_draw=10, required_accepts=5, seed=7,
+    )
+    model.fit(df)
+    metrics = model.get_model_metrics()
+    assert metrics["accepted_draws"] >= 3
+    for irf in model.accepted_irfs:
+        # shock s1 (index 0) has an exact zero impact on y3 (index 2)
+        assert abs(irf[0, 2, 0]) <= 1e-10
+        # sign restrictions hold
+        assert irf[0, 0, 0] > 0
+        assert irf[0, 2, 1] > 0
+
 def test_bayesian_sign_zero_fit_and_metrics(tmp_path):
     np.random.seed(42)
     T = 80
