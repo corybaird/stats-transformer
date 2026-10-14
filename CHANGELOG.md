@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-10-14
+
+### Added
+
+- **Per-run pipeline output folders with a provenance manifest.** New YAML key `output.root` (default `data/pipeline`). Each full or single-stage run writes to `<root>/<config_stem>/<YYYYMMDD_HHMMSS>/`: `01_data/merged.parquet` (copy, when `data.merge.output_path` is unset), `02_features/features.parquet` (keeps dtypes), `03_model/model_summary.json`, and `manifest.json` (config copy and sha256, input file sha256s, git SHA when available, package version, stages run, UTC timestamps, written files). Explicit output paths are still written exactly as configured, and single-stage runs chain through them as before.
+- `VECMModel(coint_rank=...)` and YAML `model.coint_rank` (default 1).
+- `SVEC.max_restriction_violation`: the largest violation of the identifying restrictions in the fitted model.
+
+### Changed
+
+- The pipeline no longer writes `reports/model_summary.json` or `reports/transformed_data_<timestamp>.csv`. Use `model.summary_output_path` or the run folder's `03_model/model_summary.json`. `Pipeline.save_results()` is unchanged for direct callers.
+- Results change for the models fixed below (BVAR family, TVECM, SVEC, sign-zero SVARs with zero restrictions); re-run analyses that use them.
+
+### Fixed
+
+- **Minnesota prior scaling.** `BVARModel`, `PandemicBVARModel` and `BayesianSignZeroSVARModel` multiplied the prior variance by sigma_j^2 instead of dividing by it. In the natural-conjugate form the prior for equation i, variable j is now sigma_i^2/sigma_j^2 times the tightness (Kadiyala & Karlsson 1997), so the posterior is equivariant to rescaling a variable. One shared `minnesota_prior_moments` helper replaces three identical copies.
+- **VECM cointegration rank.** The rank was always 1 because `coint_rank` was never passed to statsmodels. The UK term structure rank-3 case now matches R `urca::ca.jo` (beta and alpha, 1e-8).
+- **SVEC estimation.** The unconstrained Nelder-Mead fallback, which ignored the identifying restrictions, is gone, and the constrained solver no longer stops at a local optimum. A just-identified restriction set is solved directly from the ML system (restrictions and BB' = Sigma_u); an over-identified set maximises the concentrated likelihood in the free directions from several deterministic starts. If no start satisfies the restrictions to 1e-6, the fit raises `RuntimeError`. The Canada example now matches R `vars::SVEC` on raw SR and LR (1e-6).
+- **Cross-sectional data and single series without an entity column.** `FeatureEngineer` no longer requires unconfigured entity or date columns; transformations run on the whole frame and resampling works without an entity. `country_list` without an entity and `start_date` without a date column raise clear errors. The paper's Mincer wage example (`references/configs/regression/mincer_wage.yaml`) now runs end to end.
+- **Sign-zero SVAR zero restrictions.** `SignZeroSVARModel` and `BayesianSignZeroSVARModel` impose zero restrictions by construction (Arias, Rubio-Ramírez & Waggoner 2018, Algorithm 2) instead of accepting random rotations within 1e-10 of zero, which almost never happened. Without zero restrictions, draws are unchanged for a fixed seed. Bayesian draws with zero restrictions are from the ARW proposal; importance weights are not yet applied.
+- **TVECM error-correction term.** The regressor is now ECT_{t-1} and the threshold variable ECT_{t-d} (Hansen & Seo 2002). The previous code used ECT_{t-1-d} for both, so results change for every delay, including d = 1.
+- **TVAR / TVECM empty regimes.** A threshold that leaves a regime empty or below the minimum size raises `ValueError` instead of silently estimating both regimes on the full sample.
+- Tests no longer write into the repository's `reports/` folder.
+
 ## [1.8.0] - 2026-10-14
 
 ### Changed
