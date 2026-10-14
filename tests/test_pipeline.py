@@ -8,7 +8,7 @@ from stats_transformer.pipeline import Pipeline
 from stats_transformer.models.registry import MODEL_REGISTRY
 from stats_transformer.models.regression.iv import IV2SLSModel
 
-def test_pipeline_run_regression(project_root):
+def test_pipeline_run_model(project_root):
     # Setup
     config_path = project_root / "references" / "configs" / "test_pipeline.yaml"
     temp_dir = project_root / "data" / "temp"
@@ -16,8 +16,8 @@ def test_pipeline_run_regression(project_root):
 
     pipeline = Pipeline(params_path=str(config_path))
 
-    # Run the regression stage
-    results = pipeline.run(stage="regression")
+    # Run the model stage
+    results = pipeline.run(stage="model")
 
     summary_path = temp_dir / "test_summary.json"
     assert results is not None

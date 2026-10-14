@@ -9,7 +9,7 @@ description: Library architecture and pipeline usage for the stats-transformer P
 
 ## Mental model
 
-`params.yaml` → `Pipeline` orchestrator → stages in order: `resample` → `features` → `regression`/`model` → `reporting`. Each stage persists its artifact (parquet, csv, json) so stages can be run individually and re-cached.
+`params.yaml` → `Pipeline` orchestrator → stages in order: `data` → `features` → `model` → `reporting`. Each stage persists its artifact (parquet, csv, json) so stages can be run individually and re-cached.
 
 The mermaid diagram in `docs/library/architecture.md:9` is the canonical flow. Read it before adding anything new.
 
@@ -69,21 +69,21 @@ references/
 | Add a new YAML config | `references/configs/<name>.yaml` (template: `references/configs/test_pipeline.yaml`) |
 | Add a packaged example dataset | `src/stats_transformer/data/` and expose via `list_examples` / `load_example` |
 | Add a new dictionary mapping | `references/dictionaries/<NAME>.py` (constants only, per project rules) |
-| Add a new pipeline stage | Extend `Pipeline.run()` in `src/stats_transformer/pipeline.py:195`; mirror the stage in `dvc.yaml` with explicit `deps` / `params` / `outs` |
+| Add a new pipeline stage | Add a `run_<stage>()` method and dispatch it from `Pipeline.run()` in `src/stats_transformer/pipeline.py:361`; mirror the stage in `dvc.yaml` with explicit `deps` / `params` / `outs` |
 
 ## Pipeline stage contract
 
-`Pipeline.run(stage=None)` is the dispatcher. Stage values: `resample`, `features`, `eda`, `regression`, `reporting`, or `None` for full run.
+`Pipeline.run(stage=None)` is the dispatcher; each stage is its own method (`run_data`, `run_features`, `run_model`, `run_reporting`, `run_eda`). Stage values: `data`, `features`, `model`, `reporting`, `eda`, or `None` for full run. Legacy `resample`, `regression`, `visualization` still work with a `DeprecationWarning`.
 
-- `resample` — calls `FeatureEngineer.resample_dataset` per dataset in `data.datasets`, then `DataMerger.merge` to produce `data.merge.output_path` (default `data/pipeline/resampled_merged.parquet`).
+- `data` — calls `FeatureEngineer.resample_dataset` per dataset in `data.datasets`, then `DataMerger.merge` to produce `data.merge.output_path` (default `data/pipeline/resampled_merged.parquet`).
 - `features` — runs `FeatureEngineer.fit_transform` on the merged output (or `raw_data_file` if merge hasn't run) and writes `data.featurization.output_path`.
-- `regression` — fits the configured model and writes `reports/model_summary.json`.
+- `model` — fits the configured model and writes `reports/model_summary.json`.
 - `reporting` — reads the model summary and renders plots, tables, and metadata to `reporting.output_dir` (default `reports/visualizations`).
 - `eda` — runs `EDAVisualizer` on the same data path.
 
-The full-run branch (no `stage` arg) executes all of the above in order; see `src/stats_transformer/pipeline.py:275`.
+The full run (no `stage` arg) calls `run_data` → `run_features` → `run_model` → `run_reporting`; see `src/stats_transformer/pipeline.py:361`.
 
-Data-path resolution: `effective_data_path = merged_output_path if exists else raw_data_file` (`src/stats_transformer/pipeline.py:206`).
+Data-path resolution: `effective_data_path = merged_output_path if exists else raw_data_file` (`Pipeline._resolve_paths`, `src/stats_transformer/pipeline.py:249`).
 
 ## `params.yaml` shape
 

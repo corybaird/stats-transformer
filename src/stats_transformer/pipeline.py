@@ -12,6 +12,13 @@ from stats_transformer.models.base import ModelBase
 from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
 from stats_transformer.utils.config import Config, resolve_reporting_config
 
+# Canonical research stages: data (ingest, resample, merge) -> features (transform)
+# -> model (estimate, diagnostics, JSON summary) -> reporting (charts, tables).
+STAGES = ("data", "features", "model", "reporting")
+
+# Legacy stage names accepted by Pipeline.run(); each maps to a canonical stage.
+_STAGE_ALIASES = {"resample": "data", "regression": "model", "visualization": "reporting"}
+
 class Pipeline:
 
     def __init__(self, params_path: Optional[str] = None, transformations: Optional[List[Dict[str, Any]]] = None, entity_column: Optional[str] = None, date_column: str = "date", target: Optional[str] = None, features: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, **kwargs: Any) -> None:
@@ -239,128 +246,159 @@ class Pipeline:
                 self.logger.error(f"Error creating data visualization: {e}")
         return results
 
+    def _resolve_paths(self) -> Dict[str, Any]:
+        if not self.params_path:
+            raise ValueError("Pipeline stages require a params_path")
+        # Stage methods can be called directly, without going through run()
+        if self.feature_engineer is None:
+            self._initialize_from_params()
+        params = self._get_config().to_dict()
+
+        data_config = params.get("data", {})
+        raw_data_file = data_config.get("raw_data_file")
+        merged_output_path = data_config.get("merge", {}).get("output_path", "data/pipeline/resampled_merged.parquet")
+
+        # Prefer merged output if it exists or if we are in a later stage
+        effective_data_path = merged_output_path if os.path.exists(merged_output_path) else raw_data_file
+
+        report_config = resolve_reporting_config(params)
+        return {
+            "params": params,
+            "merged_output_path": merged_output_path,
+            "effective_data_path": effective_data_path,
+            "report_output_dir": report_config.get("output_dir", "reports/visualizations"),
+            "processed_path": data_config.get("featurization", {}).get("output_path"),
+            "summary_path": params.get("model", {}).get("summary_output_path"),
+        }
+
+    def run_data(self) -> pd.DataFrame:
+        """Data stage: ingest, resample to a common frequency, and merge."""
+        paths = self._resolve_paths()
+        assert self.feature_engineer is not None  # set by _resolve_paths via _initialize_from_params
+        data_config = paths["params"].get("data", {})
+        output_path = paths["merged_output_path"]
+
+        resampled = []
+        for ds_cfg in data_config.get("datasets", []):
+            self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
+            df = self.feature_engineer.load_data(ds_cfg.get("path"))
+            resampled_df = self.feature_engineer.resample_dataset(df, ds_cfg)
+            resampled.append(resampled_df)
+        dm = DataMerger(params_path=self.params_path)
+        merge_config = data_config.get("merge", {})
+        merge_on = merge_config.get("on", ["country", "date"])
+        merge_how = merge_config.get("how", "outer")
+        merged_df = resampled[0]
+        for i, next_df in enumerate(resampled[1:], start=1):
+            self.logger.info(f"Merging dataset {i + 1} of {len(resampled)}")
+            merged_df = dm.merge(merged_df, next_df, on=merge_on, how=merge_how)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        merged_df.to_parquet(output_path)
+        self.logger.info(f"Merged data saved to {output_path} with shape {merged_df.shape}")
+        return merged_df
+
+    def run_features(self, data_path: Optional[str] = None) -> pd.DataFrame:
+        """Features stage: apply transformations to the merged data."""
+        paths = self._resolve_paths()
+        data_path = data_path or paths["effective_data_path"]
+        processed_path = paths["processed_path"]
+        if not data_path:
+            raise ValueError("No data path found for features stage")
+        transformed_data = self.fit_transform(data_path, fit_model=False)
+        if processed_path:
+            transformed_data.to_csv(processed_path, index=False)
+        return transformed_data
+
+    def run_model(self, data_path: Optional[str] = None, transformed_data: Optional[pd.DataFrame] = None) -> Optional[Dict[str, Any]]:
+        """Model stage: fit the configured estimator and save its JSON summary."""
+        paths = self._resolve_paths()
+        processed_path = paths["processed_path"]
+        summary_path = paths["summary_path"]
+
+        if transformed_data is not None:
+            # Full run: fit on the in-memory features, not the CSV round-trip (keeps dtypes such as dates)
+            if self.model and self.target:
+                self.model.fit(transformed_data)
+                self.model_results = self.model.get_model_metadata()
+        elif processed_path and os.path.exists(processed_path):
+            assert self.model is not None  # set unconditionally by _initialize_from_params
+            transformed_data = pd.read_csv(processed_path)
+            self.transformed_data = transformed_data
+            self.model.fit(transformed_data)
+            self.model_results = self.model.get_model_metadata()
+        else:
+            data_path = data_path or paths["effective_data_path"]
+            self.fit_transform(data_path)
+
+        self.save_results(output_dir="reports")
+        if summary_path:
+            self.save_model_summary(summary_path)
+        return self.model_results
+
+    def run_reporting(self) -> Dict[str, Any]:
+        """Reporting stage: draw charts and tables from transformed data and model results."""
+        paths = self._resolve_paths()
+        processed_path = paths["processed_path"]
+        summary_path = paths["summary_path"]
+
+        if (self.transformed_data is None) and processed_path and os.path.exists(processed_path):
+            self.transformed_data = pd.read_csv(processed_path)
+        if (self.model_results is None) and summary_path and os.path.exists(summary_path):
+            import json
+            with open(summary_path, "r") as f:
+                self.model_results = json.load(f)
+        return self.create_visualizations(output_dir=paths["report_output_dir"])
+
+    def run_eda(self, data_path: Optional[str] = None) -> Any:
+        """EDA: exploratory charts of the merged (or raw) data."""
+        paths = self._resolve_paths()
+        data_path = data_path or paths["effective_data_path"]
+        if not data_path:
+            raise ValueError("No data path found for eda stage")
+        eda_viz = EDAVisualizer(params_path=self.params_path, output_dir=paths["report_output_dir"])
+        return eda_viz.run(data_path=data_path)
+
     def run(self, stage: Optional[str] = None) -> Any:
         if self.params_path:
             self._initialize_from_params()
             assert self.feature_engineer is not None  # set unconditionally by _initialize_from_params
-            params = self._get_config().to_dict()
-
-            data_config = params.get("data", {})
-            raw_data_file = data_config.get("raw_data_file")
-            merged_output_path = data_config.get("merge", {}).get("output_path", "data/pipeline/resampled_merged.parquet")
-            
-            # Prefer merged output if it exists or if we are in a later stage
-            effective_data_path = merged_output_path if os.path.exists(merged_output_path) else raw_data_file
-            
-            report_config = resolve_reporting_config(params)
-            report_output_dir = report_config.get("output_dir", "reports/visualizations")
-            processed_path = data_config.get("featurization", {}).get("output_path")
-            summary_path = params.get("model", {}).get("summary_output_path")
         else:
             raise ValueError("Pipeline.run() requires a params_path")
 
-        valid_stages = {"resample", "features", "eda", "regression", "reporting"}
-        if stage == "visualization":  # Deprecated alias for "reporting"
-            warnings.warn('Pipeline stage "visualization" is deprecated and will be removed in a future release; use "reporting".', DeprecationWarning, stacklevel=2)
-            stage = "reporting"
-        if stage is not None and stage not in valid_stages:
-            raise ValueError(f"Unknown stage '{stage}'. Valid values: {sorted(valid_stages)}, or None for a full run")
+        if stage is not None and stage in _STAGE_ALIASES:
+            canonical = _STAGE_ALIASES[stage]
+            warnings.warn(f'Pipeline stage "{stage}" is deprecated and will be removed in a future release; use "{canonical}".', DeprecationWarning, stacklevel=2)
+            stage = canonical
+        if stage is not None and stage != "eda" and stage not in STAGES:
+            raise ValueError(f"Unknown stage '{stage}'. Valid values: {', '.join(STAGES)} (or 'eda'), or None for a full run")
 
-        if stage == "resample":
-            data_config = params.get("data", {})
-            datasets_config = data_config.get("datasets", [])
-            resampled = []
-            for ds_cfg in datasets_config:
-                self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
-                df = self.feature_engineer.load_data(ds_cfg.get("path"))
-                resampled_df = self.feature_engineer.resample_dataset(df, ds_cfg)
-                resampled.append(resampled_df)
-            dm = DataMerger(params_path=self.params_path)
-            merge_config = data_config.get("merge", {})
-            merge_on = merge_config.get("on", ["country", "date"])
-            merge_how = merge_config.get("how", "outer")
-            output_path = merge_config.get("output_path", "data/pipeline/resampled_merged.parquet")
-            merged_df = resampled[0]
-            for i, next_df in enumerate(resampled[1:], start=1):
-                self.logger.info(f"Merging dataset {i + 1} of {len(resampled)}")
-                merged_df = dm.merge(merged_df, next_df, on=merge_on, how=merge_how)
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            merged_df.to_parquet(output_path)
-            self.logger.info(f"Merged data saved to {output_path} with shape {merged_df.shape}")
-            return merged_df
+        if stage == "data":
+            return self.run_data()
 
         if stage == "features":
-            if not effective_data_path:
-                raise ValueError("No data path found for features stage")
-            transformed_data = self.fit_transform(effective_data_path, fit_model=False)
-            if processed_path:
-                transformed_data.to_csv(processed_path, index=False)
-            return transformed_data
-            
-        elif stage == "eda":
-            if not effective_data_path:
-                raise ValueError("No data path found for eda stage")
-            eda_viz = EDAVisualizer(params_path=self.params_path, output_dir=report_output_dir)
-            return eda_viz.run(data_path=effective_data_path)
-        
-        elif stage == "regression":
-            if processed_path and os.path.exists(processed_path):
-                assert self.model is not None  # set unconditionally by _initialize_from_params
-                transformed_data = pd.read_csv(processed_path)
-                self.transformed_data = transformed_data
-                self.model.fit(transformed_data)
-                self.model_results = self.model.get_model_metadata()
-            else:
-                transformed_data = self.fit_transform(effective_data_path)
-            
-            self.save_results(output_dir="reports")
-            if summary_path:
-                self.save_model_summary(summary_path)
-            return self.model_results
-            
-        elif stage == "reporting":
-            if (self.transformed_data is None) and processed_path and os.path.exists(processed_path):
-                self.transformed_data = pd.read_csv(processed_path)
-            if (self.model_results is None) and summary_path and os.path.exists(summary_path):
-                import json
-                with open(summary_path, "r") as f:
-                    self.model_results = json.load(f)
-            return self.create_visualizations(output_dir=report_output_dir)
-        
-        else:
-            # Full run (stage is None)
-            data_config = params.get("data", {})
-            datasets_config = data_config.get("datasets", [])
-            resampled = []
-            for ds_cfg in datasets_config:
-                self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
-                df = self.feature_engineer.load_data(ds_cfg.get("path"))
-                resampled_df = self.feature_engineer.resample_dataset(df, ds_cfg)
-                resampled.append(resampled_df)
-            dm = DataMerger(params_path=self.params_path)
-            merge_config = data_config.get("merge", {})
-            merge_on = merge_config.get("on", ["country", "date"])
-            merge_how = merge_config.get("how", "outer")
-            merged_df = resampled[0]
-            for i, next_df in enumerate(resampled[1:], start=1):
-                self.logger.info(f"Merging dataset {i + 1} of {len(resampled)}")
-                merged_df = dm.merge(merged_df, next_df, on=merge_on, how=merge_how)
-            merged_df.to_parquet(merged_output_path)
-            self.logger.info(f"Merged data saved to {merged_output_path}")
-            transformed_data = self.fit_transform(merged_output_path)
-            if processed_path:
-                transformed_data.to_csv(processed_path, index=False)
-            self.create_visualizations(output_dir=report_output_dir)
-            self.save_results(output_dir="reports")
-            if summary_path:
-                self.save_model_summary(summary_path)
-            return transformed_data
+            return self.run_features()
+
+        if stage == "eda":
+            return self.run_eda()
+
+        if stage == "model":
+            return self.run_model()
+
+        if stage == "reporting":
+            return self.run_reporting()
+
+        # Full run (stage is None): data -> features -> model -> reporting
+        self.run_data()
+        transformed_data = self.run_features()
+        self.run_model(transformed_data=transformed_data)
+        self.run_reporting()
+        return transformed_data
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="params.yaml")
-    parser.add_argument("--stage", type=str)
+    parser.add_argument("--stage", type=str, choices=[*STAGES, "eda", *_STAGE_ALIASES], help="Run a single stage (data, features, model, reporting; default: run them all in order). Legacy names resample/regression/visualization are accepted but deprecated.")
     args = parser.parse_args()
     pipeline = Pipeline(params_path=args.config)
     pipeline.run(stage=args.stage)

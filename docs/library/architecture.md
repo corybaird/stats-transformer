@@ -11,21 +11,19 @@ For YAML-driven execution, the `Pipeline` class coordinates sequential execution
 ```mermaid
 flowchart LR
     A[params.yaml] --> B[Pipeline]
-    B --> C[resample]
-    C --> D[merge]
-    D --> E[features]
-    E --> F[model]
-    F --> G[metadata and artifacts]
-    G --> H[reporting]
+    B --> C[data]
+    C --> D[features]
+    D --> E[model]
+    E --> F[reporting]
 ```
 
 - **Pipeline Stages**:
-  - `resample`: Aligns multi-frequency datasets and performs panel joins via `DataMerger`.
+  - `data`: Ingests, resamples to a common frequency, and merges datasets (`DataMerger`).
   - `features`: Applies `FeatureEngineer` transformations within entity boundaries.
-  - `regression`: Fits configured estimators and outputs structured JSON metadata.
-  - `reporting`: Renders configured plots, tables, and model metadata from transformed data (legacy `visualization` stage name still accepted).
+  - `model`: Fits configured estimators and outputs structured JSON metadata and diagnostics.
+  - `reporting`: Renders configured plots, tables, and model metadata from transformed data and model results.
   - `eda`: Generates exploratory data analysis charts.
-- **Stage Execution**: `Pipeline.run(stage=...)` accepts `resample`, `features`, `eda`, `regression`, `reporting`, or `None` for full sequential execution.
+- **Stage Execution**: `Pipeline.run(stage=...)` accepts `data`, `features`, `model`, `reporting`, `eda`, or `None` for full sequential execution. Dedicated stage methods (`run_data()`, `run_features()`, `run_model()`, `run_reporting()`, `run_eda()`) can also be called directly. Legacy names (`resample`, `regression`, `visualization`) remain supported as deprecated aliases.
 - **Persisted Artifacts**: Every stage persists inspectable artifacts (Parquet, CSV, JSON, figures) enabling modular inspection and caching.
 
 ---
