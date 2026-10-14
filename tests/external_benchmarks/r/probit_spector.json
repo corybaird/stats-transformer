@@ -1,0 +1,90 @@
+{
+ "case": "probit_spector",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "stats": "4.6.1"
+  }
+ },
+ "data": {
+  "path": "data/examples/discrete/spector.csv",
+  "sha256": "54bf8eefa348d3956f29ba242516d8184179e091a40ea084e6bfa89ca569df9d",
+  "sheet": null,
+  "columns": [
+   "GPA",
+   "TUCE",
+   "PSI",
+   "GRADE"
+  ],
+  "nrows": 32,
+  "filter": null
+ },
+ "settings": {
+  "call": "glm(GRADE ~ GPA + TUCE + PSI, family = binomial(probit))"
+ },
+ "outputs": {
+  "beta": [
+   [
+    -7.45231964597208
+   ],
+   [
+    1.6258100421199995
+   ],
+   [
+    0.05172894507666283
+   ],
+   [
+    1.4263323415981959
+   ]
+  ],
+  "se": [
+   [
+    2.5715582027155626
+   ],
+   [
+    0.6897313967931695
+   ],
+   [
+    0.08119484537135631
+   ],
+   [
+    0.5869588703841924
+   ]
+  ],
+  "loglik": -12.818804068889442,
+  "nobs": 32
+ },
+ "labels": {
+  "beta": {
+   "rows": [
+    "(Intercept)",
+    "GPA",
+    "TUCE",
+    "PSI"
+   ],
+   "cols": []
+  },
+  "se": {
+   "rows": [
+    "(Intercept)",
+    "GPA",
+    "TUCE",
+    "PSI"
+   ],
+   "cols": []
+  }
+ },
+ "layout": {
+  "beta": "4 x 1 (Intercept) GPA TUCE PSI",
+  "se": "4 x 1 from the expected information (Fisher scoring); Stata and statsmodels use the observed Hessian, so se differ by up to 0.03",
+  "loglik": "scalar",
+  "nobs": "scalar"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_probit_spector.R",
+ "driver_sha256": "fc7f5e27b85d4aae3ae6d47dcedc929cca1228b7ad9e827fb95f2b8d01fb2f1d",
+ "recorded_at": "2026-10-14T02:17:12.262087+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

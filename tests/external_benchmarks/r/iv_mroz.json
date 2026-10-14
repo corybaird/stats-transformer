@@ -1,0 +1,124 @@
+{
+ "case": "iv_mroz",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "AER": "1.2.17",
+   "sandwich": "3.1.3"
+  }
+ },
+ "data": {
+  "path": "data/examples/regression/mroz.csv",
+  "sha256": "ca22d8b3a47459d632e92a7822f3b752ad45a23980f28df496dd1e12d73e38df",
+  "sheet": null,
+  "columns": [
+   "rownames",
+   "inlf",
+   "hours",
+   "kidslt6",
+   "kidsge6",
+   "age",
+   "educ",
+   "wage",
+   "repwage",
+   "hushrs",
+   "husage",
+   "huseduc",
+   "huswage",
+   "faminc",
+   "mtr",
+   "motheduc",
+   "fatheduc",
+   "unem",
+   "city",
+   "exper",
+   "nwifeinc",
+   "lwage",
+   "expersq"
+  ],
+  "nrows": 428,
+  "filter": "inlf == 1"
+ },
+ "settings": {
+  "call": "AER::ivreg(lwage ~ exper + expersq + educ | exper + expersq + motheduc + fatheduc), sandwich::vcovHC(HC0). Classical vcov uses sigma2 = RSS/(n-k)"
+ },
+ "outputs": {
+  "beta": [
+   [
+    0.04810030693217907
+   ],
+   [
+    0.0441703929487626
+   ],
+   [
+    -0.0008989695881555201
+   ],
+   [
+    0.061396628660154086
+   ]
+  ],
+  "se": [
+   [
+    0.4003280776041143
+   ],
+   [
+    0.013432475529443405
+   ],
+   [
+    0.0004016856118761858
+   ],
+   [
+    0.031436695644695256
+   ]
+  ],
+  "se_robust_hc0": [
+   [
+    0.4277845981493743
+   ],
+   [
+    0.01547356092588779
+   ],
+   [
+    0.00042806922850567906
+   ],
+   [
+    0.03318243462716473
+   ]
+  ],
+  "nobs": 428,
+  "df_residual": 424
+ },
+ "labels": {
+  "beta": {
+   "rows": [
+    "(Intercept)",
+    "exper",
+    "expersq",
+    "educ"
+   ],
+   "cols": []
+  },
+  "se": {
+   "rows": [],
+   "cols": []
+  },
+  "se_robust_hc0": {
+   "rows": [],
+   "cols": []
+  }
+ },
+ "layout": {
+  "beta": "4 x 1, (Intercept) exper expersq educ",
+  "se": "4 x 1 classical, n-k divisor",
+  "se_robust_hc0": "4 x 1",
+  "nobs": "scalar",
+  "df_residual": "scalar"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_iv_mroz.R",
+ "driver_sha256": "c0b381fbfbc803cb95689c79801933e52849fd0b177c941451c663163f0f6ea0",
+ "recorded_at": "2026-10-14T02:17:08.653857+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

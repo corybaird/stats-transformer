@@ -1,0 +1,77 @@
+cases:
+  - case: ols_longley
+    data: {path: data/examples/regression/longley.csv}
+    command: "regress totemp gnpdefl gnp unemp armed pop year [, vce(hc2) | vce(hc3) | vce(robust)]"
+    outputs: {beta: beta.csv, se_classical: se_classical.csv, se_hc1: se_hc1.csv, se_hc2: se_hc2.csv, se_hc3: se_hc3.csv, resid: resid.csv}
+    layout: {beta: "7 x 1, regressors gnpdefl gnp unemp armed pop year then _cons LAST", se_classical: "7 x 1 same order", se_hc1: "7 x 1 vce(robust)", se_hc2: "7 x 1", se_hc3: "7 x 1", resid: "n x 1"}
+  - case: iv_mroz
+    data: {path: data/examples/regression/mroz.csv, filter: inlf == 1}
+    command: "ivregress 2sls lwage exper expersq (educ = motheduc fatheduc) [, vce(robust)]"
+    outputs: {beta: beta.csv, se: se.csv, se_robust: se_robust.csv, nobs: nobs.csv}
+    layout: {beta: "4 x 1 educ exper expersq _cons (instrumented variable first, constant last)", se: "4 x 1 classical, divisor N not N-k", se_robust: "4 x 1 vce(robust)", nobs: "1 x 1"}
+  - case: panel_grunfeld
+    data: {path: data/examples/regression/grunfeld.csv}
+    command: "xtset firm year; xtreg invest value capital, fe [vce(cluster firm)]"
+    outputs: {beta_fe: beta_fe.csv, se_fe: se_fe.csv, se_fe_cluster: se_fe_cluster.csv, fe_scalars: fe_scalars.csv}
+    layout: {beta_fe: "3 x 1 value capital _cons", se_fe: "3 x 1", se_fe_cluster: "3 x 1 vce(cluster firm) with Stata small-sample factor", fe_scalars: "1 x 5 N, N_g, r2_within, sigma_u, sigma_e"}
+  - case: logit_spector
+    data: {path: data/examples/discrete/spector.csv}
+    command: "logit GRADE GPA TUCE PSI"
+    outputs: {beta: beta.csv, se: se.csv, loglik: loglik.csv}
+    layout: {beta: "4 x 1 GPA TUCE PSI _cons", se: "4 x 1", loglik: "1 x 3 ll, ll_0, N"}
+  - case: pca_longley
+    data: {path: data/examples/regression/longley.csv}
+    command: "pca GNPDEFL GNP UNEMP ARMED POP YEAR, components(6)"
+    outputs: {eigenvalues: eigenvalues.csv, loadings: loadings.csv}
+    layout: {eigenvalues: "1 x 6 descending, correlation PCA", loadings: "6 x 6 e(L), rows variables, columns components, signs arbitrary"}
+  - case: var_macro
+    data: {path: data/examples/timeseries/macrodata.csv}
+    command: "tsset t; var realgdp realcons realinv, lags(1/2)"
+    outputs: {coef_rowvec: b_rowvec.csv, Sigma_ml: Sigma_ml.csv, scalars: scalars.csv, eq1_coef: eq1_coef.csv, eq2_coef: eq2_coef.csv, eq3_coef: eq3_coef.csv}
+    layout: {coef_rowvec: "1 x 21 e(b); within each equation the order is realgdp L1 L2, realcons L1 L2, realinv L1 L2, _cons (variable-major, differs from R)", Sigma_ml: "3 x 3 e(Sigma), divisor T", scalars: "1 x 8 N, T, df_m, ll, aic, sbic, hqic, detsig", eq1_coef: "7 x 1 equation 1 coefficients in e(b) order"}
+  - case: vecm_macro
+    data: {path: data/examples/timeseries/macrodata.csv}
+    command: "tsset t; vec realgdp realcons realinv, rank(1) lags(2) trend(constant)"
+    outputs: {alpha: alpha.csv, beta: beta.csv, Pi: Pi.csv, Sigma: Sigma.csv, V_alpha: V_alpha.csv, V_beta: V_beta.csv, b_short_run: b_short_run.csv, scalars: scalars.csv}
+    layout: {alpha: "1 x 3 e(alpha), loadings of D_realgdp D_realcons D_realinv", beta: "1 x 4 e(beta) realgdp realcons realinv _cons, normalised on realgdp, the constant is reported inside the cointegrating equation", Pi: "1 x 9 e(pi), row-major 3 x 3 alpha beta, see labels", Sigma: "3 x 3 e(omega) divisor T", V_alpha: "3 x 3", V_beta: "4 x 4", b_short_run: "1 x 15 e(b): per equation L.D realgdp, realcons, realinv, _ce1 L, _cons", scalars: "1 x 6 N, ll, aic, sbic, hqic, detsig_ml"}
+  - case: bq1989_long
+    data: {path: data/examples/matlab_examples/BQ1989_Data.xlsx, sheet: Sheet1, mnemonic_row: 2, first_data_row: 3}
+    needs_csv: true
+    command: "svar y u, lags(1/8) lreq(C) with C = (., 0 \\ ., .)"
+    outputs: {B_impact: B_impact.csv, A: A.csv, lreq: lreq.csv, b_var: b_var.csv, Sigma_ml: Sigma_ml.csv}
+    layout: {B_impact: "2 x 2 e(B) impact matrix. svar uses the ML covariance (divisor T), so B equals the MATLAB and R vars::BQ matrix times sqrt((T-k)/T) = sqrt(134/151), about 0.942", A: "2 x 2 e(A)", lreq: "2 x 2 e(lreq), the restriction pattern (missing = free)", b_var: "1 x 34 reduced-form VAR coefficients e(b_var)", Sigma_ml: "2 x 2 e(Sigma) divisor T"}
+  - case: vecm_macro_rconst
+    data: {path: data/examples/timeseries/macrodata.csv}
+    command: "vec realgdp realcons realinv, rank(1) lags(2) trend(rconstant)"
+    outputs: {alpha: alpha.csv, beta: beta.csv, Sigma: Sigma.csv, b_short_run: b_short_run.csv, scalars: scalars.csv}
+    layout: {alpha: "1 x 3", beta: "1 x 4 realgdp realcons realinv _cons", Sigma: "3 x 3 e(omega)", b_short_run: "short-run coefficients, see labels", scalars: "1 x 2 N, ll"}
+  - case: arima_realgdp
+    data: {path: data/examples/timeseries/macrodata.csv}
+    command: "arima realgdp, arima(1,0,1)"
+    outputs: {b: b.csv, se: se.csv, scalars: scalars.csv}
+    layout: {b: "4 x 1 _cons (mean), ar L1, ma L1, sigma (std dev, not variance)", se: "4 x 1 OPG standard errors", scalars: "1 x 2 N, ll"}
+  - case: probit_spector
+    data: {path: data/examples/discrete/spector.csv}
+    command: "probit GRADE GPA TUCE PSI"
+    outputs: {beta: beta.csv, se: se.csv, loglik: loglik.csv}
+    layout: {beta: "4 x 1 GPA TUCE PSI _cons", se: "4 x 1", loglik: "1 x 3 ll, ll_0, N"}
+  - case: lp_plain_jt2025
+    input_from: {json: tests/external_benchmarks/matlab/lp_jt2025.json, columns: [[lcpi, ENDO, 0], [rr_shock, TREAT, 0], [dlrgdp, CTRL, 0], [dlcpi, CTRL, 1], [dstir, CTRL, 2]]}
+    command: "for h = 0..17: regress F(h).lcpi rr_shock dlrgdp dlcpi dstir, vce(hc3). Same regression as LocalProjectionsModel (level lead, contemporaneous controls, HC3)"
+    outputs: {irf: irf.csv}
+    layout: {irf: "18 x 4 columns h, coefficient on rr_shock, HC3 se, N"}
+  - case: lpiv_plain_jt2025
+    input_from: {json: tests/external_benchmarks/matlab/lpiv_jt2025.json, columns: [[urate, ENDO, 0], [ffr, TREAT, 0], [infl, CTRL, 1], [rrcgshock, IV, 0]]}
+    command: "for h = 0..48: ivregress 2sls F(h).urate infl (ffr = rrcgshock) [, small]. Same regression shape as LocalProjectionsIVModel with control infl"
+    outputs: {irf: irf.csv}
+    layout: {irf: "49 x 5 columns h, coefficient on ffr, se with small (N-k), N, se without small (N)"}
+  - case: svar_canada_a
+    data: {path: tests/integration/var/canada.csv}
+    command: "svar e prod rw U, lags(1/2) aeq(A) beq(I) with A diagonal free, A[2,1] and A[4,1] free. vars::SVAR documentation example (A-model, overidentified)"
+    outputs: {A: A.csv, impact: impact.csv, Sigma_ml: Sigma_ml.csv, scalars: scalars.csv}
+    layout: {A: "4 x 4 e(A), A u = e with e ~ N(0, I)", impact: "4 x 4 inv(A)", Sigma_ml: "4 x 4 e(Sigma) divisor T", scalars: "1 x 5 N, ll, chi2_oid, df_oid, converged"}
+  - case: vecm_ghysels_ch7
+    data: {path: data/examples/timeseries/ghysels_ch7/dataonly_uktermstructure.csv}
+    command: "vec ..., trend(rconstant): x y in 1/400 rank(1) lags(2); r1 r3 r6 r24 in 1/216 rank(1) and rank(3) lags(3); cci cli in 313/540 rank(1) lags(2). Same specs as Ghysels and Marcellino (2018) Chap7.R"
+    outputs: {sim_alpha: sim_alpha.csv, sim_beta: sim_beta.csv, sim_Sigma: sim_Sigma.csv, uk_r1_alpha: uk_r1_alpha.csv, uk_r1_beta: uk_r1_beta.csv, uk_r1_Sigma: uk_r1_Sigma.csv, uk_r3_alpha: uk_r3_alpha.csv, uk_r3_beta: uk_r3_beta.csv, lei_alpha: lei_alpha.csv, lei_beta: lei_beta.csv, lei_Sigma: lei_Sigma.csv}
+    layout: {sim_alpha: "1 x 2 e(alpha)", sim_beta: "1 x 3 x y _cons", sim_Sigma: "2 x 2 e(omega)", uk_r1_alpha: "1 x 4", uk_r1_beta: "1 x 5", uk_r1_Sigma: "4 x 4", uk_r3_alpha: "1 x 12 see labels", uk_r3_beta: "1 x 15 see labels, Johansen normalisation", lei_alpha: "1 x 2", lei_beta: "1 x 3", lei_Sigma: "2 x 2"}

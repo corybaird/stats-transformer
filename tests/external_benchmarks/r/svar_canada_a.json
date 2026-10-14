@@ -1,0 +1,167 @@
+{
+ "case": "svar_canada_a",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "vars": "1.6.1"
+  }
+ },
+ "data": {
+  "path": "tests/integration/var/canada.csv",
+  "sha256": "7fa03363a8feed2188ffd08dfae6e4f207d5e35b98a1d94647d890b11f8cee94",
+  "sheet": null,
+  "columns": [
+   "e",
+   "prod",
+   "rw",
+   "U"
+  ],
+  "nrows": 84,
+  "filter": null
+ },
+ "settings": {
+  "call": "vars::VAR(e, prod, rw, U; p = 2, type = const); SVAR(estmethod = direct, Amat with diagonal, [2,1] and [4,1] free, B = I). vars documentation example"
+ },
+ "outputs": {
+  "A": [
+   [
+    2.7562255130589537,
+    0,
+    0,
+    0
+   ],
+   [
+    0.08700348222603833,
+    1.5334124182086193,
+    0,
+    0
+   ],
+   [
+    0,
+    0,
+    1.2815687369081212,
+    0
+   ],
+   [
+    2.562480030671568,
+    0,
+    0,
+    4.882396863431143
+   ]
+  ],
+  "impact": [
+   [
+    0.36281501468657607,
+    0,
+    0,
+    0
+   ],
+   [
+    -0.020585570657175162,
+    0.6521402775440097,
+    0,
+    0
+   ],
+   [
+    0,
+    0,
+    0.7802936910060505,
+    0
+   ],
+   [
+    -0.19042004490163553,
+    0,
+    0,
+    0.20481743454530282
+   ]
+  ],
+  "Sigma_ml": [
+   [
+    0.11718702315092913,
+    -0.0066490031871563925,
+    -0.03747811410770785,
+    -0.061504506083283714
+   ],
+   [
+    -0.0066490031871563925,
+    0.37898640516693516,
+    0.05752156908885555,
+    0.01239474365702838
+   ],
+   [
+    -0.03747811410770785,
+    0.05752156908885555,
+    0.5420324249928934,
+    0.030464842536722138
+   ],
+   [
+    -0.061504506083283714,
+    0.01239474365702838,
+    0.030464842536722138,
+    0.06962595489702832
+   ]
+  ],
+  "lr_test_stat": 3.940380635933078,
+  "lr_test_df": 4,
+  "iterations": 53
+ },
+ "labels": {
+  "A": {
+   "rows": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ],
+   "cols": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ]
+  },
+  "impact": {
+   "rows": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ],
+   "cols": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ]
+  },
+  "Sigma_ml": {
+   "rows": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ],
+   "cols": [
+    "e",
+    "prod",
+    "rw",
+    "U"
+   ]
+  }
+ },
+ "layout": {
+  "A": "4 x 4. vars::SVAR scales by the degrees-of-freedom covariance (divisor T-k = 73), so A equals Stata e(A) times sqrt(73/82)",
+  "impact": "4 x 4 solve(A)",
+  "Sigma_ml": "4 x 4 divisor T, computed here, not the one SVAR uses",
+  "lr_test_stat": "overidentification LR statistic",
+  "lr_test_df": "scalar",
+  "iterations": "scalar"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_svar_canada_a.R",
+ "driver_sha256": "be18b535553d16acbd2a6beeff54c53fe3f018e96ca50114eac40d720bdb8830",
+ "recorded_at": "2026-10-14T02:17:13.133953+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

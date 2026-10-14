@@ -1,0 +1,87 @@
+{
+ "case": "logit_spector",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "stats": "4.6.1"
+  }
+ },
+ "data": {
+  "path": "data/examples/discrete/spector.csv",
+  "sha256": "54bf8eefa348d3956f29ba242516d8184179e091a40ea084e6bfa89ca569df9d",
+  "sheet": null,
+  "columns": [
+   "GPA",
+   "TUCE",
+   "PSI",
+   "GRADE"
+  ],
+  "nrows": 32,
+  "filter": null
+ },
+ "settings": {
+  "call": "glm(GRADE ~ GPA + TUCE + PSI, family = binomial(logit))"
+ },
+ "outputs": {
+  "beta": [
+   [
+    -13.021346856307614
+   ],
+   [
+    2.826112594559379
+   ],
+   [
+    0.09515766129565034
+   ],
+   [
+    2.378687654812495
+   ]
+  ],
+  "se": [
+   [
+    4.9312725267527835
+   ],
+   [
+    1.2629325892604621
+   ],
+   [
+    0.141553508341034
+   ],
+   [
+    1.064556869534093
+   ]
+  ],
+  "loglik": -12.889634222131413,
+  "loglik_null": -20.59172969661729,
+  "nobs": 32
+ },
+ "labels": {
+  "beta": {
+   "rows": [
+    "(Intercept)",
+    "GPA",
+    "TUCE",
+    "PSI"
+   ],
+   "cols": []
+  },
+  "se": {
+   "rows": [],
+   "cols": []
+  }
+ },
+ "layout": {
+  "beta": "4 x 1 (Intercept) GPA TUCE PSI",
+  "se": "4 x 1",
+  "loglik": "scalar",
+  "loglik_null": "scalar",
+  "nobs": "scalar"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_logit_spector.R",
+ "driver_sha256": "7ba3482702dad4f9c6dc6fb8d8701796bcdf3df1e9c50afe36224613b1506984",
+ "recorded_at": "2026-10-14T02:17:09.554573+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

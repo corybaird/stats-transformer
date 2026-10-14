@@ -1,0 +1,262 @@
+{
+ "case": "var_macro",
+ "engine": {
+  "product": "Stata",
+  "version": "19.5",
+  "born_date": "16 Apr 2025",
+  "edition": "MP",
+  "os": "Unix",
+  "machine_type": "Mac (Apple Silicon)"
+ },
+ "data": {
+  "path": "data/examples/timeseries/macrodata.csv",
+  "sha256": "9b42d81d9716ec76766e51ead8a6e3850950bdf451e4e3e6bdd9c72129ec997f",
+  "sheet": null,
+  "columns": [
+   "realgdp",
+   "realcons",
+   "realinv",
+   "year",
+   "quarter"
+  ],
+  "nrows": 202,
+  "filter": null
+ },
+ "settings": {
+  "command": "tsset t; var realgdp realcons realinv, lags(1/2)"
+ },
+ "outputs": {
+  "coef_rowvec": [
+   [
+    -0.2794347358730523,
+    0.0082210849125809,
+    0.6750157517485433,
+    0.2904576281292084,
+    0.0332194507939468,
+    -0.0073209075324282,
+    0.1526972352915854,
+    -0.100467978082055,
+    -0.1231739277060548,
+    0.2686395525227136,
+    0.2324994359173216,
+    0.0257387265222042,
+    0.0235037610409798,
+    0.5459603048402542,
+    -1.970973673795811,
+    0.3807858492371767,
+    4.41416232699027,
+    0.8002809175290274,
+    0.2254789532238884,
+    -0.1240790615765992,
+    -2.390252088527766
+   ]
+  ],
+  "Sigma_ml": [
+   [
+    0.5511467046179834,
+    0.2879511271821329,
+    2.167751560320239
+   ],
+   [
+    0.2879511271821329,
+    0.4133146421365632,
+    0.3299502176786783
+   ],
+   [
+    2.167751560320239,
+    0.3299502176786783,
+    15.12840049133023
+   ]
+  ],
+  "scalars": [
+   [
+    200.0,
+    200.0,
+    NaN,
+    -800.5312875485306,
+    8.215312875485306,
+    8.561636198972849,
+    8.355464626835012,
+    0.6015062675571937
+   ]
+  ],
+  "eq1_coef": [
+   [
+    -0.2794347358730523
+   ],
+   [
+    0.0082210849125809
+   ],
+   [
+    0.6750157517485433
+   ],
+   [
+    0.2904576281292084
+   ],
+   [
+    0.0332194507939468
+   ],
+   [
+    -0.0073209075324282
+   ],
+   [
+    0.1526972352915854
+   ]
+  ],
+  "eq2_coef": [
+   [
+    -0.100467978082055
+   ],
+   [
+    -0.1231739277060548
+   ],
+   [
+    0.2686395525227136
+   ],
+   [
+    0.2324994359173216
+   ],
+   [
+    0.0257387265222042
+   ],
+   [
+    0.0235037610409798
+   ],
+   [
+    0.5459603048402542
+   ]
+  ],
+  "eq3_coef": [
+   [
+    -1.970973673795811
+   ],
+   [
+    0.3807858492371767
+   ],
+   [
+    4.41416232699027
+   ],
+   [
+    0.8002809175290274
+   ],
+   [
+    0.2254789532238884
+   ],
+   [
+    -0.1240790615765992
+   ],
+   [
+    -2.390252088527766
+   ]
+  ]
+ },
+ "labels": {
+  "coef_rowvec": {
+   "rows": [
+    "y1"
+   ],
+   "cols": [
+    "realgdp:L.realgdp",
+    "realgdp:L2.realgdp",
+    "realgdp:L.realcons",
+    "realgdp:L2.realcons",
+    "realgdp:L.realinv",
+    "realgdp:L2.realinv",
+    "realgdp:_cons",
+    "realcons:L.realgdp",
+    "realcons:L2.realgdp",
+    "realcons:L.realcons",
+    "realcons:L2.realcons",
+    "realcons:L.realinv",
+    "realcons:L2.realinv",
+    "realcons:_cons",
+    "realinv:L.realgdp",
+    "realinv:L2.realgdp",
+    "realinv:L.realcons",
+    "realinv:L2.realcons",
+    "realinv:L.realinv",
+    "realinv:L2.realinv",
+    "realinv:_cons"
+   ]
+  },
+  "Sigma_ml": {
+   "rows": [
+    "realgdp",
+    "realcons",
+    "realinv"
+   ],
+   "cols": [
+    "realgdp",
+    "realcons",
+    "realinv"
+   ]
+  },
+  "scalars": {
+   "rows": [
+    "r1"
+   ],
+   "cols": [
+    "c1",
+    "c2",
+    "c3",
+    "c4",
+    "c5",
+    "c6",
+    "c7",
+    "c8"
+   ]
+  },
+  "eq1_coef": {
+   "rows": [
+    "realgdp:L.realgdp",
+    "realgdp:L2.realgdp",
+    "realgdp:L.realcons",
+    "realgdp:L2.realcons",
+    "realgdp:L.realinv",
+    "realgdp:L2.realinv",
+    "realgdp:_cons"
+   ],
+   "cols": [
+    "y1"
+   ]
+  },
+  "eq2_coef": {
+   "rows": [
+    "realcons:L.realgdp",
+    "realcons:L2.realgdp",
+    "realcons:L.realcons",
+    "realcons:L2.realcons",
+    "realcons:L.realinv",
+    "realcons:L2.realinv",
+    "realcons:_cons"
+   ],
+   "cols": [
+    "y1"
+   ]
+  },
+  "eq3_coef": {
+   "rows": [
+    "realinv:L.realgdp",
+    "realinv:L2.realgdp",
+    "realinv:L.realcons",
+    "realinv:L2.realcons",
+    "realinv:L.realinv",
+    "realinv:L2.realinv",
+    "realinv:_cons"
+   ],
+   "cols": [
+    "y1"
+   ]
+  }
+ },
+ "layout": {
+  "coef_rowvec": "1 x 21 e(b); within each equation the order is realgdp L1 L2, realcons L1 L2, realinv L1 L2, _cons (variable-major, differs from R)",
+  "Sigma_ml": "3 x 3 e(Sigma), divisor T",
+  "scalars": "1 x 8 N, T, df_m, ll, aic, sbic, hqic, detsig",
+  "eq1_coef": "7 x 1 equation 1 coefficients in e(b) order"
+ },
+ "driver": "tests/external_benchmarks/stata/drivers/st_ref_var_macro.do",
+ "driver_sha256": "b6d410ec7a68f8699fa54c1b65e64e510b645168e5aedf12fda5923430f7c81e",
+ "recorded_at": "2026-10-14T02:17:18.717301+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

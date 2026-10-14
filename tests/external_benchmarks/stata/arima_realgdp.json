@@ -1,0 +1,106 @@
+{
+ "case": "arima_realgdp",
+ "engine": {
+  "product": "Stata",
+  "version": "19.5",
+  "born_date": "16 Apr 2025",
+  "edition": "MP",
+  "os": "Unix",
+  "machine_type": "Mac (Apple Silicon)"
+ },
+ "data": {
+  "path": "data/examples/timeseries/macrodata.csv",
+  "sha256": "9b42d81d9716ec76766e51ead8a6e3850950bdf451e4e3e6bdd9c72129ec997f",
+  "sheet": null,
+  "columns": [
+   "realgdp",
+   "realcons",
+   "realinv",
+   "year",
+   "quarter"
+  ],
+  "nrows": 202,
+  "filter": null
+ },
+ "settings": {
+  "command": "arima realgdp, arima(1,0,1)"
+ },
+ "outputs": {
+  "b": [
+   [
+    0.7777743300097408
+   ],
+   [
+    0.625381141352806
+   ],
+   [
+    -0.3498432807365869
+   ],
+   [
+    0.8276028231271894
+   ]
+  ],
+  "se": [
+   [
+    0.1009930651009753
+   ],
+   [
+    0.1603230031940734
+   ],
+   [
+    0.190754333120576
+   ],
+   [
+    0.0328824077687114
+   ]
+  ],
+  "scalars": [
+   [
+    202.0,
+    -248.4781226421133
+   ]
+  ]
+ },
+ "labels": {
+  "b": {
+   "rows": [
+    "realgdp:_cons",
+    "ARMA:L.ar",
+    "ARMA:L.ma",
+    "sigma:_cons"
+   ],
+   "cols": [
+    "y1"
+   ]
+  },
+  "se": {
+   "rows": [
+    "realgdp:_cons",
+    "ARMA:L.ar",
+    "ARMA:L.ma",
+    "sigma:_cons"
+   ],
+   "cols": [
+    "r1"
+   ]
+  },
+  "scalars": {
+   "rows": [
+    "r1"
+   ],
+   "cols": [
+    "c1",
+    "c2"
+   ]
+  }
+ },
+ "layout": {
+  "b": "4 x 1 _cons (mean), ar L1, ma L1, sigma (std dev, not variance)",
+  "se": "4 x 1 OPG standard errors",
+  "scalars": "1 x 2 N, ll"
+ },
+ "driver": "tests/external_benchmarks/stata/drivers/st_ref_arima_realgdp.do",
+ "driver_sha256": "aab3b7496cf6b0732cee925085305c9ecb33b04bec73dd6b863ea0b06630fb0c",
+ "recorded_at": "2026-10-14T02:17:22.217386+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

@@ -4,6 +4,8 @@ This roadmap catalogs future model extensions, advanced structural identificatio
 
 For the complete catalog of models already implemented and available in the library, refer to the [Implemented Models Catalog](library/models.md).
 
+For correctness fixes to existing models and the plan for external verification against R, Stata and MATLAB, refer to the [Software Parity Benchmarks](validation/benchmarks.md#2-software-parity-benchmarks-stata-matlab-r).
+
 ---
 
 ## 1. Roadmap Architecture & Complexity Tiers

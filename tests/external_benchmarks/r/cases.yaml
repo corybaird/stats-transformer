@@ -1,0 +1,59 @@
+image: st-ref-r:1
+cases:
+  - case: ols_longley
+    data: {path: data/examples/regression/longley.csv}
+    call: "lm(TOTEMP ~ GNPDEFL + GNP + UNEMP + ARMED + POP + YEAR); sandwich::vcovHC(type = HC0..HC3)"
+    layout: {beta: "7 x 1, (Intercept) first then GNPDEFL GNP UNEMP ARMED POP YEAR", se_classical: "7 x 1 same order", se_hc0: "7 x 1", se_hc1: "7 x 1", se_hc2: "7 x 1", se_hc3: "7 x 1", resid: "n x 1"}
+  - case: iv_mroz
+    data: {path: data/examples/regression/mroz.csv, filter: inlf == 1}
+    call: "AER::ivreg(lwage ~ exper + expersq + educ | exper + expersq + motheduc + fatheduc), sandwich::vcovHC(HC0). Classical vcov uses sigma2 = RSS/(n-k)"
+    layout: {beta: "4 x 1, (Intercept) exper expersq educ", se: "4 x 1 classical, n-k divisor", se_robust_hc0: "4 x 1", nobs: scalar, df_residual: scalar}
+  - case: panel_grunfeld
+    data: {path: data/examples/regression/grunfeld.csv}
+    call: "plm::plm(invest ~ value + capital, index = c(firm, year), model = within); vcovHC(type = HC1, cluster = group)"
+    layout: {beta_fe: "2 x 1 value capital", se_fe: "2 x 1 classical", se_fe_cluster_hc1: "2 x 1", nobs: scalar, r2_within: scalar}
+  - case: logit_spector
+    data: {path: data/examples/discrete/spector.csv}
+    call: "glm(GRADE ~ GPA + TUCE + PSI, family = binomial(logit))"
+    layout: {beta: "4 x 1 (Intercept) GPA TUCE PSI", se: "4 x 1", loglik: scalar, loglik_null: scalar, nobs: scalar}
+  - case: pca_longley
+    data: {path: data/examples/regression/longley.csv}
+    call: "prcomp(Longley regressors GNPDEFL GNP UNEMP ARMED POP YEAR, center = TRUE, scale. = TRUE)"
+    layout: {eigenvalues: "6 x 1 descending, sdev^2 of the correlation PCA", loadings: "6 x 6, rows variables, columns components, signs arbitrary"}
+  - case: var_macro
+    data: {path: data/examples/timeseries/macrodata.csv}
+    call: "vars::VAR(realgdp, realcons, realinv; p = 2, type = const)"
+    layout: {coef: "7 x 3, rows realgdp.l1 realcons.l1 realinv.l1 realgdp.l2 realcons.l2 realinv.l2 const, columns equations", Sigma_dof: "3 x 3 divisor T-k", Sigma_ml: "3 x 3 divisor T", nobs: scalar, loglik: scalar, roots: "modulus of companion eigenvalues"}
+  - case: vecm_macro
+    data: {path: data/examples/timeseries/macrodata.csv}
+    call: "urca::ca.jo(type = trace, ecdet = none, K = 2, spec = longrun); cajorls(r = 1)"
+    layout: {lambda: "eigenvalues of the Johansen problem, descending, with one trailing 0 per ca.jo", trace_stats: "r<=2, r<=1, r=0 test statistics", trace_cval: "10, 5, 1 percent critical values", beta_normalized: "3 x 1 cointegrating vector normalised on realgdp", alpha: "3 x 1 loadings", rlm_coef: "coefficients of the restricted ECM", Sigma_ml: "3 x 3 divisor T", nobs: scalar}
+  - case: bq1989_long
+    data: {path: data/examples/matlab_examples/BQ1989_Data.xlsx, sheet: Sheet1, mnemonic_row: 2, first_data_row: 3}
+    needs_csv: true
+    call: "vars::VAR(p = 8, type = const); vars::BQ"
+    layout: {coef: "17 x 2", Sigma_dof: "2 x 2", B_impact: "2 x 2 impact matrix, column j shock j", LR: "2 x 2 long-run impact", Phi: "2 x 2 x 40 reduced-form MA coefficients Phi[,,h+1]"}
+  - case: vecm_macro_rconst
+    data: {path: data/examples/timeseries/macrodata.csv}
+    call: "urca::ca.jo(type = trace, ecdet = const, K = 2, spec = longrun); cajorls(r = 1). Restricted constant, matches statsmodels deterministic = ci"
+    layout: {lambda: "eigenvalues", trace_stats: "trace statistics", beta_normalized: "4 x 1 realgdp realcons realinv constant, unit on realgdp", alpha: "3 x 1", rlm_coef: "short-run coefficients", Sigma_ml: "3 x 3 divisor T", nobs: scalar}
+  - case: arima_realgdp
+    data: {path: data/examples/timeseries/macrodata.csv}
+    call: "arima(realgdp, order = c(1, 0, 1), method = ML)"
+    layout: {coef: "3 x 1 ar1 ma1 intercept (intercept is the mean)", se: "3 x 1", sigma2: scalar, loglik: scalar}
+  - case: probit_spector
+    data: {path: data/examples/discrete/spector.csv}
+    call: "glm(GRADE ~ GPA + TUCE + PSI, family = binomial(probit))"
+    layout: {beta: "4 x 1 (Intercept) GPA TUCE PSI", se: "4 x 1 from the expected information (Fisher scoring); Stata and statsmodels use the observed Hessian, so se differ by up to 0.03", loglik: scalar, nobs: scalar}
+  - case: svec_canada
+    data: {path: tests/integration/var/canada.csv}
+    call: "ca.jo(prod, e, U, rw; type = trace, ecdet = trend, K = 3, spec = transitory); SVEC(LR[1,2:4] = 0, LR[2:4,4] = 0, SR[4,2] = 0, r = 1). Breitung, Brueggemann and Luetkepohl (2004) example"
+    layout: {SR: "4 x 4 contemporaneous impact matrix, columns shocks", LR: "4 x 4 long-run impact matrix", iterations: scalar, ENDO: "T x 4 prod e U rw as passed to ca.jo"}
+  - case: svar_canada_a
+    data: {path: tests/integration/var/canada.csv}
+    call: "vars::VAR(e, prod, rw, U; p = 2, type = const); SVAR(estmethod = direct, Amat with diagonal, [2,1] and [4,1] free, B = I). vars documentation example"
+    layout: {A: "4 x 4. vars::SVAR scales by the degrees-of-freedom covariance (divisor T-k = 73), so A equals Stata e(A) times sqrt(73/82)", impact: "4 x 4 solve(A)", Sigma_ml: "4 x 4 divisor T, computed here, not the one SVAR uses", lr_test_stat: "overidentification LR statistic", lr_test_df: scalar, iterations: scalar}
+  - case: vecm_ghysels_ch7
+    data: {path: data/examples/timeseries/ghysels_ch7/dataonly_uktermstructure.csv}
+    call: "Ghysels and Marcellino (2018) Chap7.R specs: ca.jo(type = eigen, ecdet = const, spec = longrun); cajorls. simulated_cointegration rows 1:400 (x, y), K = 2, r = 1; dataonly_uktermstructure rows 1:216 (r1, r3, r6, r24), K = 3, r = 1 and r = 3; dataonly_uslei rows 313:540 (cci, cli), K = 2, r = 1. ecdet = const is the restricted constant (statsmodels deterministic = ci, Stata trend(rconstant))"
+    layout: {sim_beta: "3 x 1 x, y, constant; unit on x", sim_alpha: "1 x 2 loadings on x.d, y.d", sim_lambda: "eigenvalues", sim_eigen_stats: "max-eigen statistics r<=1, r=0", sim_Sigma_ml: "2 x 2 divisor T", uk_r1_beta: "5 x 1 r1 r3 r6 r24 constant", uk_r1_alpha: "1 x 4", uk_r3_beta: "5 x 3", uk_r3_alpha: "3 x 4", uk_lambda: "eigenvalues", uk_eigen_stats: "max-eigen statistics", uk_r1_Sigma_ml: "4 x 4", lei_beta: "3 x 1 cci cli constant", lei_alpha: "1 x 2", lei_lambda: "eigenvalues", lei_eigen_stats: "max-eigen statistics", lei_Sigma_ml: "2 x 2"}

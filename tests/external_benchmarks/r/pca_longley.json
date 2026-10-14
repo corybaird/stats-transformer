@@ -1,0 +1,135 @@
+{
+ "case": "pca_longley",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "stats": "4.6.1"
+  }
+ },
+ "data": {
+  "path": "data/examples/regression/longley.csv",
+  "sha256": "61e5d64fdfd24e410341d94df094bc6c8f6a8c76adc85bf4acc1d23ac388c0ce",
+  "sheet": null,
+  "columns": [
+   "TOTEMP",
+   "GNPDEFL",
+   "GNP",
+   "UNEMP",
+   "ARMED",
+   "POP",
+   "YEAR"
+  ],
+  "nrows": 16,
+  "filter": null
+ },
+ "settings": {
+  "call": "prcomp(Longley regressors GNPDEFL GNP UNEMP ARMED POP YEAR, center = TRUE, scale. = TRUE)"
+ },
+ "outputs": {
+  "eigenvalues": [
+   [
+    4.603377095768391
+   ],
+   [
+    1.1753404992571466
+   ],
+   [
+    0.20342537240143474
+   ],
+   [
+    0.014928258677276877
+   ],
+   [
+    0.002552065763074835
+   ],
+   [
+    0.00037670813267770683
+   ]
+  ],
+  "loadings": [
+   [
+    0.46183489816677165,
+    0.05784276766775612,
+    0.1491198920530801,
+    -0.7928735589035615,
+    -0.3379378262071006,
+    0.13518707063887273
+   ],
+   [
+    0.46150434667900214,
+    0.0532122862362266,
+    0.27768232680779864,
+    0.12162122516494876,
+    0.14957319181769302,
+    -0.8184808206960945
+   ],
+   [
+    0.3213166983065419,
+    -0.5955137627127101,
+    -0.7283056857802679,
+    -0.007645795493798972,
+    -0.009231961100774773,
+    -0.10745268063090317
+   ],
+   [
+    0.20150974187320744,
+    0.7981925479564478,
+    -0.5616075237192034,
+    0.07725497907864604,
+    -0.02425247230870712,
+    -0.0179709602816599
+   ],
+   [
+    0.46227935304156026,
+    -0.0455444698016807,
+    0.19598459108162566,
+    0.5897449647496541,
+    -0.5485781730932335,
+    0.31157086776309517
+   ],
+   [
+    0.4649402842330695,
+    0.0006187883931806701,
+    0.12811573124862707,
+    0.05228655422029379,
+    0.7495428355969569,
+    0.45040888363560067
+   ]
+  ]
+ },
+ "labels": {
+  "eigenvalues": {
+   "rows": [],
+   "cols": []
+  },
+  "loadings": {
+   "rows": [
+    "GNPDEFL",
+    "GNP",
+    "UNEMP",
+    "ARMED",
+    "POP",
+    "YEAR"
+   ],
+   "cols": [
+    "PC1",
+    "PC2",
+    "PC3",
+    "PC4",
+    "PC5",
+    "PC6"
+   ]
+  }
+ },
+ "layout": {
+  "eigenvalues": "6 x 1 descending, sdev^2 of the correlation PCA",
+  "loadings": "6 x 6, rows variables, columns components, signs arbitrary"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_pca_longley.R",
+ "driver_sha256": "b3e2a66ad8886e031e568d39de554ae5ba38f5774c3a7e9a6a00b3665fd7ea0e",
+ "recorded_at": "2026-10-14T02:17:09.882524+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}

@@ -1,0 +1,182 @@
+{
+ "case": "var_macro",
+ "engine": {
+  "product": "R",
+  "version": "R version 4.6.1 (2026-06-24)",
+  "platform": "aarch64-unknown-linux-gnu",
+  "image": "st-ref-r:1",
+  "packages": {
+   "vars": "1.6.1"
+  }
+ },
+ "data": {
+  "path": "data/examples/timeseries/macrodata.csv",
+  "sha256": "9b42d81d9716ec76766e51ead8a6e3850950bdf451e4e3e6bdd9c72129ec997f",
+  "sheet": null,
+  "columns": [
+   "realgdp",
+   "realcons",
+   "realinv",
+   "year",
+   "quarter"
+  ],
+  "nrows": 202,
+  "filter": null
+ },
+ "settings": {
+  "call": "vars::VAR(realgdp, realcons, realinv; p = 2, type = const)"
+ },
+ "outputs": {
+  "coef": [
+   [
+    -0.27943473587305323,
+    -0.10046797808205547,
+    -1.9709736737958148
+   ],
+   [
+    0.6750157517485436,
+    0.2686395525227138,
+    4.414162326990269
+   ],
+   [
+    0.03321945079394693,
+    0.02573872652220427,
+    0.22547895322388856
+   ],
+   [
+    0.008221084912580556,
+    -0.12317392770605445,
+    0.38078584923717557
+   ],
+   [
+    0.2904576281292087,
+    0.23249943591732114,
+    0.8002809175290289
+   ],
+   [
+    -0.007320907532428145,
+    0.023503761040979735,
+    -0.12407906157659895
+   ],
+   [
+    0.1526972352915857,
+    0.5459603048402544,
+    -2.3902520885277645
+   ]
+  ],
+  "Sigma_dof": [
+   [
+    0.5711364814694128,
+    0.29839495044780623,
+    2.2463746739069834
+   ],
+   [
+    0.29839495044780623,
+    0.42830532863892556,
+    0.3419173240193559
+   ],
+   [
+    2.2463746739069834,
+    0.3419173240193559,
+    15.677098954746352
+   ]
+  ],
+  "Sigma_ml": [
+   [
+    0.5511467046179832,
+    0.2879511271821331,
+    2.1677515603202395
+   ],
+   [
+    0.2879511271821331,
+    0.41331464213656355,
+    0.32995021767867827
+   ],
+   [
+    2.1677515603202395,
+    0.32995021767867827,
+    15.12840049133023
+   ]
+  ],
+  "nobs": 200,
+  "loglik": -800.5312875485301,
+  "roots": [
+   [
+    0.6144500174245816
+   ],
+   [
+    0.2851173757539297
+   ],
+   [
+    0.2851173757539297
+   ],
+   [
+    0.27087865439869796
+   ],
+   [
+    0.27087865439869796
+   ],
+   [
+    0.23508307988463972
+   ]
+  ]
+ },
+ "labels": {
+  "coef": {
+   "rows": [
+    "realgdp.l1",
+    "realcons.l1",
+    "realinv.l1",
+    "realgdp.l2",
+    "realcons.l2",
+    "realinv.l2",
+    "const"
+   ],
+   "cols": [
+    "realgdp",
+    "realcons",
+    "realinv"
+   ]
+  },
+  "Sigma_dof": {
+   "rows": [
+    "realgdp",
+    "realcons",
+    "realinv"
+   ],
+   "cols": [
+    "realgdp",
+    "realcons",
+    "realinv"
+   ]
+  },
+  "Sigma_ml": {
+   "rows": [
+    "realgdp",
+    "realcons",
+    "realinv"
+   ],
+   "cols": [
+    "realgdp",
+    "realcons",
+    "realinv"
+   ]
+  },
+  "roots": {
+   "rows": [],
+   "cols": []
+  }
+ },
+ "layout": {
+  "coef": "7 x 3, rows realgdp.l1 realcons.l1 realinv.l1 realgdp.l2 realcons.l2 realinv.l2 const, columns equations",
+  "Sigma_dof": "3 x 3 divisor T-k",
+  "Sigma_ml": "3 x 3 divisor T",
+  "nobs": "scalar",
+  "loglik": "scalar",
+  "roots": "modulus of companion eigenvalues"
+ },
+ "driver": "tests/external_benchmarks/r/drivers/r_ref_var_macro.R",
+ "driver_sha256": "7d1750328f7783e393562f583a8b67b401c4923354a9e9eee9aaa9213c3f8425",
+ "recorded_at": "2026-10-14T02:17:10.317582+00:00",
+ "host": "macOS-26.6.2-arm64-arm-64bit arm64"
+}
