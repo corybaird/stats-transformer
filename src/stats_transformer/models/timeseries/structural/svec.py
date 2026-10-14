@@ -16,13 +16,46 @@ def _orthogonal_complement(M: np.ndarray) -> np.ndarray:
     return q[:, r:]
 
 
+def _restriction_matrix(Xi: np.ndarray, SR: np.ndarray, LR: np.ndarray) -> np.ndarray:
+    """Rows of E impose the restrictions on vec(B) (row-major, index i*K+j).
+
+    SR entries give unit rows (B[i, j] = SR[i, j]); an LR restriction
+    (Xi B)[i, j] = LR[i, j] is column j of B dotted with row i of Xi, so its
+    row places Xi[i, :] on the entries of column j (indices j, K+j, ...)."""
+    K = SR.shape[0]
+    sr_mask = ~np.isnan(SR)
+    lr_mask = ~np.isnan(LR)
+    E = np.zeros((0, K * K))
+    for i in range(K):
+        for j in range(K):
+            if lr_mask[i, j]:
+                row = np.zeros(K * K)
+                row[j::K] = Xi[i, :]
+                E = np.vstack([E, row])
+            if sr_mask[i, j]:
+                row = np.zeros(K * K)
+                row[i * K + j] = 1.0
+                E = np.vstack([E, row])
+    return E
+
+
+def _restriction_violation(vec_B: np.ndarray, Xi: np.ndarray, SR: np.ndarray, LR: np.ndarray) -> float:
+    """Max absolute violation of the SR/LR restrictions for vec(B)."""
+    K = SR.shape[0]
+    B = vec_B.reshape((K, K))
+    sr_mask = ~np.isnan(SR)
+    lr_mask = ~np.isnan(LR)
+    violations = [abs(B[i, j] - float(SR[i, j])) for i in range(K) for j in range(K) if sr_mask[i, j]]
+    violations += [abs((Xi @ B)[i, j] - float(LR[i, j])) for i in range(K) for j in range(K) if lr_mask[i, j]]
+    return max(violations, default=0.0)
+
+
 class SVEC:
     """
     Structural Vector Error Correction (SVEC) model.
     Estimates short-run (SR) and long-run (LR) structural impact matrices
     via Maximum Likelihood matching R vars::SVEC (King et al. 1991).
     """
-
     def __init__(self, vecm_result, SR=None, LR=None, max_iter=1000, r=None):
         self.vecm = vecm_result
         self.sigma_u = np.asarray(vecm_result.sigma_u)
@@ -111,22 +144,22 @@ class SVEC:
             rng.normal(0, 1, K * K),
         ]
 
-        # Restriction matrix on vec(B) (row-major): unit rows for SR zeros,
-        # rows of Xi at the affected column block for LR zeros.
-        E = np.zeros((0, K * K))
+        # Restriction matrix on vec(B) (row-major); the free directions of Sb
+        # remove any linear dependence between the restriction rows.
+        E = _restriction_matrix(Xi, self.SR, self.LR)
+        Sb = null_space(E) if E.shape[0] else np.eye(K * K)
+        # Non-zero restriction targets are shifted into the constrained part;
+        # the free directions only span the homogeneous system.
+        sr_mask = ~np.isnan(self.SR)
+        lr_mask = ~np.isnan(self.LR)
+        rhs = []
         for i in range(K):
             for j in range(K):
                 if lr_mask[i, j]:
-                    row = np.zeros(K * K)
-                    row[j * K:(j + 1) * K] = Xi[i, :]
-                    E = np.vstack([E, row])
+                    rhs.append(float(self.LR[i, j]))
                 if sr_mask[i, j]:
-                    row = np.zeros(K * K)
-                    row[i * K + j] = 1.0
-                    E = np.vstack([E, row])
-        # Free directions of vec(B); parametrising on them removes any
-        # linear dependence between the restrictions.
-        Sb = null_space(E) if E.shape[0] else np.eye(K * K)
+                    rhs.append(float(self.SR[i, j]))
+        b_shift = np.linalg.lstsq(E, np.array(rhs), rcond=None)[0] if E.shape[0] else np.zeros(K * K)
 
         def objective(b_flat):
             B = b_flat.reshape((K, K))
@@ -140,11 +173,8 @@ class SVEC:
             except (np.linalg.LinAlgError, ValueError):
                 return 1e10
 
-        def restriction_violation(b_flat):
-            B = b_flat.reshape((K, K))
-            violations = [abs(B[i, j] - float(self.SR[i, j])) for i in range(K) for j in range(K) if sr_mask[i, j]]
-            violations += [abs((Xi @ B)[i, j] - float(self.LR[i, j])) for i in range(K) for j in range(K) if lr_mask[i, j]]
-            return max(violations, default=0.0)
+        def violation(b_flat):
+            return _restriction_violation(b_flat, Xi, self.SR, self.LR)
 
         self.restr_tol = 1e-6
         candidates = []  # (objective, vec(B)) of restriction-satisfying fits
@@ -170,25 +200,28 @@ class SVEC:
                 sol = root(direct_residuals, b0, method="lm")
                 if not sol.success:
                     continue
-                viol = restriction_violation(sol.x)
+                viol = violation(sol.x)
                 best_viol = min(best_viol, viol)
                 if viol <= self.restr_tol:
                     candidates.append((objective(sol.x), sol.x))
 
         # Fallback (over-identified, or the system solve failed): minimise the
-        # concentrated likelihood along the free directions with a Newton-type
-        # method from several deterministic starts, keeping the best fit.
+        # concentrated likelihood along the free directions from several
+        # deterministic starts, keeping the best fit. Finite-difference BFGS
+        # at tight tolerances can stop with a precision-loss flag while still at
+        # a good point, so a fit is accepted when the objective is finite and
+        # not worse than its start, not when the success flag is set.
         free_starts = [np.linalg.lstsq(Sb, s0, rcond=None)[0] for s0 in starts[:2]]
         rng = np.random.default_rng(0)
         free_starts += [rng.normal(0.0, 1.0, Sb.shape[1]) for _ in range(2)]
         for g0 in free_starts:
-            fit_res = minimize(lambda g: objective(Sb @ g), g0, method="BFGS", options={"maxiter": self.max_iter, "gtol": 1e-10})
-            if not fit_res.success:
-                continue
-            b_flat = Sb @ fit_res.x
-            viol = restriction_violation(b_flat)
-            best_viol = min(best_viol, viol)
-            if viol <= self.restr_tol and objective(b_flat) < 1e10:
+            g_obj = lambda g: objective(Sb @ g + b_shift)
+            fit_res = minimize(g_obj, g0, method="BFGS", options={"maxiter": self.max_iter, "gtol": 1e-8})
+            b_flat = Sb @ fit_res.x + b_shift
+            viol = violation(b_flat)
+            if fit_res.success or g_obj(fit_res.x) < g_obj(g0):
+                best_viol = min(best_viol, viol)
+            if viol <= self.restr_tol and g_obj(fit_res.x) <= g_obj(g0) and objective(b_flat) < 1e10:
                 candidates.append((objective(b_flat), b_flat))
 
         if not candidates:
@@ -212,7 +245,7 @@ class SVEC:
             if c_obj < best_obj - 1e-9:
                 best_obj, b_flat = c_obj, c_flat
         B_est = b_flat.reshape((K, K))
-        self.max_restriction_violation = restriction_violation(b_flat)
+        self.max_restriction_violation = violation(b_flat)
         for i in range(K):
             for j in range(K):
                 if sr_mask[i, j]:
