@@ -1,0 +1,130 @@
+toolbox:
+  name: VAR-Toolbox
+  version: "4.0"
+  root: references/matlab_benchmarks
+  folders: [VAR, Utils, Stats, Auxiliary]
+  always_hash: [VAR/VARmodel.m, VAR/VARoption.m, VAR/VARmakexy.m, VAR/VARmakelags.m, VAR/compute_IR.m, VAR/OLSmodel.m]
+cases:
+  - case: ols_longley
+    kind: csv
+    data: {path: data/examples/regression/longley.csv}
+    columns: [TOTEMP, GNPDEFL, GNP, UNEMP, ARMED, POP, YEAR]
+    settings: {estimator: "X\\y", constant: first column of X}
+    layout:
+      X: n x 7, constant column first then GNPDEFL GNP UNEMP ARMED POP YEAR
+      y: n x 1, TOTEMP
+      beta: 7 x 1, same order as columns of X
+      resid: n x 1, y - X*beta
+      se_classical: 7 x 1, sqrt(diag(s2*inv(X'X))) with s2 = SSR/(n-k)
+      se_hc3: 7 x 1, sqrt(diag(inv(X'X) X' diag(u^2/(1-h)^2) X inv(X'X))) with h = leverage
+  - case: bq1989_long
+    kind: var
+    data: {path: data/examples/matlab_examples/BQ1989_Data.xlsx, sheet: Sheet1, mnemonic_row: 2, first_data_row: 3}
+    endo: null
+    ident: long
+    iv: null
+  - case: gk2015_short
+    kind: var
+    data: {path: data/examples/matlab_examples/GK2015_Data.xlsx, sheet: Sheet1, mnemonic_row: 2, first_data_row: 3}
+    endo: [gs1, logcpi, logip, ebp]
+    ident: short
+    iv: null
+  - case: gk2015_iv
+    kind: var
+    data: {path: data/examples/matlab_examples/GK2015_Data.xlsx, sheet: Sheet1, mnemonic_row: 2, first_data_row: 3}
+    endo: [gs1, logcpi, logip, ebp]
+    ident: iv
+    iv: [ff4_tc]
+  - case: sw2001_short
+    kind: var
+    data: {path: data/examples/matlab_examples/SW2001_Data.xlsx, sheet: Sheet1, mnemonic_row: 2, first_data_row: 3}
+    endo: null
+    ident: short
+    iv: null
+var_layout:
+  ENDO: nobs x nvar, exact matrix passed to VARmodel (sentinel 123456789 already mapped to NaN)
+  IV: nobs x niv, exact matrix passed as VARopt.IV, NaN where the instrument is unavailable
+  Ft: ntotcoeff x nvar, row 1 constant then lag1 of all vars, lag2 of all vars and so on, column j is equation j
+  Sigma: nvar x nvar, residual covariance with divisor nobs-ntotcoeff
+  resid: (nobs-nlags) x nvar, rows start at observation nlags+1
+  B: nvar x nvar structural impact matrix, column j is shock j, for iv only column 1 is identified and columns 2 onward are zero
+  IR: nsteps x nvar x nvar, IR(h, i, j) is response of variable i to shock j at horizon h, one std dev shock
+  VD: nsteps x nvar x nvar, VD(h, j, i) is share of shock j in variance of variable i at horizon h
+  sigma_b: nvar x nvar, demeaned covariance of [instrumented residual, other residuals] on the instrument common sample, divisor n-ntotcoeff
+  first_stage_F: F statistic of the first stage regression of the instrumented residual on the instrument
+  first_stage_beta: constant then instrument coefficients of the first stage
+  first_stage_tstat: t statistics matching first_stage_beta
+  first_stage_rsqr: first stage R squared
+  first_stage_nobs: first stage sample size
+generic_cases:
+  - case: svar_keating
+    kind: generic
+    data: {files: [tests/external_benchmarks/matlab/third_party/kilian_lutkepohl_2017/9/ml_nonrecursive/gnpdeflator.txt, tests/external_benchmarks/matlab/third_party/kilian_lutkepohl_2017/9/ml_nonrecursive/realgnp.txt, tests/external_benchmarks/matlab/third_party/kilian_lutkepohl_2017/9/ml_nonrecursive/fedfunds.txt, tests/external_benchmarks/matlab/third_party/kilian_lutkepohl_2017/9/ml_nonrecursive/m1.txt]}
+    inputs: [ENDO]
+    settings: {source: "Kilian and Luetkepohl (2017) Code_Kilian/9/ml_nonrecursive, Keating (1992) model", columns: [infl, drgdp, irate, dmoney], const: 1, solver: "fsolve Levenberg-Marquardt, TolX = TolFun = 1e-12 (book uses 1e-4)", start: "[eye(4) 1.5*ones(4,1)]"}
+    layout:
+      ENDO: "T x 4 infl drgdp irate dmoney, exact matrix passed to olsvarc"
+      A_lags: "4 x 16 lag coefficients [A1 A2 A3 A4], column block l is lag l"
+      const: "4 x 1 intercepts"
+      resid: "(T-4) x 4"
+      SIGMAu: "4 x 4 residual covariance with divisor T-p (ML)"
+      B0_equality: "4 x 4 structural matrix B0 (B0 u = w), unit diagonal, book restrictions B0(1,2:4)=0, B0(3,1:2)=0, B0(4,1)=B0(4,2)"
+      SIGMAw_equality: "4 x 1 structural shock variances"
+      impact_equality: "4 x 4 inv(B0)*diag(sqrt(SIGMAw)), column j is shock j"
+      exitflag_equality: "fsolve exit flag, 1 = converged"
+      B0_zero: "4 x 4 same as equality case but B0(4,1)=0 replaces the equality. Stata svar and R vars::SVAR did not converge on either variant from their default starts, so this case is MATLAB-only"
+      SIGMAw_zero: "4 x 1"
+      impact_zero: "4 x 4"
+      exitflag_zero: "fsolve exit flag"
+  - case: bvar_kl_minnesota
+    kind: generic
+    data: {files: [tests/external_benchmarks/matlab/third_party/kilian_lutkepohl_2017/5/figure5_2/Yraw.dat]}
+    inputs: [ENDO]
+    settings: {source: "Kilian and Luetkepohl (2017) Code_Kilian/5/figure5_2 with prior_hyper_Minnesota.m", prior: "Litterman Minnesota, Sigma fixed at diag(sigma_sq), independent equations", note: "this is NOT the natural-conjugate NIW prior used by BVARModel; use it for the prior-variance formula and the fixed-Sigma posterior only"}
+    layout:
+      ENDO: "T x 3 Yraw (inflation, unemployment, interest rate)"
+      A_OLS: "13 x 3 OLS coefficients, row 1 constant then lag1 of all vars, lag2 and so on"
+      sigma_sq: "3 x 1 AR(4) residual variances with divisor Traw-p+1 as in the book"
+      a_prior: "39 x 1 prior mean, vec of 13 x 3"
+      V_prior_diag: "39 x 1 prior variances, vec of 13 x 3, V(i,j,l) = lambda^2 own, lambda^2 theta^2 sigma_i^2 / (l^2 sigma_j^2) cross, intercept 1e6"
+      A_post_mean: "13 x 3 analytic posterior mean with Sigma fixed"
+      V_post_diag: "13 x 3 posterior variances"
+      lambda: scalar
+      theta: scalar
+      intercept_var: scalar
+  - case: vecm_macro
+    kind: generic
+    data: {files: [data/examples/timeseries/macrodata.csv]}
+    inputs: [ENDO]
+    settings: {call: "estimate(vecm(3,1,1), Y, 'Model', 'H1' | 'H1*')", columns: [realgdp, realcons, realinv], note: "H1 = unrestricted constant (Stata trend(constant), urca ecdet none), H1* = constant in cointegration (Stata trend(rconstant), urca ecdet const, statsmodels ci)"}
+    layout:
+      ENDO: "T x 3"
+      h1_alpha: "3 x 1 adjustment"
+      h1_beta: "3 x 1 cointegrating vector, MATLAB normalisation (not unit on realgdp)"
+      h1_constant: "3 x 1"
+      h1_short_run: "3 x 3 Gamma_1"
+      h1_covariance: "3 x 3"
+      h1star_alpha: "3 x 1"
+      h1star_beta: "3 x 1"
+      h1star_beta_constant: "scalar constant inside the cointegrating relation"
+      h1star_constant: "3 x 1"
+      h1star_short_run: "3 x 3"
+      h1star_covariance: "3 x 3"
+  - case: arima_realgdp
+    kind: generic
+    data: {files: [data/examples/timeseries/macrodata.csv]}
+    inputs: [y]
+    settings: {call: "estimate(arima(1,0,1), realgdp)", method: "MATLAB default: presample response taken from the data and presample innovations set to 0, so the likelihood is conditional, not exact. Stata arima and R arima(method = ML) use the exact likelihood and agree with each other but not with this case"}
+    layout: {y: "T x 1 realgdp", constant: "scalar intercept c in y_t = c + phi y_{t-1} + e_t + theta e_{t-1}", mean: "c/(1-phi), comparable to Stata _cons, R intercept and statsmodels const", ar: scalar, ma: scalar, variance: scalar, loglik: scalar}
+  - case: lp_jt2025
+    kind: generic
+    data: {files: [data/examples/matlab_examples/JT2025_Data.xlsx]}
+    inputs: [ENDO, TREAT, CTRL, rows_used]
+    settings: {source: "Replic/JT2025/GO_JT2025.m Example 5, sheet Ex5, 1985q1 to 2007q4", nlag: 4, const: 1, nsteps: 18, longdiff: 1, impact: 1, pctg: 95, note: "long differences and lagged controls; the plain LP in LocalProjectionsModel estimates a different regression, see stata/lp_plain_jt2025"}
+    layout: {ENDO: "T x 1 100*lcpi", TREAT: "T x 1 rr_shock", CTRL: "T x 3 dlrgdp dlcpi dstir", rows_used: "1 x 2 first and last sheet data rows (1-based)", IR: "18 x 1 response at horizons 0..17", INF: "18 x 1 lower 95 band", SUP: "18 x 1 upper 95 band"}
+  - case: lpiv_jt2025
+    kind: generic
+    data: {files: [data/examples/matlab_examples/JT2025_Data.xlsx]}
+    inputs: [ENDO, TREAT, CTRL, IV, rows_used]
+    settings: {source: "Replic/JT2025/GO_JT2025.m Example 6, sheet Ex6, 1985m1 to 2000m1", nlag: 6, const: 1, nsteps: 49, longdiff: 1, impact: 1, nlag_iv: 6}
+    layout: {ENDO: "T x 1 urate", TREAT: "T x 1 ffr", CTRL: "T x 3 urate infl ffr", IV: "T x 1 RRCGShock", rows_used: "1 x 2", IR: "49 x 1 horizons 0..48", INF: "49 x 1", SUP: "49 x 1", jtest_df: scalar, jtest_pval: scalar}
