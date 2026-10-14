@@ -12,56 +12,57 @@
 - **Benchmark Dataset**: The packaged empirical dataset used to fit and verify the model.
 - **Reference Target**: The reference function, package, or toolbox in R, Stata, or MATLAB against which the model is compared.
 - **Verification Parity Status**:
-  - **Verified**: Parameter point estimates, standard errors, or structural impact matrices match the reference target software (Stata, MATLAB, R) to machine precision in automated benchmark tests.
+  - **Verified**: A wrapper test in `tests/test_external_parity/` asserts parameter point estimates, standard errors, or structural impact matrices against outputs recorded from the reference software (Stata, MATLAB, R), at the tolerance shown. See [Software Parity Benchmarks](../validation/benchmarks.md#2-software-parity-benchmarks-stata-matlab-r).
   - **Implemented**: Class is fully implemented and covered by unit/integration tests in Python, with cross-language benchmarks planned or in development.
+  - **Known mismatch**: A recorded external output disagrees with the wrapper; tracked as a strict `xfail` in `tests/test_external_parity/`.
   - **Utility Wrapper**: Helper or grid runner orchestrating underlying model fits.
 
 ### 1.1 Cross-Language Numerically Verified Models
 
-These models have been verified to machine precision against native Stata, MATLAB, or R routines on empirical benchmark datasets.
+These models are asserted by automated wrapper tests against outputs recorded from native Stata, MATLAB, or R routines on packaged benchmark datasets. Tolerances are relative unless stated.
 
 | Family | Class Name | YAML Pipeline Key | Direct Python API | Benchmark Dataset | Reference Target | Verification Parity Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Applied Regression** | `RegressionModel` | `ols` | `RegressionModel` | Longley (`data/examples/regression/longley.csv`) | R `stats::lm`, Stata `regress`, MATLAB `mldivide` | **Verified** ($0.00$ vs Stata) |
-| **Applied Regression** | `PanelRegressionModel` | `panel_ols` | `PanelRegressionModel` | Grunfeld (`data/examples/regression/grunfeld.csv`) | R `plm::plm`, Stata `xtreg` | **Verified** (R `plm` parity) |
-| **Discrete Choice** | `LogitModel` | `logit` | `LogitModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::glm`, Stata `logit` | **Verified** ($0.00$ vs Stata) |
-| **Unsupervised Learning** | `PCAModel` | `pca` | `PCAModel` | Longley (`data/examples/regression/longley.csv`) | R `stats::prcomp`, Stata `pca` | **Verified** ($0.00$ vs Stata) |
-| **Reduced-Form Time Series** | `VARModel` | `var` | `VARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `vars::VAR`, Stata `var`, `statsmodels` | **Verified** ($5.77 \times 10^{-15}$ vs Stata) |
-| **Reduced-Form Time Series** | `VECMModel` | `vecm` | `VECMModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `urca::ca.jo`, Stata `vec`, MATLAB `vecm` | **Verified** ($2.00 \times 10^{-3}$ vs Stata) |
-| **Structural Identification** | `BlanchardQuahModel` | `blanchard_quah` | `BlanchardQuahModel` | Blanchard & Quah (`data/examples/matlab_examples/BQ1989_Data.xlsx`) | MATLAB `VAR-Toolbox 4.0`, R `vars::BQ` | **Verified** ($2.22 \times 10^{-16}$ vs MATLAB) |
-| **Structural Identification** | `SVARModel` | `svar` | `SVARModel` | Blanchard & Quah (`data/examples/matlab_examples/BQ1989_Data.xlsx`) | R `vars::SVAR`, Stata `svar`, VAR-Toolbox | **Verified** (R `svars` parity) |
-| **Structural Identification** | `VolatilitySVARModel` | `volatility_svar` | `VolatilitySVARModel` | Rigobon Break Panel (`data/examples/regression/grunfeld.csv`) | R `svars::id.cv` | **Verified** (R `svars` parity) |
-| **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR`, Stata `threshold` | **Verified** (Stata threshold parity) |
+| **Applied Regression** | `RegressionModel` | `ols` | `RegressionModel` | Longley (`data/examples/regression/longley.csv`) | R `stats::lm`, Stata `regress`, MATLAB `mldivide` | **Verified** ($10^{-7}$) |
+| **Applied Regression** | `RobustOLSModel` | `robust_ols` | `RobustOLSModel` | Longley (`data/examples/regression/longley.csv`) | R `sandwich::vcovHC`, Stata `regress, vce(hc1/hc2/hc3)` | **Verified** (HC1, HC2, HC3, $10^{-6}$) |
+| **Applied Regression** | `IV2SLSModel` | `iv` (`iv_2sls`, `2sls`) | `IV2SLSModel` | Mroz (`data/examples/regression/mroz.csv`) | R `AER::ivreg`, Stata `ivregress 2sls` | **Verified** ($10^{-6}$) |
+| **Applied Regression** | `PanelRegressionModel` | `panel_ols` | `PanelRegressionModel` | Grunfeld (`data/examples/regression/grunfeld.csv`) | R `plm::plm`, Stata `xtreg, fe` | **Verified** (fixed effects, $10^{-6}$) |
+| **Discrete Choice** | `LogitModel` | `logit` | `LogitModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::glm`, Stata `logit` | **Verified** ($10^{-5}$) |
+| **Discrete Choice** | `ProbitModel` | `probit` | `ProbitModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::glm(probit)`, Stata `probit` | **Verified** ($10^{-5}$) |
+| **Unsupervised Learning** | `PCAModel` | `pca` | `PCAModel` | Longley (`data/examples/regression/longley.csv`) | R `stats::prcomp`, Stata `pca` | **Verified** ($10^{-8}$) |
+| **Reduced-Form Time Series** | `VARModel` | `var` | `VARModel` | US Macro growth rates (`data/examples/timeseries/macrodata.csv`) | R `vars::VAR`, Stata `var` | **Verified** ($10^{-8}$) |
+| **Reduced-Form Time Series** | `VECMModel` | `vecm` | `VECMModel` | Ghysels & Marcellino Ch 7 (`data/examples/timeseries/ghysels_ch7/`), US Macro | R `urca::ca.jo`, Stata `vec`, MATLAB `vecm` | **Verified** (rank 1, `ci` and `co`, $10^{-6}$) |
+| **Reduced-Form Time Series** | `ARIMAModel` | `arima` | `ARIMAModel` | US Macro growth rates (`data/examples/timeseries/macrodata.csv`) | R `stats::arima`, Stata `arima` | **Verified** (log-likelihood $10^{-7}$) |
+| **Reduced-Form Time Series** | `LocalProjectionsModel` | `local_projections` | `LocalProjectionsModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | Stata `regress` per horizon (HC3) | **Verified** (level-lead spec, $10^{-6}$) |
+| **Reduced-Form Time Series** | `LocalProjectionsIVModel` | `lp_iv` | `LocalProjectionsIVModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | Stata `ivregress 2sls` per horizon | **Verified** (level-lead spec, $10^{-6}$) |
+| **Structural Identification** | `BlanchardQuahModel` | `blanchard_quah` | `BlanchardQuahModel` | Blanchard & Quah (`data/examples/matlab_examples/BQ1989_Data.xlsx`) | MATLAB `VAR-Toolbox 4.0`, R `vars::BQ` | **Verified** ($10^{-8}$) |
+| **Structural Identification** | `SVARModel` | `svar` | `SVARModel` | Canada (`tests/integration/var/canada.csv`) | R `vars::SVAR` | **Verified** (A-model, $10^{-4}$, sign and scale normalised) |
 
 ### 1.2 Implemented Models (Python Tested, External Parity Benchmarks Planned)
 
-These models are fully implemented and verified via automated Python unit and integration test suites. External cross-language parity comparators are currently planned or in development.
+These models are fully implemented and covered by automated Python unit and integration test suites. External cross-language comparators are planned, in development, or blocked on a library fix; see Section 2.2 of [Software Parity Benchmarks](../validation/benchmarks.md#2-software-parity-benchmarks-stata-matlab-r).
 
 | Family | Class Name | YAML Pipeline Key | Direct Python API | Benchmark Dataset | Reference Target | Verification Parity Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Applied Regression** | `RobustOLSModel` | `robust_ols` | `RobustOLSModel` | Longley (`data/examples/regression/longley.csv`) | R `sandwich::vcovHC`, Stata `regress, robust` | **Implemented** |
-| **Applied Regression** | `IV2SLSModel` | `iv` (`iv_2sls`, `2sls`) | `IV2SLSModel` | Mroz (`data/examples/regression/mroz.csv`) | R `AER::ivreg`, Stata `ivregress 2sls` | **Implemented** |
 | **Applied Regression** | `PanelIV2SLSModel` | `panel_iv` | `PanelIV2SLSModel` | Grunfeld (`data/examples/regression/grunfeld.csv`) | R `fixest::feols`, Stata `xtivreg` | **Implemented** |
 | **Applied Regression** | `GMMModel` | `gmm` | `GMMModel` | Greenbook (`data/examples/academic/coibion_gorodnichenko_2012/`) | R `gmm::gmm`, Stata `gmm` | **Implemented** |
 | **Applied Regression** | `DiDModel` | `did` | `DiDModel` | Policy Loans (`data/examples/academic/lane_2025/`) | R `did::att_gt`, Stata `csdid` | **Implemented** |
 | **Applied Regression** | `SpecificationRunner` | `None` | `SpecificationRunner` | Longley (`data/examples/regression/longley.csv`) | Custom grid runner | **Utility Wrapper** |
-| **Discrete Choice** | `ProbitModel` | `probit` | `ProbitModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::glm(probit)`, Stata `probit` | **Implemented** |
 | **Unsupervised Learning** | `KMeansModel` | `kmeans` | `KMeansModel` | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | R `stats::kmeans`, Stata `cluster kmeans` | **Implemented** |
 | **Reduced-Form Time Series** | `RestrictedVAR` | `None` | `RestrictedVAR` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `vars::restrict`, Stata `var (constrained)` | **Implemented** |
-| **Reduced-Form Time Series** | `ARIMAModel` | `arima` | `ARIMAModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `forecast::auto.arima`, Stata `arima` | **Implemented** |
 | **Reduced-Form Time Series** | `BVARModel` | `bvar` | `BVARModel` | FOMC Surprises (`data/examples/academic/jarocinski_karadi_2020/`) | R `BVAR::bvar`, Stata `bayes: var` | **Implemented** |
 | **Reduced-Form Time Series** | `DynamicFactorModel` | `dynamic_factor` | `DynamicFactorModel` | Global Factor (`data/examples/academic/miranda_agrippino_rey_2020/`) | R `MARSS`, Stata `dfactor` | **Implemented** |
-| **Reduced-Form Time Series** | `LocalProjectionsModel` | `local_projections` | `LocalProjectionsModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | R `lpirfs::lp_lin`, Stata `jorda` | **Implemented** |
-| **Reduced-Form Time Series** | `LocalProjectionsIVModel` | `lp_iv` | `LocalProjectionsIVModel` | JT Macro (`data/examples/matlab_examples/JT2025_Data.xlsx`) | R `lpirfs::lp_lin_iv`, Stata `lproj` | **Implemented** |
 | **Reduced-Form Time Series** | `PandemicBVARModel` | `pandemic_bvar` | `PandemicBVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | Cascaldi-Garcia (2022) | **Implemented** |
-| **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Implemented** |
+| **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Known mismatch** (MATLAB `gk2015_iv`: shock scaling and sample) |
 | **Structural Identification** | `SignZeroSVARModel` | `sign_restrictions` (`sign_zero`) | `SignZeroSVARModel` | Kilian & Lütkepohl (`data/examples/timeseries/macrodata.csv`) | MATLAB `VAR-Toolbox 4.0`, R `BMR` | **Implemented** |
 | **Structural Identification** | `BayesianSignZeroSVARModel` | `bsvar_sign_zero` (`bayesian_sign_zero`) | `BayesianSignZeroSVARModel` | UK SVAR (`data/examples/timeseries/macrodata.csv`) | Bank of England (Brignone & Piffer 2025), Arias et al. (2018) | **Implemented** |
+| **Structural Identification** | `VolatilitySVARModel` | `volatility_svar` | `VolatilitySVARModel` | US output gap, inflation, rate (`tests/integration/svar/data_usa.csv`) | R `svars::id.cv` | **Known mismatch** (regime variance ratios differ from R by up to 0.16) |
 | **Structural Identification** | `IndependenceSVARModel` | `independence_svar` | `IndependenceSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.dc` | **Implemented** |
 | **Structural Identification** | `CVMSVARModel` | `cvm_svar` (`cvm`) | `CVMSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.cvm` | **Implemented** |
 | **Structural Identification** | `NonGaussianSVARModel` | `non_gaussian_svar` (`non_gaussian`) | `NonGaussianSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.ng` | **Implemented** |
 | **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Implemented** |
 | **Nonlinear Dynamics** | `TVECMModel` | `tvecm` | `TVECMModel` | Cointegration Panel (`data/examples/timeseries/ghysels_ch7/`) | R `tsDyn::TVECM` | **Implemented** |
+| **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR` | **Implemented** (no recorded reference) |
 | **Nonlinear Dynamics** | `STVARModel` | `stvar` | `STVARModel` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::STVAR` | **Implemented** |
 | **Nonlinear Dynamics** | `GIRFEngine` | `None` | `GIRFEngine` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::GIRF` | **Implemented** |
 
@@ -75,7 +76,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/regression/regression.py`
 - **Pipeline Access**: `ols` (direct instantiation: `RegressionModel`)
 - **Benchmark Target**: R (`stats::lm`), Stata (`regress`), MATLAB (`mldivide`)
-- **Verified Discrepancy**: Machine precision (Stata: $0.00$, MATLAB: $3.52 \times 10^{-6}$, R: $2.07 \times 10^{-6}$)
+- **Verified Discrepancy**: Relative agreement $10^{-7}$ with R, Stata and MATLAB on Longley (collinear; coefficients agree to about $10^{-12}$ between R and MATLAB).
 
 ### 2.2 Robust OLS (`RobustOLSModel`)
 - **Description**: OLS regression with heteroskedasticity-consistent (HC0, HC1, HC2, HC3) or autocorrelation-consistent (HAC / Newey-West) standard errors.
@@ -83,6 +84,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/regression/robust_ols.py`
 - **Pipeline Access**: `robust_ols` (direct instantiation: `RobustOLSModel`)
 - **Benchmark Target**: R (`sandwich::vcovHC`), Stata (`regress, robust`)
+- **Verified Discrepancy**: HC1, HC2 and HC3 standard errors agree with R `sandwich` and Stata to $10^{-6}$ on Longley.
 
 ### 2.3 Panel Regression (`PanelRegressionModel`)
 - **Description**: Static panel data regression supporting entity fixed effects, two-way fixed effects, and random effects.
@@ -90,7 +92,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/regression/panel.py`
 - **Pipeline Access**: `panel_ols` (direct instantiation: `PanelRegressionModel`)
 - **Benchmark Target**: R (`plm::plm`), Stata (`xtreg`)
-- **Verified Discrepancy**: Verified against R `plm` in integration test suite.
+- **Verified Discrepancy**: Fixed-effects coefficients and standard errors agree with R `plm` and Stata `xtreg, fe` to $10^{-6}$ on Grunfeld. Random effects and clustered errors are not yet covered.
 
 ### 2.4 Instrumental Variables 2SLS (`IV2SLSModel`)
 - **Description**: Two-Stage Least Squares (2SLS) instrumental variables estimation for endogenous regressors.
@@ -98,6 +100,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/regression/iv.py`
 - **Pipeline Access**: `iv` (aliases: `iv_2sls`, `2sls`)
 - **Benchmark Target**: R (`AER::ivreg`), Stata (`ivregress 2sls`), Python (`linearmodels.iv`)
+- **Verified Discrepancy**: Coefficients and classical standard errors agree with R `AER::ivreg` and Stata `ivregress 2sls` to $10^{-6}$ on Mroz (Stata divides by $N$, R by $N-k$; the test uses the matching convention).
 
 ### 2.5 Panel IV 2SLS (`PanelIV2SLSModel`)
 - **Description**: Panel instrumental variables estimation combining fixed effects with two-stage least squares.
@@ -135,7 +138,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/discrete/logit.py`
 - **Pipeline Access**: `logit` (direct instantiation: `LogitModel`)
 - **Benchmark Target**: R (`stats::glm`), Stata (`logit`)
-- **Verified Discrepancy**: Machine precision (Stata: $0.00$, R: $1.81 \times 10^{-9}$)
+- **Verified Discrepancy**: Coefficients, standard errors and log-likelihood agree with R and Stata to $10^{-5}$ on Spector.
 
 ### 3.2 Binary Probit (`ProbitModel`)
 - **Description**: Maximum likelihood binary probit classification model under standard normal cumulative density.
@@ -143,6 +146,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/discrete/probit.py`
 - **Pipeline Access**: `probit` (direct instantiation: `ProbitModel`)
 - **Benchmark Target**: R (`stats::glm(family=binomial(link="probit"))`), Stata (`probit`)
+- **Verified Discrepancy**: Coefficients and log-likelihood agree with R and Stata to $10^{-5}$; R uses expected information so its standard errors differ by up to 0.03, while Stata matches the observed-information standard errors.
 
 ### 3.3 Principal Component Analysis (`PCAModel`)
 - **Description**: Standardized PCA feature extraction producing factor loadings, scree variance shares, and orthogonal latent components.
@@ -150,7 +154,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/unsupervised/pca.py`
 - **Pipeline Access**: `pca` (direct instantiation: `PCAModel`)
 - **Benchmark Target**: R (`stats::prcomp`), Stata (`pca`)
-- **Verified Discrepancy**: Machine precision (Stata: $0.00$, R: $3.33 \times 10^{-16}$)
+- **Verified Discrepancy**: Variance shares and absolute loadings agree with R `prcomp` and Stata `pca` to $10^{-8}$ on Longley (component signs are arbitrary).
 
 ### 3.4 K-Means Clustering (`KMeansModel`)
 - **Description**: Standardized K-means clustering algorithm partitioning observations into $K$ disjoint clusters by minimizing within-cluster sum of squares.
@@ -168,7 +172,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/unsupervised/pca.py`
 - **Pipeline Access**: `pca` (direct instantiation: `PCAModel`)
 - **Benchmark Target**: R (`stats::prcomp`), Stata (`pca`)
-- **Verified Discrepancy**: Machine precision (Stata: $0.00$, R: $3.33 \times 10^{-16}$)
+- **Verified Discrepancy**: Variance shares and absolute loadings agree with R `prcomp` and Stata `pca` to $10^{-8}$ on Longley (component signs are arbitrary).
 
 ### 4.2 K-Means Clustering (`KMeansModel`)
 - **Description**: Standardized K-means clustering algorithm partitioning observations into $K$ disjoint clusters by minimizing within-cluster sum of squares.
@@ -189,7 +193,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/var.py`
 - **Pipeline Access**: `var` (direct instantiation: `VARModel`)
 - **Benchmark Target**: R (`vars::VAR`), Stata (`var`), Python (`statsmodels`)
-- **Verified Discrepancy**: Stata $5.77 \times 10^{-15}$, `statsmodels` $0.00$.
+- **Verified Discrepancy**: Coefficients, $\hat\Sigma_u$ (both divisors) and log-likelihood agree with R `vars::VAR` and Stata `var` to $10^{-8}$ on US macro growth rates.
 
 ### 5.2 Vector Error Correction Model (`VECMModel`)
 - **Description**: Cointegrated multivariate time series model capturing long-run equilibrium relationships alongside short-run adjustment dynamics.
@@ -197,7 +201,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/vecm.py`
 - **Pipeline Access**: `vecm` (direct instantiation: `VECMModel`)
 - **Benchmark Target**: R (`urca::ca.jo`), Stata (`vec`), MATLAB (`vecm`)
-- **Verified Discrepancy**: Stata $2.00 \times 10^{-3}$ parameter agreement.
+- **Verified Discrepancy**: Normalised $\beta$ and $\alpha$ agree with Stata `vec` and MATLAB `vecm` to $10^{-6}$ on three Ghysels & Marcellino Ch 7 datasets and US macro, for `deterministic="ci"` (restricted constant) and `"co"`. Rank is fixed at 1 (known gap: the UK term structure needs rank 3).
 
 ### 5.3 Restricted VAR (`RestrictedVAR`)
 - **Description**: VAR enforced with structural zero restrictions on lag coefficients at the equation level.
@@ -212,6 +216,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/arima.py`
 - **Pipeline Access**: `arima` (direct instantiation: `ARIMAModel`)
 - **Benchmark Target**: R (`forecast::auto.arima`), Stata (`arima`)
+- **Verified Discrepancy**: Log-likelihood agrees with R `arima` and Stata `arima` to $10^{-7}$ for ARIMA(1,0,1) on US macro growth rates; MATLAB `estimate` uses a conditional likelihood and is not comparable.
 
 ### 5.5 Analytical Conjugate Bayesian VAR (`BVARModel`)
 - **Description**: Conjugate Normal-Inverse-Wishart prior BVAR with Minnesota prior moments, estimated analytically in closed form without MCMC dependencies.
@@ -233,6 +238,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/local_projections.py`
 - **Pipeline Access**: `local_projections` (direct instantiation: `LocalProjectionsModel`)
 - **Benchmark Target**: R (`lpirfs::lp_lin`), Stata (`jorda`)
+- **Verified Discrepancy**: Per-horizon coefficient and HC3 standard error agree with Stata `regress F(h).y x controls, vce(hc3)` to $10^{-6}$ on the Jordà & Taylor Example 5 sample. This is a level-lead regression with contemporaneous controls; the paper's long-difference, lagged-control specification (MATLAB `LPmodel`) is not implemented.
 
 ### 5.8 Local Projections IV (`LocalProjectionsIVModel`)
 - **Description**: Instrumented local projections (Stock & Watson 2018) using external narrative or high-frequency surprises as instruments for policy treatments.
@@ -240,6 +246,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/local_projections_iv.py`
 - **Pipeline Access**: `lp_iv` (direct instantiation: `LocalProjectionsIVModel`)
 - **Benchmark Target**: R (`lpirfs::lp_lin_iv`), Stata (`lproj`)
+- **Verified Discrepancy**: Per-horizon coefficient and standard error agree with Stata `ivregress 2sls F(h).y controls (x = z)` to $10^{-6}$ on the Jordà & Taylor Example 6 sample, with the same level-lead caveat as `LocalProjectionsModel`.
 
 ### 5.9 Pandemic BVAR (`PandemicBVARModel`)
 - **Description**: Bayesian Vector Autoregression incorporating the Cascaldi-Garcia (2022) pandemic prior to downweight extreme volatility during pandemic or crisis quarters without distorting autoregressive lag shrinkage.
@@ -258,6 +265,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/svar.py`
 - **Pipeline Access**: `svar` (direct instantiation: `SVARModel`)
 - **Benchmark Target**: R (`vars::SVAR`), Stata (`svar`), MATLAB (`VAR-Toolbox 4.0`)
+- **Verified Discrepancy**: A-model matrix agrees with R `vars::SVAR` to $10^{-4}$ after sign and scale normalisation (R uses divisor $T-k$, Stata `svar` divisor $T$). The Keating non-recursive case did not converge in Stata or R and is MATLAB-only.
 
 ### 6.2 Blanchard-Quah Long-Run SVAR (`BlanchardQuahModel`)
 - **Description**: Identification imposing cumulative long-run neutrality restrictions on structural shocks ($C(1) = (I - \sum A_i)^{-1} B$ is triangular).
@@ -265,7 +273,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/blanchard_quah.py`
 - **Pipeline Access**: `blanchard_quah` (direct instantiation: `BlanchardQuahModel`)
 - **Benchmark Target**: MATLAB (`VAR-Toolbox 4.0`), R (`vars::BQ`)
-- **Verified Discrepancy**: Machine precision ($2.22 \times 10^{-16}$ maximum absolute difference vs MATLAB).
+- **Verified Discrepancy**: Impact matrix agrees with MATLAB VAR-Toolbox 4.0 and R `vars::BQ` to $10^{-8}$ (VAR(8) with constant, 159 observations). Stata `svar` differs by the factor $\sqrt{134/151}$ because it uses the ML covariance.
 
 ### 6.3 Proxy SVAR / SVAR-IV (`ProxySVARModel`)
 - **Description**: Structural shock identification using external instruments correlated with target shock but orthogonal to other structural shocks.
@@ -273,6 +281,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/proxy_svar.py`
 - **Pipeline Access**: `proxy_svar` (direct instantiation: `ProxySVARModel`)
 - **Benchmark Target**: R (`svars`), MATLAB (`VAR-Toolbox 4.0`)
+- **Known Mismatch**: Impact column differs from MATLAB VAR-Toolbox `gk2015_iv` (shock scaling by $\sqrt{\Sigma_{11}}$ and instrument-missing rows dropped before VAR estimation); tracked as a strict `xfail`.
 
 ### 6.4 Sign, Zero, & Narrative Restrictions (`SignZeroSVARModel`)
 - **Description**: Non-Bayesian set identification imposing directional inequality signs, exact zero impact constraints, and historical narrative restrictions (Antolín-Díaz & Rubio-Ramírez 2018).
@@ -287,7 +296,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/volatility.py`
 - **Pipeline Access**: `volatility_svar` (direct instantiation: `VolatilitySVARModel`)
 - **Benchmark Target**: R (`svars::id.cv`)
-- **Verified Discrepancy**: Verified against R `svars` in integration test suite.
+- **Known Mismatch**: Sorted regime variance ratios differ from R `svars::id.cv` by up to 0.161; the wrapper test is an `xfail`.
 
 ### 6.6 Distance Covariance & ICA SVAR (`IndependenceSVARModel`)
 - **Description**: Data-driven structural identification by maximizing statistical independence across shock components via FastICA or distance covariance minimization.
@@ -330,7 +339,7 @@ These models are fully implemented and verified via automated Python unit and in
 - **Module Location**: `src/stats_transformer/models/timeseries/nonlinear/tvar.py`
 - **Pipeline Access**: `tvar` (direct instantiation: `TVARModel`)
 - **Benchmark Target**: R (`tsDyn::TVAR`), Stata (`threshold`)
-- **Verified Discrepancy**: Stata threshold search and parameter parity verified.
+- **Verified Discrepancy**: None recorded. Stata `threshold` is a single-equation threshold regression and does not check a TVAR; R `tsDyn::TVAR` driver is planned.
 
 ### 7.2 Threshold VECM (`TVECMModel`)
 - **Description**: Threshold cointegrated vector error correction model switching regimes based on error correction deviation magnitude.
