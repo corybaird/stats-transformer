@@ -131,12 +131,13 @@ def test_run_writes_nothing_outside_tmp_path(tmp_path, monkeypatch, stage):
 def test_run_with_repo_cwd_writes_nothing_into_repo(tmp_path, monkeypatch):
     # Mirrors the leak that produced the stray CSVs in reports/: tests whose config
     # lives in tmp_path but whose CWD stays at the repo root. On main,
-    # run_model() wrote reports/transformed_data_*.csv (+ data/pipeline/...
-    # resampled_merged.parquet) relative to the repo CWD; these writes must go to
-    # the output.root run folder instead. Deliberately does not chdir.
+    # run_model() wrote reports/transformed_data_*.csv relative to the repo CWD;
+    # these writes must go to the output.root run folder or the explicit paths
+    # instead. Deliberately does not chdir; explicit paths keep the branch side
+    # of the comparison clean (the default merge path is repo-CWD-relative).
     before_status, before_files = _repo_snapshot()
 
-    config_path, _ = _write_full_config(tmp_path)
+    config_path, _ = _write_full_config(tmp_path, with_explicit_paths=True)
     pipeline = Pipeline(params_path=str(config_path))
     pipeline.run()
 
@@ -144,6 +145,40 @@ def test_run_with_repo_cwd_writes_nothing_into_repo(tmp_path, monkeypatch):
     assert after_status == before_status, f"repo tree changed:\n{after_status}"
     assert {name for name, _ in after_files} == {name for name, _ in before_files}
     assert after_files == before_files
+
+
+# --- single-stage data run with explicit paths still gets a run manifest ---
+
+def test_run_data_stage_with_explicit_merge_path_still_gets_run_manifest(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    config_path, _ = _write_full_config(tmp_path, with_explicit_paths=True)
+    pipeline = Pipeline(params_path=str(config_path))
+    pipeline.run(stage="data")
+
+    run_dir = _single_run_dir(tmp_path / "output_root")
+    assert (run_dir / "manifest.json").exists()
+    assert not (run_dir / "01_data").exists()
+    with open(run_dir / "manifest.json") as f:
+        manifest = json.load(f)
+    assert manifest["stages_run"] == ["data"]
+    assert str(tmp_path / "merged.parquet") in manifest["files"]
+    assert (tmp_path / "merged.parquet").exists()
+
+
+# --- stage chaining across separate Pipeline instances (explicit paths unset) ---
+
+def test_data_stage_then_fresh_pipeline_features_stage(tmp_path, monkeypatch):
+    # The README/DVC way to run single stages: one Pipeline invocation per stage.
+    # The canonical merged output stays at the explicit path or the data/pipeline
+    # default so a fresh instance finds it, as on main.
+    monkeypatch.chdir(tmp_path)
+    config_path, _ = _write_full_config(tmp_path)
+    Pipeline(params_path=str(config_path)).run(stage="data")
+
+    assert (tmp_path / "data" / "pipeline" / "resampled_merged.parquet").exists()
+
+    transformed = Pipeline(params_path=str(config_path)).run(stage="features")
+    assert transformed is not None
 
 
 # --- manifest contents ---
@@ -214,6 +249,10 @@ def test_explicit_output_paths_still_honoured(tmp_path, monkeypatch):
     assert (run_dir / "02_features" / "features.parquet").exists()
     assert (run_dir / "03_model" / "model_summary.json").exists()
     assert (run_dir / "manifest.json").exists()
+    with open(run_dir / "manifest.json") as f:
+        manifest = json.load(f)
+    assert manifest["stages_run"] == ["data", "features", "model", "reporting"]
+    assert str(tmp_path / "merged.parquet") in manifest["files"]
     assert not (tmp_path / "reports").exists()
 
 

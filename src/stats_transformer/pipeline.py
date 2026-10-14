@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+import shutil
 import subprocess
 import warnings
 from datetime import datetime, timezone
@@ -40,7 +41,6 @@ class Pipeline:
         self.transformed_data: Optional[pd.DataFrame] = None
         self.model_results: Optional[Dict[str, Any]] = None
         self._config: Optional[Config] = None
-        self._merged_output_path: Optional[str] = None
         self._run_dir: Optional[str] = None
         self._run_files: List[str] = []
         self._stages_run: List[str] = []
@@ -102,6 +102,12 @@ class Pipeline:
             git_sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
         except Exception:
             git_sha = None
+        config_sha256: Optional[str] = None
+        if self.params_path and os.path.isfile(self.params_path):
+            try:
+                config_sha256 = _sha256(self.params_path)
+            except OSError:
+                config_sha256 = None
         try:
             from stats_transformer import __version__ as package_version
         except Exception:
@@ -111,7 +117,7 @@ class Pipeline:
             "started_at_utc": self._run_start,
             "finished_at_utc": datetime.now(timezone.utc).isoformat(),
             "config": params,
-            "config_sha256": _sha256(self.params_path) if self.params_path else None,
+            "config_sha256": config_sha256,
             "inputs_sha256": inputs,
             "git_sha": git_sha,
             "package_version": package_version,
@@ -337,7 +343,7 @@ class Pipeline:
 
         data_config = params.get("data", {})
         raw_data_file = data_config.get("raw_data_file")
-        merged_output_path = data_config.get("merge", {}).get("output_path") or self._merged_output_path or "data/pipeline/resampled_merged.parquet"
+        merged_output_path = data_config.get("merge", {}).get("output_path", "data/pipeline/resampled_merged.parquet")
 
         # Prefer merged output if it exists or if we are in a later stage
         effective_data_path = merged_output_path if os.path.exists(merged_output_path) else raw_data_file
@@ -357,9 +363,12 @@ class Pipeline:
         paths = self._resolve_paths()
         assert self.feature_engineer is not None  # set by _resolve_paths via _initialize_from_params
         data_config = paths["params"].get("data", {})
-        # Explicit merge output paths keep working; otherwise the run folder receives the merged data.
+        run_dir = self._begin_run()
+        # The canonical chaining location stays exactly as on main: the explicit
+        # merge output_path, or the data/pipeline default. The run folder also
+        # receives a copy so each run is self-contained.
         explicit_output_path = data_config.get("merge", {}).get("output_path")
-        output_path = explicit_output_path or os.path.join(self._begin_run(), "01_data", "merged.parquet")
+        output_path = paths["merged_output_path"]
 
         resampled = []
         for ds_cfg in data_config.get("datasets", []):
@@ -378,8 +387,12 @@ class Pipeline:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         merged_df.to_parquet(output_path)
         self.logger.info(f"Merged data saved to {output_path} with shape {merged_df.shape}")
-        self._merged_output_path = output_path
         self._run_files.append(output_path)
+        if explicit_output_path is None:
+            run_copy = os.path.join(run_dir, "01_data", "merged.parquet")
+            os.makedirs(os.path.dirname(run_copy), exist_ok=True)
+            shutil.copyfile(output_path, run_copy)
+            self._run_files.append(run_copy)
         self._end_stage("data")
         return merged_df
 

@@ -168,7 +168,8 @@ flowchart LR
 
 ```text
 <output.root>/<config_stem>/<YYYYMMDD_HHMMSS>/
-├── 01_data/merged.parquet        # only when data.merge.output_path is unset
+├── 01_data/merged.parquet        # copy of the merged data; the canonical chaining copy lives at
+│                                 # data.merge.output_path (or the data/pipeline default, as before)
 ├── 02_features/features.parquet  # always written; keeps dtypes
 ├── 03_model/model_summary.json   # written when the model stage runs
 └── manifest.json                 # config copy + sha256, input file checksums, git SHA (when available),
