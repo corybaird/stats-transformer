@@ -60,14 +60,17 @@ class TVECMModel(ModelBase):
         dY_eff = dY[max_lag - 1 :]
         T_eff = len(dY_eff)
 
-        ect_eff = ect_series[max_lag - 1 - d : T - 1 - d]
+        # The ECT regressor is ECT_{t-1} regardless of the threshold delay, while
+        # the threshold variable is ECT_{t-d} (Hansen & Seo 2002; tsDyn::TVECM).
+        ect_regressor = ect_series[max_lag - 1 : T - 1]
+        ect_threshold = ect_series[max_lag - d : T - d]
 
-        X_list = [np.ones((T_eff, 1)), ect_eff.reshape((T_eff, -1))]
+        X_list = [np.ones((T_eff, 1)), ect_regressor.reshape((T_eff, -1))]
         for lag in range(1, p_diff + 1):
             X_list.append(dY[max_lag - 1 - lag : T_d - lag])
 
         X_eff = np.hstack(X_list)
-        return dY_eff, X_eff, ect_eff
+        return dY_eff, X_eff, ect_regressor, ect_threshold
 
     def _estimate_regime_ols(self, Y, X):
         try:
@@ -78,24 +81,24 @@ class TVECMModel(ModelBase):
         except Exception:
             return None, None, None
 
-    def _grid_search_threshold(self, dY_eff, X_eff, ect_eff):
+    def _grid_search_threshold(self, dY_eff, X_eff, th_eff):
         T_eff = len(dY_eff)
         num_regressors = X_eff.shape[1]
         min_obs = max(num_regressors + 2, int(np.floor(self.trim * T_eff)))
 
-        unique_th = np.sort(np.unique(ect_eff))
+        unique_th = np.sort(np.unique(th_eff))
         lower_idx = int(np.floor(self.trim * len(unique_th)))
         upper_idx = int(np.ceil((1.0 - self.trim) * len(unique_th)))
 
         candidate_gammas = unique_th[lower_idx:upper_idx]
         if len(candidate_gammas) == 0:
-            candidate_gammas = [np.median(ect_eff)]
+            candidate_gammas = [np.median(th_eff)]
 
         best_gamma = candidate_gammas[0]
         best_ssr = np.inf
 
         for cand in candidate_gammas:
-            mask1 = ect_eff <= cand
+            mask1 = th_eff <= cand
             mask2 = ~mask1
 
             if np.sum(mask1) < min_obs or np.sum(mask2) < min_obs:
@@ -136,18 +139,22 @@ class TVECMModel(ModelBase):
         else:
             ect_series = ect
 
-        dY_eff, X_eff, ect_eff = self._construct_tvecm_design_matrices(y_levels, ect_series)
+        dY_eff, X_eff, ect_regressor, ect_threshold = self._construct_tvecm_design_matrices(y_levels, ect_series)
         T_eff = len(dY_eff)
 
         if self.gamma is None:
-            self.gamma = self._grid_search_threshold(dY_eff, X_eff, ect_eff)
+            self.gamma = self._grid_search_threshold(dY_eff, X_eff, ect_threshold)
 
-        mask1 = ect_eff <= self.gamma
+        mask1 = ect_threshold <= self.gamma
         mask2 = ~mask1
 
-        if np.sum(mask1) == 0 or np.sum(mask2) == 0:
-            mask1 = np.ones(T_eff, dtype=bool)
-            mask2 = np.ones(T_eff, dtype=bool)
+        min_obs = max(X_eff.shape[1] + 2, int(np.floor(self.trim * T_eff)))
+        n1, n2 = int(np.sum(mask1)), int(np.sum(mask2))
+        if n1 < min_obs or n2 < min_obs:
+            raise ValueError(
+                f"Threshold gamma={self.gamma:g} leaves regime sizes ({n1}, {n2}); "
+                f"each regime needs at least {min_obs} observations (trim={self.trim})"
+            )
 
         p1, r1, cov1 = self._estimate_regime_ols(dY_eff[mask1], X_eff[mask1])
         p2, r2, cov2 = self._estimate_regime_ols(dY_eff[mask2], X_eff[mask2])
