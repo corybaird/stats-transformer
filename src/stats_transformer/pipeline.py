@@ -1,6 +1,10 @@
+import hashlib
+import json
 import logging
 import os
+import subprocess
 import warnings
+from datetime import datetime, timezone
 import pandas as pd
 from typing import Any, Dict, List, Optional, Union
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
@@ -36,6 +40,85 @@ class Pipeline:
         self.transformed_data: Optional[pd.DataFrame] = None
         self.model_results: Optional[Dict[str, Any]] = None
         self._config: Optional[Config] = None
+        self._merged_output_path: Optional[str] = None
+        self._run_dir: Optional[str] = None
+        self._run_files: List[str] = []
+        self._stages_run: List[str] = []
+        self._run_start: Optional[str] = None
+        self._full_run_active: bool = False
+
+    def _get_output_root(self) -> str:
+        return self._get_config().to_dict().get("output", {}).get("root") or "data/pipeline"
+
+    def _begin_run(self) -> str:
+        """Create (or reuse) this run's per-run output folder."""
+        if self._run_dir is None:
+            stem = os.path.splitext(os.path.basename(self.params_path or "pipeline"))[0]
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            candidate = os.path.join(self._get_output_root(), stem, ts)
+            suffix = 1
+            while os.path.isdir(candidate) and os.listdir(candidate):
+                candidate = os.path.join(self._get_output_root(), stem, f"{ts}_{suffix}")
+                suffix += 1
+            os.makedirs(candidate, exist_ok=True)
+            self._run_dir = candidate
+            self._run_files = []
+            self._stages_run = []
+            self._run_start = datetime.now(timezone.utc).isoformat()
+        return self._run_dir
+
+    def _end_stage(self, stage: str) -> None:
+        """Record a finished stage; close the run folder and write the manifest for single-stage runs."""
+        if self._run_dir is None:
+            return
+        self._stages_run.append(stage)
+        if not self._full_run_active:
+            self._write_manifest()
+            self._run_dir = None
+
+    def _write_manifest(self) -> None:
+        """Write manifest.json into the current run folder (no-op if no run is open)."""
+        if self._run_dir is None:
+            return
+
+        def _sha256(path: str) -> str:
+            digest = hashlib.sha256()
+            with open(path, "rb") as f:
+                for chunk in iter(lambda: f.read(65536), b""):
+                    digest.update(chunk)
+            return digest.hexdigest()
+
+        params = self._get_config().to_dict()
+        inputs: Dict[str, str] = {}
+        data_config = params.get("data", {})
+        input_paths = [ds.get("path") for ds in data_config.get("datasets", [])] + [data_config.get("raw_data_file")]
+        for path in input_paths:
+            if path and os.path.isfile(path) and path not in inputs:
+                try:
+                    inputs[path] = _sha256(path)
+                except OSError:
+                    pass
+        try:
+            git_sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
+        except Exception:
+            git_sha = None
+        try:
+            from stats_transformer import __version__ as package_version
+        except Exception:
+            package_version = "unknown"
+        manifest = {
+            "stages_run": list(self._stages_run),
+            "started_at_utc": self._run_start,
+            "finished_at_utc": datetime.now(timezone.utc).isoformat(),
+            "config": params,
+            "config_sha256": _sha256(self.params_path) if self.params_path else None,
+            "inputs_sha256": inputs,
+            "git_sha": git_sha,
+            "package_version": package_version,
+            "files": list(self._run_files),
+        }
+        with open(os.path.join(self._run_dir, "manifest.json"), "w") as f:
+            json.dump(manifest, f, indent=2)
 
     def _get_config(self) -> Config:
         if self._config is None:
@@ -189,8 +272,6 @@ class Pipeline:
         return self.model.predict(data_to_predict)
 
     def save_results(self, output_dir: str = "reports") -> Dict[str, str]:
-        import json
-        from datetime import datetime
         os.makedirs(output_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         results: Dict[str, str] = {}
@@ -256,7 +337,7 @@ class Pipeline:
 
         data_config = params.get("data", {})
         raw_data_file = data_config.get("raw_data_file")
-        merged_output_path = data_config.get("merge", {}).get("output_path", "data/pipeline/resampled_merged.parquet")
+        merged_output_path = data_config.get("merge", {}).get("output_path") or self._merged_output_path or "data/pipeline/resampled_merged.parquet"
 
         # Prefer merged output if it exists or if we are in a later stage
         effective_data_path = merged_output_path if os.path.exists(merged_output_path) else raw_data_file
@@ -276,7 +357,9 @@ class Pipeline:
         paths = self._resolve_paths()
         assert self.feature_engineer is not None  # set by _resolve_paths via _initialize_from_params
         data_config = paths["params"].get("data", {})
-        output_path = paths["merged_output_path"]
+        # Explicit merge output paths keep working; otherwise the run folder receives the merged data.
+        explicit_output_path = data_config.get("merge", {}).get("output_path")
+        output_path = explicit_output_path or os.path.join(self._begin_run(), "01_data", "merged.parquet")
 
         resampled = []
         for ds_cfg in data_config.get("datasets", []):
@@ -295,6 +378,9 @@ class Pipeline:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         merged_df.to_parquet(output_path)
         self.logger.info(f"Merged data saved to {output_path} with shape {merged_df.shape}")
+        self._merged_output_path = output_path
+        self._run_files.append(output_path)
+        self._end_stage("data")
         return merged_df
 
     def run_features(self, data_path: Optional[str] = None) -> pd.DataFrame:
@@ -307,6 +393,15 @@ class Pipeline:
         transformed_data = self.fit_transform(data_path, fit_model=False)
         if processed_path:
             transformed_data.to_csv(processed_path, index=False)
+        run_dir = self._begin_run()
+        features_path = os.path.join(run_dir, "02_features", "features.parquet")
+        os.makedirs(os.path.dirname(features_path), exist_ok=True)
+        # Parquet (not the CSV above) keeps dtypes such as dates.
+        transformed_data.to_parquet(features_path)
+        if processed_path:
+            self._run_files.append(processed_path)
+        self._run_files.append(features_path)
+        self._end_stage("features")
         return transformed_data
 
     def run_model(self, data_path: Optional[str] = None, transformed_data: Optional[pd.DataFrame] = None) -> Optional[Dict[str, Any]]:
@@ -330,9 +425,16 @@ class Pipeline:
             data_path = data_path or paths["effective_data_path"]
             self.fit_transform(data_path)
 
-        self.save_results(output_dir="reports")
+        # Model artefacts go to the run folder; the hardcoded reports/ default is gone.
+        run_dir = self._begin_run()
+        if self.model_results is not None:
+            summary_run_path = os.path.join(run_dir, "03_model", "model_summary.json")
+            self.save_model_summary(summary_run_path)
+            self._run_files.append(summary_run_path)
         if summary_path:
             self.save_model_summary(summary_path)
+            self._run_files.append(summary_path)
+        self._end_stage("model")
         return self.model_results
 
     def run_reporting(self) -> Dict[str, Any]:
@@ -347,7 +449,13 @@ class Pipeline:
             import json
             with open(summary_path, "r") as f:
                 self.model_results = json.load(f)
-        return self.create_visualizations(output_dir=paths["report_output_dir"])
+        self._begin_run()
+        results = self.create_visualizations(output_dir=paths["report_output_dir"])
+        for path in results.values():
+            if isinstance(path, str) and os.path.isfile(path):
+                self._run_files.append(path)
+        self._end_stage("reporting")
+        return results
 
     def run_eda(self, data_path: Optional[str] = None) -> Any:
         """EDA: exploratory charts of the merged (or raw) data."""
@@ -357,6 +465,18 @@ class Pipeline:
             raise ValueError("No data path found for eda stage")
         eda_viz = EDAVisualizer(params_path=self.params_path, output_dir=paths["report_output_dir"])
         return eda_viz.run(data_path=data_path)
+
+    def _run_stage(self, stage: str) -> Any:
+        """Dispatch a validated single-stage run."""
+        if stage == "data":
+            return self.run_data()
+        if stage == "features":
+            return self.run_features()
+        if stage == "eda":
+            return self.run_eda()
+        if stage == "model":
+            return self.run_model()
+        return self.run_reporting()
 
     def run(self, stage: Optional[str] = None) -> Any:
         if self.params_path:
@@ -372,26 +492,21 @@ class Pipeline:
         if stage is not None and stage != "eda" and stage not in STAGES:
             raise ValueError(f"Unknown stage '{stage}'. Valid values: {', '.join(STAGES)} (or 'eda'), or None for a full run")
 
-        if stage == "data":
-            return self.run_data()
-
-        if stage == "features":
-            return self.run_features()
-
-        if stage == "eda":
-            return self.run_eda()
-
-        if stage == "model":
-            return self.run_model()
-
-        if stage == "reporting":
-            return self.run_reporting()
+        if stage is not None:
+            return self._run_stage(stage)
 
         # Full run (stage is None): data -> features -> model -> reporting
-        self.run_data()
-        transformed_data = self.run_features()
-        self.run_model(transformed_data=transformed_data)
-        self.run_reporting()
+        self._run_dir = None
+        self._full_run_active = True
+        try:
+            self.run_data()
+            transformed_data = self.run_features()
+            self.run_model(transformed_data=transformed_data)
+            self.run_reporting()
+        finally:
+            self._full_run_active = False
+            self._write_manifest()
+            self._run_dir = None
         return transformed_data
 
 if __name__ == "__main__":
