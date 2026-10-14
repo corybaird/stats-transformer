@@ -255,3 +255,8 @@ __marimo__/
 src/temp/
 references/matlab_benchmarks/
 /data/examples/academic/ghysels_2018/
+
+# Generated code knowledge graphs and agent working files
+.code-review-graph/
+graphify-out/
+.herdr/
