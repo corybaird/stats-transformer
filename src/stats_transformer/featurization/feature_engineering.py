@@ -133,7 +133,7 @@ class FeatureEngineer:
         required_columns = []
         if self.entity_column:
             required_columns.append(self.entity_column)
-        if self.start_date:
+        if self.start_date and self.date_column:
             required_columns.append(self.date_column)
         required_columns += self.data_columns
         missing_columns = [col for col in required_columns if col not in df.columns]
