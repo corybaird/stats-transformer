@@ -78,6 +78,9 @@ def test_run_data_stage_without_datasets_raises(tmp_path, monkeypatch):
     pipeline = Pipeline(params_path=str(config_path))
     with pytest.raises(ValueError, match="data.datasets"):
         pipeline.run(stage="data")
+    # The failed stage leaves nothing behind: no run folder, no output file.
+    assert not (tmp_path / "data").exists()
+    assert not list(tmp_path.rglob("manifest.json"))
 
 
 def test_transform_whole_frame_without_entity():
