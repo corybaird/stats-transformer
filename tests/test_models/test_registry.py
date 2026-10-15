@@ -22,6 +22,8 @@ def test_every_model_base_subclass_is_registered_or_explicitly_excluded():
             continue
         if subclass.__name__ in NOT_PIPELINE_EXPOSED:
             continue
+        if subclass.__module__.startswith("test_models."):
+            continue  # test-only stubs (tests/ is not an importable package)
         unaccounted.append(subclass.__name__)
 
     assert not unaccounted, (
