@@ -23,8 +23,9 @@ class TableGenerator:
             if tbl[col].dropna().apply(lambda x: x.is_integer()).all():
                 tbl[col] = tbl[col].fillna(0).astype(int)
         
-        # Escape specific characters for LaTeX
-        for col in tbl.select_dtypes(include=['object']).columns:
+        # Escape specific characters for LaTeX (is_string_dtype covers object
+        # on pandas 2 and the new str dtype on pandas 3)
+        for col in [c for c in tbl.columns if pd.api.types.is_string_dtype(tbl[c])]:
             tbl[col] = tbl[col].astype(str).str.replace('&', r'\&', regex=False)
             tbl[col] = tbl[col].str.replace('%', r'\%', regex=False)
             tbl[col] = tbl[col].str.replace('_', r'\_', regex=False)
@@ -42,13 +43,15 @@ class TableGenerator:
             align_first_n_left (int): If col_format is None, how many of the first columns to align left 'l'.
         """
         tbl = self.clean_dataframe_for_export(df)
-        
-        # Generate Base Body (No Header)
-        latex = tbl.to_latex(index=False, escape=False, header=False)
-        
-        # Clean up default pandas rules to match target style
-        latex = latex.replace(r'\toprule', '').replace(r'\midrule', '').replace(r'\bottomrule', r'\hline\hline')
-        
+
+        # Rendered by hand instead of DataFrame.to_latex: pandas routes to_latex
+        # through Styler, which drags in jinja2. Keeps booktabs rules
+        # (toprule/midrule/bottomrule) — compile with \usepackage{booktabs}.
+        body = [
+            " & ".join("" if pd.isna(v) else str(v) for v in row) + r" \\"
+            for row in tbl.itertuples(index=False, name=None)
+        ]
+
         # Generate the exact Header format
         if not col_format:
             col_format = 'l' * align_first_n_left + 'c' * (len(tbl.columns) - align_first_n_left)
@@ -67,23 +70,10 @@ class TableGenerator:
         
         # Join headers with alignment tabs and add the row end command
         header_line = ' & '.join(header_parts) + r'\\'
-        
-        # Inject into the LaTeX string
-        lines = latex.split('\n')
-        
-        try:
-            begin_idx = next(i for i, line in enumerate(lines) if r'\begin{tabular}' in line)
-            
-            # Replace the default column format with the custom one
-            lines[begin_idx] = r'\begin{tabular}{' + col_format + '}'
-            
-            # Insert the specific border/header sequence
-            lines.insert(begin_idx + 1, r'\hline\hline')
-            lines.insert(begin_idx + 2, header_line)
-            lines.insert(begin_idx + 3, r'\hline')
-            
-        except StopIteration:
-            pass # Tabular start not found
+
+        lines = [r'\begin{tabular}{' + col_format + '}', r'\toprule', header_line, r'\midrule']
+        lines.extend(body)
+        lines.extend([r'\bottomrule', r'\end{tabular}'])
 
         latex = '\n'.join(lines)
         
