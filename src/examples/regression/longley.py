@@ -1,22 +1,13 @@
-import os
-import pandas as pd
 import numpy as np
 import statsmodels.api as sm
+from stats_transformer.data import load_example
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from src.examples.base import BaseExample
 
 class LongleyExample(BaseExample):
-    def __init__(self):
-        self.data_dir = "data/examples/regression"
-        self.data_path = f"{self.data_dir}/longley.csv"
-        os.makedirs(self.data_dir, exist_ok=True)
-
     def _fetch_and_prepare_data(self):
-        print("Fetching Longley (1967) Macroeconomic Dataset...")
-        df_raw = sm.datasets.longley.load_pandas().data
-        df_raw.to_csv(self.data_path, index=False)
-        print(f"Data saved to {self.data_path}")
-        return df_raw
+        print("Loading Longley (1967) Macroeconomic Dataset...")
+        return load_example("longley")
 
     def _compute_baseline(self, df):
         print("\n" + "="*50)

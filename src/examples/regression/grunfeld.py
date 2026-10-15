@@ -1,24 +1,15 @@
-import os
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
+from stats_transformer.data import load_example
 from stats_transformer.models.regression.regression import RegressionModel
 from src.examples.base import BaseExample
 
 class GrunfeldPanelExample(BaseExample):
-    def __init__(self):
-        self.data_dir = "data/examples/regression"
-        self.data_path = f"{self.data_dir}/grunfeld.csv"
-        os.makedirs(self.data_dir, exist_ok=True)
-
     def _fetch_and_prepare_data(self):
-        print("Fetching Grunfeld Investment Panel Data...")
-        # Load directly from statsmodels
-        df_raw = sm.datasets.grunfeld.load_pandas().data
+        print("Loading Grunfeld Investment Panel Data...")
+        df_raw = load_example("grunfeld")
         
-        # Save data
-        df_raw.to_csv(self.data_path, index=False)
-        print(f"Data saved to {self.data_path}")
         print("\n" + "="*50)
         print("1. PREPARED DATA (Last 5 Rows)")
         print("="*50)

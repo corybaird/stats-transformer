@@ -1,32 +1,16 @@
-import os
-import pandas as pd
 import numpy as np
 from linearmodels.iv import IV2SLS
 import statsmodels.api as sm
+from stats_transformer.data import load_example
 from stats_transformer.models.regression.iv import IV2SLSModel
 from src.examples.base import BaseExample
 
 class MrozIVExample(BaseExample):
-    def __init__(self):
-        self.data_url = "https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/wooldridge/mroz.csv"
-        self.data_dir = "data/examples/regression"
-        self.data_path = f"{self.data_dir}/mroz.csv"
-        os.makedirs(self.data_dir, exist_ok=True)
-
     def _fetch_and_prepare_data(self):
-        print("Fetching Mroz (1987) Female Labor Supply Data...")
-        df_raw = pd.read_csv(self.data_url)
-        
-        # We only use women who are in the labor force (wage > 0)
-        df_clean = df_raw[df_raw['wage'] > 0].copy()
-        
-        # We will regress log wage on experience, experience squared, instrumenting education with parents' education
-        df_clean["expersq"] = df_clean["exper"] ** 2
-        df_clean = df_clean.dropna(subset=["lwage", "exper", "expersq", "educ", "motheduc", "fatheduc"])
-        
-        df_clean.to_csv(self.data_path, index=False)
-        print(f"Data saved to {self.data_path}")
-        return df_clean
+        print("Loading Mroz (1987) Female Labor Supply Data...")
+        # Tracked file is pre-cleaned: labor-force women, expersq added, rows with
+        # missing motheduc/fatheduc dropped.
+        return load_example("mroz")
 
     def _compute_baseline(self, df):
         print("\n" + "="*50)

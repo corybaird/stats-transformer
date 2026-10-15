@@ -1,69 +1,14 @@
-import os
-import requests
-import pandas as pd
 import numpy as np
 import statsmodels.api as sm
+from stats_transformer.data import load_example
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from src.examples.base import BaseExample
 
 class OkunsLawExample(BaseExample):
-    def __init__(self):
-        self.api_key = self._load_api_key()
-        self.base_url = "https://api.stlouisfed.org/fred/series/observations"
-        self.data_dir = "data/examples/regression"
-        self.data_path = f"{self.data_dir}/okuns_law.csv"
-        os.makedirs(self.data_dir, exist_ok=True)
-
-    def _load_api_key(self):
-        env_path = ".env"
-        if os.path.exists(env_path):
-            with open(env_path) as f:
-                for line in f:
-                    if line.startswith("API_FRED"):
-                        return line.split("=", 1)[1].strip()
-        return os.environ.get("API_FRED")
-
-    def _fetch_series(self, series_id, frequency="q"):
-        if not self.api_key:
-            raise ValueError("FRED API key not found. Please set API_FRED in .env")
-        params = {
-            "series_id": series_id,
-            "api_key": self.api_key,
-            "file_type": "json",
-            "units": "lin",
-            "observation_start": "1948-01-01",
-            "observation_end": "2024-01-01",
-            "frequency": frequency
-        }
-        response = requests.get(self.base_url, params=params)
-        response.raise_for_status()
-        data = response.json().get("observations", [])
-        df = pd.DataFrame(data)
-        df["date"] = pd.to_datetime(df["date"])
-        df["value"] = pd.to_numeric(df["value"], errors="coerce")
-        df = df.rename(columns={"value": series_id})
-        return df[["date", series_id]]
-
     def _fetch_and_prepare_data(self):
-        print("Fetching FRED data for Okun's Law (GDPC1, UNRATE)...")
-        # GDP is quarterly, UNRATE is monthly, so we fetch both as quarterly.
-        df_gdp = self._fetch_series("GDPC1", frequency="q")
-        df_unrate = self._fetch_series("UNRATE", frequency="q")
+        print("Loading Okun's Law data (FRED GDPC1 and UNRATE)...")
+        df_clean = load_example("okuns_law")
         
-        df_raw = df_gdp.merge(df_unrate, on="date", how="inner").sort_values("date").dropna()
-        
-        # Calculate transformations for Okun's law
-        # Target: Change in Unemployment Rate (diff)
-        # Independent: Percentage Change in Real GDP (pct_change)
-        
-        df_raw["unrate_diff"] = df_raw["UNRATE"].diff()
-        df_raw["gdp_pct_change"] = df_raw["GDPC1"].pct_change() * 100
-        
-        df_clean = df_raw.dropna().copy()
-        
-        # Save data
-        df_clean.to_csv(self.data_path, index=False)
-        print(f"Data saved to {self.data_path}")
         print("\n" + "="*50)
         print("1. PREPARED DATA (Last 5 Rows)")
         print("="*50)
