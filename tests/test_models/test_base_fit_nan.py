@@ -67,6 +67,19 @@ def test_fit_nan_from_features_raises_valueerror():
         model.fit(_make_df())
 
 
+def test_original_error_propagates_when_check_cannot_run():
+    # build_model fails without setting X/y: the RuntimeError must propagate
+    # unchanged, untouched by the NaN/inf check
+    class _NoXY(_MinimalOLS):
+        def build_model(self):
+            raise RuntimeError("boom")
+
+    model = _NoXY(target="target", independent_variables=["x1", "x2"])
+    with pytest.raises(RuntimeError, match="^boom$") as excinfo:
+        model.fit(_make_df())
+    assert not isinstance(excinfo.value, ValueError)
+
+
 class _DropNaOLS(_MinimalOLS):
     """Like statsmodels missing='drop': fits after dropping NaN rows itself,
     but leaves the NaN row in self.X."""
