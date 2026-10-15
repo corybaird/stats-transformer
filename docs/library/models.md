@@ -240,6 +240,11 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Pipeline Access**: `lp_iv` (direct instantiation: `LocalProjectionsIVModel`)
 - **Benchmark Target**: R (`lpirfs::lp_lin_iv`), Stata (`lproj`)
 - **Verified Discrepancy**: Per-horizon coefficient and standard error agree with Stata `ivregress 2sls F(h).y controls (x = z)` to $10^{-6}$ on the Jordà & Taylor Example 6 sample, with the same level-lead caveat as `LocalProjectionsModel`.
+- **Enhancements**:
+  - `cumulative`: Boolean enabling cumulative IRF estimation with dependent variable $y_{t+h} - y_{t-1}$ (pre-shock baseline), e.g. cumulative price/output responses instrumented by narrative or high-frequency shocks.
+  - `multiplier`: Boolean enabling the Ramey & Zubairy (2018) integral multiplier $\sum_{j=0}^h y_{t+j} = \beta_h \left(\sum_{j=0}^h x_{t+j}\right) + \Gamma_h W_t$, with the cumulative treatment $\sum_{j=0}^h x_{t+j}$ instrumented by $z_t$. Mutually exclusive with `cumulative` (raises `ValueError`).
+  - `lags`: Integer $P \ge 0$ injecting lag blocks ($t-1, \dots, t-P$) of target, treatment, instrument, and controls into each horizon regression.
+  - `cov_type`: Covariance estimator: `"nonrobust"` (classical; default — kept because the Stata `ivregress 2sls, small` parity test pins unadjusted standard errors), `"HC1"`/`"HC3"` (heteroskedasticity-robust), or `"HAC"` (Newey-West Bartlett kernel with bandwidth $h+1$ per horizon). HC3 maps to the debiased robust estimator (linearmodels does not implement HC3).
 
 ### 5.9 Pandemic BVAR (`PandemicBVARModel`)
 - **Description**: Bayesian Vector Autoregression incorporating the Cascaldi-Garcia (2022) pandemic prior to downweight extreme volatility during pandemic or crisis quarters without distorting autoregressive lag shrinkage.
