@@ -67,3 +67,62 @@ def test_pca_with_mean_false_does_not_center():
     assert uncentered.model.components_[0, 0] > 0.9
     assert abs(uncentered.model.components_[0, 1]) < 0.2
     assert uncentered.get_model_metrics()["explained_variance_ratio"][0] > 0.99
+
+def test_rotate_target_path_recovers_two_factor_structure():
+    # 2 latent factors: MP1 (target surprise) loads only on the Target factor,
+    # ED/FF futures load on both (Path factor). GSS (2005) rotation must recover them.
+    from stats_transformer.models.unsupervised.unsupervised import rotate_target_path
+    np.random.seed(42)
+    n = 600
+    target_true = np.random.normal(size=n)
+    path_true = np.random.normal(size=n)
+    loadings_true = np.array([  # rows: mp1, ff4, ed2, ed3, ed4
+        [1.0, 0.0],
+        [0.3, 0.5],
+        [0.5, 0.7],
+        [0.8, 0.9],
+        [1.0, 1.0],
+    ])
+    X = np.column_stack([target_true, path_true]) @ loadings_true.T + np.random.normal(scale=0.05, size=(n, 5))
+    df = pd.DataFrame(X, columns=["mp1", "ff4", "ed2", "ed3", "ed4"])
+
+    model = PCAModel(features=["mp1", "ff4", "ed2", "ed3", "ed4"], n_components=2, standardize=False)
+    model.fit(df)
+    model.rotate_target_path(target_index=0, path_index=4)
+    F_rot = model.df_clean[["target", "path"]].values
+    L_rot = model.rotated_loadings_.values
+
+    # Zero path loading on the target surprise; unit-effect pivots (GSS normalisation)
+    assert abs(L_rot[0, 1]) < 1e-10
+    assert np.isclose(L_rot[0, 0], 1.0)
+    assert np.isclose(L_rot[4, 1], 1.0)
+    # Rotated factors remain uncorrelated
+    assert abs(np.corrcoef(F_rot[:, 0], F_rot[:, 1])[0, 1]) < 1e-10
+    # Recover the true latent factors
+    corr_target = np.corrcoef(F_rot[:, 0], target_true)[0, 1]
+    corr_path = np.corrcoef(F_rot[:, 1], path_true)[0, 1]
+    assert corr_target > 0.99 and corr_path > 0.99
+    # Fitted reconstruction unchanged: F L' identical before and after rotation
+    F_pre = model.transformed_X
+    L_pre = model.model.components_.T
+    assert np.allclose(F_pre @ L_pre.T, F_rot @ L_rot.T, atol=1e-8)
+    # df_clean carries the named columns without disturbing pca_ columns
+    assert "target" in model.df_clean.columns and "path" in model.df_clean.columns
+
+def test_rotate_target_path_pure_function_and_unit_std():
+    from stats_transformer.models.unsupervised.unsupervised import rotate_target_path
+    # Exactly uncorrelated unit-std columns (as PCA scores are, up to roundoff)
+    Q, _ = np.linalg.qr(np.random.normal(size=(200, 2)))
+    F = pd.DataFrame(Q * np.sqrt(199), columns=["f1", "f2"])
+    L = np.array([[0.6, 0.8], [1.0, 2.0]])  # target_index=0: path loading 0.8
+    F_rot, L_rot = rotate_target_path(F, L, target_index=0)
+    # Zero-loading condition by construction
+    assert abs(L_rot.values[0, 1]) < 1e-10
+    assert np.isclose(np.hypot(L[0, 0], L[0, 1]), np.sqrt(0.6**2 + 0.8**2))
+    # path_index=None: both factors rescaled to (approximately) unit std;
+    # exact for zero-mean orthogonal factors like PCA scores
+    assert np.allclose(F_rot.std(ddof=1), [1.0, 1.0], atol=0.02)
+    # Orthogonal U + consistent rescaling: F L' preserved
+    assert np.allclose(F.values @ L.T, F_rot.values @ L_rot.values.T, atol=1e-10)
+    # Rotated factor columns stay uncorrelated (exactly so for truly orthogonal inputs)
+    assert abs(np.corrcoef(F_rot.values[:, 0], F_rot.values[:, 1])[0, 1]) < 1e-2

@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
@@ -76,6 +76,51 @@ class _UncenteredPCA(TruncatedSVD):
         self.explained_variance_ratio_ = sv2 / total_ss
         return Xtr
 
+def rotate_target_path(
+    factors: Union[np.ndarray, pd.DataFrame],
+    loadings: Union[np.ndarray, pd.DataFrame],
+    target_index: int = 0,
+    path_index: Optional[int] = None
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    # Gürkaynak-Sack-Swanson (2005) Target/Path rotation of a 2-factor PCA solution.
+    # Zero-loading condition on the rotated loading of the target surprise:
+    #   (L U)[target_index, 1] = L[i,0]*sin(th) + L[i,1]*cos(th) = 0
+    #   => th = atan2(-L[i,1], L[i,0]), which also gives (L U)[target_index,0] = |L[i,:]| > 0.
+    # Factors are first rescaled to unit variance (scores /s_j, loadings *s_j, fit F L'
+    # preserved) because F @ U keeps rotated columns uncorrelated only for equal-variance
+    # columns. GSS unit-effect normalisation then rescales scores by the pivot loadings
+    # and divides loadings by them, again preserving the fit F L'.
+    F = np.asarray(factors, dtype=float)
+    L = np.asarray(loadings, dtype=float)
+    if F.ndim != 2 or F.shape[1] != 2 or L.shape[1] != 2:
+        raise ValueError("rotate_target_path requires exactly 2 factor columns")
+    if not 0 <= target_index < L.shape[0]:
+        raise ValueError(f"target_index {target_index} out of range for {L.shape[0]} features")
+    unit = F.std(axis=0, ddof=1)
+    unit = np.where(unit > 0, unit, 1.0)
+    F = F / unit
+    L = L * unit
+    theta = np.arctan2(-L[target_index, 1], L[target_index, 0])
+    c, s = np.cos(theta), np.sin(theta)
+    U = np.array([[c, s], [-s, c]])
+    F_rot = F @ U
+    L_rot = L @ U
+    if path_index is None:
+        # GSS fallback: unit-variance factors (already true after the pre-rescale)
+        pivot = np.ones(2)
+    else:
+        if not 0 <= path_index < L.shape[0]:
+            raise ValueError(f"path_index {path_index} out of range for {L.shape[0]} features")
+        # GSS normalisation: Target has unit effect on the target surprise, Path on the path surprise
+        pivot = np.array([L_rot[target_index, 0], L_rot[path_index, 1]])
+        if np.any(np.abs(pivot) < 1e-12):
+            raise ValueError("Degenerate loadings at the normalisation pivot")
+    F_rot = F_rot * pivot
+    L_rot = L_rot / pivot
+    F_df = pd.DataFrame(F_rot, columns=["target", "path"], index=factors.index if isinstance(factors, pd.DataFrame) else None)
+    L_df = pd.DataFrame(L_rot, columns=["target", "path"], index=loadings.index if isinstance(loadings, pd.DataFrame) else None)
+    return F_df, L_df
+
 class PCAModel(UnsupervisedModel):
     # Principal Component Analysis
 
@@ -97,6 +142,23 @@ class PCAModel(UnsupervisedModel):
             with_mean=with_mean,
             **kwargs
         )
+
+    def rotate_target_path(self, target_index: int = 0, path_index: Optional[int] = None) -> pd.DataFrame:
+        # Rotates the first two PCA factors GSS-style so the second ("path") factor has zero
+        # loading on the surprise at target_index, then normalises (see module-level function).
+        if self.model is None or self.transformed_X is None:
+            raise ValueError("PCAModel must be fit (build_model) before rotate_target_path")
+        if self.n_components < 2:
+            raise ValueError("rotate_target_path requires n_components >= 2")
+        F_df, L_df = rotate_target_path(
+            factors=pd.DataFrame(self.transformed_X[:, :2], index=self.df_clean.index),
+            loadings=pd.DataFrame(self.model.components_.T[:, :2], index=self.features),
+            target_index=target_index,
+            path_index=path_index
+        )
+        self.df_clean[["target", "path"]] = F_df
+        self.rotated_loadings_ = L_df
+        return F_df
 
     def build_model(self):
         assert self.df_clean is not None  # set by load_data, called via fit() before build_model()
