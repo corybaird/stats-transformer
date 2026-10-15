@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
 from statsmodels.tsa.api import VAR
 from stats_transformer.models.base import ModelBase
 
@@ -26,6 +25,22 @@ class ProxySVARModel(ModelBase):
             cols.append(self.date_column)
         return cols
 
+    def load_data(self, data):
+        # The reduced-form VAR is estimated on the full sample of endogenous
+        # variables: rows where the instrument is missing must survive ModelBase's
+        # NaN-drop, so the instrument is held out of the shared row cleaning and
+        # its true values (NaNs included) are read from self.df during estimation.
+        instrument = self.instrument_variable
+        if instrument:
+            self.instrument_variable = None
+        try:
+            cleaned = super().load_data(data)
+        finally:
+            self.instrument_variable = instrument
+        if instrument and instrument not in self.df.columns:
+            raise ValueError(f"Required columns missing: ['{instrument}']")
+        return cleaned
+
     def build_model(self):
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
@@ -35,32 +50,39 @@ class ProxySVARModel(ModelBase):
         var_model = VAR(self.y)
         self.var_result = var_model.fit(maxlags=self.maxlags)
         self.model = self.var_result
-        if self.instrument_variable in self.df_clean.columns:
+        if self.instrument_variable in self.df.columns:
             self._estimate_proxy_svar()
         return self.var_result
 
     def _estimate_proxy_svar(self):
         residuals = self.var_result.resid
-        z = self.df_clean.loc[residuals.index, self.instrument_variable].values
-        u1 = residuals.iloc[:, 0].values
-        valid_mask = ~np.isnan(z) & ~np.isnan(u1)
-        z_valid = z[valid_mask]
-        u1_valid = u1[valid_mask]
-        stage1 = sm.OLS(u1_valid, sm.add_constant(z_valid)).fit()
-        u1_hat = stage1.fittedvalues
-        k = residuals.shape[1]
-        b1_estimates = np.zeros(k)
-        b1_estimates[0] = 1.0
-        for i in range(1, k):
-            ui_valid = residuals.iloc[:, i].values[valid_mask]
-            stage2 = sm.OLS(ui_valid, u1_hat).fit()
-            b1_estimates[i] = stage2.params[0]
-        sigma_u = self.var_result.sigma_u
-        if type(sigma_u) == pd.DataFrame:
-            sigma_u = sigma_u.values
-        sig11 = sigma_u[0, 0]
-        scale = np.sqrt(max(sig11, 1e-8))
-        self.impact_column = b1_estimates * scale
+        # mirror ModelBase.load_data's index choice: a literal 'date' column
+        # (with no date_column param) becomes df_clean's index, otherwise row
+        # labels are the input frame's
+        index_col = None if self.time_column else ('date' if 'date' in self.df.columns else None)
+        if index_col:
+            z = self.df.set_index(index_col)[self.instrument_variable].loc[residuals.index].to_numpy()
+        else:
+            z = self.df.loc[residuals.index, self.instrument_variable].to_numpy()
+        u = residuals.to_numpy()
+        # Gertler-Karadi (2015) / Mertens-Ravn (2014): with a proxy-external
+        # instrument the impact ratios are the demeaned moments relative to the
+        # instrumented residual, and the shock size follows the closed form
+        # below; both use the common sample where the instrument is observed
+        common = ~np.isnan(z) & ~np.isnan(u[:, 0])
+        uc = u[common] - u[common].mean(axis=0)
+        zc = z[common] - z[common].mean()
+        n = int(common.sum())
+        nparams = self.var_result.params.shape[0]
+        sigma = uc.T @ uc / (n - nparams)
+        s21 = (uc[:, 1:].T @ zc) / (uc[:, 0] @ zc)
+        sig11 = sigma[0, 0]
+        sig21 = sigma[1:, 0]
+        sig22 = sigma[1:, 1:]
+        q = np.outer(s21, s21) * sig11 - (np.outer(sig21, s21) + np.outer(s21, sig21)) + sig22
+        s12s12 = (sig21 - s21 * sig11) @ np.linalg.solve(q, sig21 - s21 * sig11)
+        b11 = np.sqrt(sig11 - s12s12)
+        self.impact_column = np.r_[b11, b11 * s21]
 
     def get_summary(self):
         if self.var_result is None:

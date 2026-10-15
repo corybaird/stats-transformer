@@ -210,7 +210,6 @@ def test_local_projections_iv_plain_jt2025_matches_stata():
     np.testing.assert_allclose(m.irf_std_errors, irf[:, 2], rtol=1e-6)
 
 
-@pytest.mark.xfail(reason="ProxySVARModel scales by sqrt(Sigma_11) instead of the Gertler-Karadi / Mertens-Ravn shock-size formula and drops rows where the instrument is missing before estimating the VAR", strict=True)
 def test_proxy_svar_gk2015_matches_matlab():
     inp = _inputs("gk2015_iv")
     endo = np.asarray(inp["ENDO"], dtype=float)
