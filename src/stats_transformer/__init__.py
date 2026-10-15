@@ -27,6 +27,7 @@ from .models import (
     LocalProjectionsModel,
     LocalProjectionsIVModel,
 )
+from .reporting.tables import TableGenerator
 from .pipeline import Pipeline
 from .reporting import (
     BaseVisualizer, DataVisualizer, ModelVisualizer, RegressionVisualizer, TimeSeriesVisualizer,
