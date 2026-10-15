@@ -61,11 +61,14 @@ def test_generator_writes_one_row_per_application(tmp_path, monkeypatch):
     assert "references/configs" not in tex
     assert tex.count("VAR(2), constant") == 1
     assert "VAR(8), constant" in tex
-    # Output cells show bare file names, no stage folders (file names appear
-    # inside \texttt cells, dots unescaped).
+    # Output cells show bare file names of the key outputs only (file names
+    # appear inside \texttt cells, dots unescaped).
     assert "02\\_features" not in tex and "03\\_model" not in tex
-    assert tex.count("features.parquet") == len(gen.APPLICATIONS)
+    assert tex.count("model.joblib") == len(gen.APPLICATIONS)
     assert tex.count("model\\_summary.json") == len(gen.APPLICATIONS)
+    assert tex.count("descriptive\\_stats.tex") == len(gen.APPLICATIONS)
+    assert tex.count("regression\\_table.tex") == 2  # mincer and grunfeld only
+    assert "coefficient\\_plot.png" not in tex and "features.parquet" not in tex
     # One flow strip and one verbatim config per application; 
     # application_configs.tex is no longer emitted.
     for name in (app["name"] for app in gen.APPLICATIONS):
@@ -104,11 +107,13 @@ def test_flow_files_come_from_the_manifest(tmp_path, monkeypatch):
     assert "\\node[box] (n0)" in flow
     # The pipeline box is the third one.
     assert nodes[2].startswith("\\node[box, right=of n1] (n2) {stats-transformer pipeline};")
-    # Every file the strip references exists in the run (manifest) or is an input.
+    # Every file the strip references exists in the run (key outputs) or is
+    # an input; the full run_files list is kept in the record.
     unescaped = flow.replace("\\_", "_")
     referenced = set(re.findall(r"[\w.-]+\.(?:parquet|json|joblib|csv|yaml|tex|png)", unescaped))
     assert Path(record["data_rel"]).name in referenced
-    assert {Path(f).name for f in record["run_files"]} <= referenced
+    assert {Path(f).name for f in record["key_outputs"]} <= referenced
+    assert record["key_outputs"] == gen._key_outputs(record["run_files"])
 
 
 def test_flow_nodes_use_short_labels(tmp_path, monkeypatch):

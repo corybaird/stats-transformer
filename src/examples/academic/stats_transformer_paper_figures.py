@@ -9,7 +9,7 @@ from stats_transformer.data import load_example
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
-from stats_transformer.reporting.charts.bar import CoefficientBarChart
+from stats_transformer.reporting.charts.bar import CoefficientBarChart, CoefficientForestPlot
 from stats_transformer.reporting.charts.time_series import IRFPlot
 
 
@@ -72,7 +72,7 @@ class PaperFigureBuilder:
         coefficients = model.model.params.loc[variables].tolist()
         standard_errors = model.model.bse.loc[variables].tolist()
         p_values = model.model.pvalues.loc[variables].tolist()
-        chart = CoefficientBarChart()
+        chart = CoefficientForestPlot()
         fig, _ = chart.plot(variables, coefficients, standard_errors, p_values, ylabel="Coefficient", title="Mincer wage equation", footer="HC3 robust standard errors; Wooldridge wage1 data")
         self._save_figure(fig, "mincer_coefficients.pdf")
 
