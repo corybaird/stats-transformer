@@ -9,8 +9,11 @@ from stats_transformer.data import load_example
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
+from stats_transformer.models.timeseries.reduced_form.var import VARModel
 from stats_transformer.reporting.charts.bar import CoefficientBarChart, CoefficientForestPlot
 from stats_transformer.reporting.charts.time_series import IRFPlot
+
+REPO = Path(__file__).resolve().parents[3]
 
 
 class PaperFigureBuilder:
@@ -65,8 +68,8 @@ class PaperFigureBuilder:
         self._save_figure(fig, "panel_coefficients.pdf")
 
     def _make_mincer_coefficients(self):
-        data = pd.read_csv("data/examples/regression/mincer_wage.csv")
-        model = RobustOLSModel(params_path="references/configs/regression/mincer_wage.yaml")
+        data = pd.read_csv(REPO / "data/examples/regression/mincer_wage.csv")
+        model = RobustOLSModel(params_path=str(REPO / "references/configs/regression/mincer_wage.yaml"))
         model.fit(data)
         variables = ["educ", "exper", "expersq", "tenure"]
         coefficients = model.model.params.loc[variables].tolist()
@@ -76,15 +79,64 @@ class PaperFigureBuilder:
         fig, _ = chart.plot(variables, coefficients, standard_errors, p_values, ylabel="Coefficient", title="Mincer wage equation", footer="HC3 robust standard errors; Wooldridge wage1 data")
         self._save_figure(fig, "mincer_coefficients.pdf")
 
+    def _make_grunfeld_coefficients(self):
+        """Grunfeld two-way FE panel from the committed config, fitted the way
+        the pipeline does (featurization here is only the column mapping year ->
+        date, firm -> country). Numbers match the applications-table run and its
+        model_summary.json."""
+        config_path = REPO / "references/configs/regression/grunfeld_panel.yaml"
+        spec = yaml.safe_load(config_path.read_text())
+        data = pd.read_csv(REPO / spec["data"]["raw_data_file"])
+        data = data.rename(columns={old: new for old, new in spec["data"]["featurization"].get("column_mapping", {}).items() if old in data.columns})
+        model = PanelRegressionModel(params_path=str(config_path))
+        model.fit(data)
+        variables = spec["model"]["independent_variables"]
+        coefficients = model.model.params.loc[variables].tolist()
+        standard_errors = model.model.std_errors.loc[variables].tolist()
+        p_values = model.model.pvalues.loc[variables].tolist()
+        chart = CoefficientForestPlot()
+        footer = f"Firm and year fixed effects; {int(model.model.nobs)} observations; unadjusted standard errors"
+        fig, _ = chart.plot(variables, coefficients, standard_errors, p_values, ylabel="Coefficient", title="Grunfeld investment equation", footer=footer)
+        self._save_figure(fig, "grunfeld_coefficients.pdf")
+
+    def _make_macro_var_irf(self):
+        """Orthogonalized (Cholesky, GDP first) responses of the three growth
+        rates to a one-s.d. GDP-growth shock from the committed macro_var
+        config (the data file itself holds percentage log-growth rates), with
+        95% asymptotic bands from the VAR's orthogonalized stderr."""
+        config_path = REPO / "references/configs/timeseries/reduced_form/macro_var.yaml"
+        spec = yaml.safe_load(config_path.read_text())["model"]
+        model = VARModel(target_variables=spec["target_variables"], maxlags=spec["maxlags"])
+        model.fit(pd.read_csv(REPO / "data/examples/timeseries/macrodata.csv"))
+        irf = model.model.irf(12)  # horizons 0..12 quarters
+        response = irf.orth_irfs[:, :, 0]  # shock 0 = GDP growth (listed first)
+        stderr = irf.stderr(orth=True)[:, :, 0]
+        labels = {"realgdp": "Real GDP", "realcons": "Real consumption", "realinv": "Real investment"}
+        rows = []
+        for variable_index, variable in enumerate(spec["target_variables"]):
+            for horizon in range(irf.orth_irfs.shape[0]):
+                centre = float(response[horizon, variable_index])
+                rows.append((horizon, variable, centre, centre - 1.96 * float(stderr[horizon, variable_index]), centre + 1.96 * float(stderr[horizon, variable_index])))
+        plot_data = pd.DataFrame(rows, columns=["horizon", "facet", "coef", "lower", "upper"])
+        chart = IRFPlot()
+        fig, axes = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "facet", labels=labels, ylabel="Response", ncols=3)
+        for ax in axes[:3]:
+            ax.set_xticks(range(0, 13, 3))
+        # IRFPlot's suptitle sits at y=1.02 and gets clipped by _save_figure;
+        # draw it inside the canvas instead.
+        fig.suptitle("Responses to a GDP growth shock", size=18, y=0.98)
+        fig.tight_layout(rect=(0, 0, 1, 0.9))
+        self._save_figure(fig, "macro_var_irf.pdf")
+
     def _make_bq_irf(self):
         """Blanchard--Quah structural IRFs on the committed bq1989 config:
         responses of output level (cumulated y) and unemployment to the supply
         and demand shocks. y is quarterly GNP growth, so its level response is
         the cumulative sum of the growth response."""
-        with open("references/configs/timeseries/identification/blanchard_quah_1989.yaml") as stream:
+        with open(REPO / "references/configs/timeseries/identification/blanchard_quah_1989.yaml") as stream:
             spec = yaml.safe_load(stream)["model"]
         model = BlanchardQuahModel(target_variables=spec["target_variables"], maxlags=spec["maxlags"])
-        model.fit(pd.read_csv("data/examples/timeseries/bq1989.csv"))
+        model.fit(pd.read_csv(REPO / "data/examples/timeseries/bq1989.csv"))
         irf = model.var_result.irf(40)  # ~40 quarters, horizon 0..40
         structural = irf.irfs @ model.B_0  # structural: variable i to shock j
         # BQ identification leaves each shock's sign free (the parity test pins
@@ -121,6 +173,8 @@ class PaperFigureBuilder:
         np.random.seed(42)
         self._make_architecture()
         self._make_mincer_coefficients()
+        self._make_grunfeld_coefficients()
+        self._make_macro_var_irf()
         self._make_bq_irf()
 
 

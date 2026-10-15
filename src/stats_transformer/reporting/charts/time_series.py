@@ -52,13 +52,13 @@ class IRFPlot:
     def __init__(self, style_path="timeseries"):
         self.style_path = style_path
 
-    def plot(self, df, horizon_col, coef_col, ci_lower_col, ci_upper_col, group_col, labels=None, title=None, ylabel=None, colors=None):
+    def plot(self, df, horizon_col, coef_col, ci_lower_col, ci_upper_col, group_col, labels=None, title=None, ylabel=None, colors=None, ncols=2):
         apply_style(self.style_path)
         
         groups = df[group_col].unique().tolist()
         n_vars = len(groups)
         
-        ncols = 2
+        ncols = min(ncols, n_vars)
         nrows = (n_vars + ncols - 1) // ncols
         
         fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 5 * nrows), sharex=True, squeeze=False)
