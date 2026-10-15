@@ -39,11 +39,15 @@ The table below catalogs every registered `load_example()` key, grouped into log
 | --- | --- | --- | --- | --- |
 | `macrodb_gdp_inflation` | `src/stats_transformer/data/macrodb_gdp_inflation.parquet` | Annual | Default macro panel, Panel OLS, VAR | Cross-country macroeconomic database |
 | `sofr_surprises` | `academic/acosta_brennan_jacobson_2024/sofr_surprises.parquet.gzip` | Daily | High-frequency monetary surprises, VAR | Acosta, Brennan, & Jacobson (2024) |
-| `bauer_swanson_2023` | `academic/bauer_swanson_2023/` | Monthly | Orthogonalized monetary surprise inputs | Bauer & Swanson (2023) |
+| `bauer_swanson_2023` | `academic/bauer_swanson_2023/` | Monthly / Event | FOMC surprises (update 2023 + monthly) and macro news inputs, Robust OLS | Bauer & Swanson (2023) |
 | `bbm_2023` | `academic/bbm_2023/` | Daily | High-frequency yield-curve surprises | Bauer, Bernanke, & Milstein (2023) |
 | `pmu_data` | `academic/cieslak_hansen_mcmahon_xiao_2024/pmu_data.parquet.gzip` | Monthly | Policymakers' Uncertainty text shocks | Cieslak, Hansen, McMahon, & Xiao (2024) |
 | `greenbook_forecast_errors` | `academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip` | Quarterly | FOMC Greenbook CPI forecast errors | Coibion & Gorodnichenko (2012) |
 | `fomc_surprises` | `academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip` | Daily / Event | BVAR sign-restriction shock classification | Jarociński & Karadi (2020) |
+| `jarocinski_2024` | `academic/jarocinski_2024/daily_surprises.parquet.gzip` | Daily | High-frequency futures surprises, Sign & Zero SVAR | Jarociński (2024) |
+| `karadi_schoenle_wursten_2024` | `academic/karadi_schoenle_wursten_2024/ce_decomp_results.parquet.gzip` | Event / Mixed | Consumer expenditure decomposition under monetary shocks | Karadi, Schoenle, & Wursten (2024) |
+| `fukui_nakamura_steinsson_2025` | `academic/fukui_nakamura_steinsson_2025/effective_exchange_rates.parquet` | Annual | Trade-weighted exchange rate panel, Local Projections | Fukui, Nakamura, & Steinsson (2025) |
+| `gertler_karadi_2015` | `matlab_examples/GK2015_Data.xlsx` (alias of `gk_2015`) | Monthly | Proxy-SVAR monetary-policy benchmark workbook | Gertler & Karadi (2015) |
 | `news_sentiment` | `academic/shapiro_sudhof_wilson_2022/news_sentiment.parquet.gzip` | Daily | High-frequency sentiment, Robust OLS | Shapiro, Sudhof, & Wilson (2022) |
 | `policy_loans` | `academic/lane_2025/policy_loans.parquet.gzip` | Annual | Staggered DiD, Targeted industrial lending | Lane (2025) |
 | `tariffs` | `academic/lane_2025/tariffs.parquet.gzip` | Annual | Tariff liberalization panels | Lane (2025) |
@@ -135,9 +139,13 @@ data:
 - **Miranda-Agrippino & Rey (2020)**: Published Global Factor reference series and model input panel in `data/examples/academic/miranda_agrippino_rey_2020/`. Used in `src/examples/academic/miranda_agrippino_rey_2020.py` and the dynamic-factor YAML configuration.
 - **Coibion & Gorodnichenko (2012)**: FOMC Greenbook CPI forecast and backcast series in `data/examples/academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip`. Used in `src/examples/academic/coibion_gorodnichenko_2012.py`.
 - **Nakamura & Steinsson (2018)**: High-frequency monetary policy surprise series in `data/examples/academic/nakamura_steinsson_2018/`, with a separate `synthetic_nakamura.csv` PCA fixture. Used in `src/examples/academic/nakamura_steinsson.py` and `nakamura_steinsson_pca.py`.
-- **Bauer & Swanson (2023)**: Orthogonalized monetary surprise inputs in `data/examples/academic/bauer_swanson_2023/`, used in `src/examples/academic/bauer_swanson.py`.
+- **Bauer & Swanson (2023)**: Macro news series and FOMC event surprises (update 2023 and monthly) in `data/examples/academic/bauer_swanson_2023/`, used in `src/examples/academic/bauer_swanson_2023.py`.
 - **Bauer, Bernanke, & Milstein (2023)**: Yield curve dataset in `data/examples/academic/bbm_2023/` used in `src/examples/academic/bauer_bernanke_milstein.py`.
 - **Jarociński & Karadi (2020)**: FOMC-day fed funds futures, Treasury yield, and equity surprises in `data/examples/academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip`. Used in `src/examples/academic/jarocinski_karadi_2020.py`.
+- **Jarociński (2024)**: Daily futures surprises (fed funds and equity, multiple horizons) in `data/examples/academic/jarocinski_2024/daily_surprises.parquet.gzip`.
+- **Karadi, Schoenle, & Wursten (2024)**: Consumer expenditure price-setting decomposition series in `data/examples/academic/karadi_schoenle_wursten_2024/ce_decomp_results.parquet.gzip`.
+- **Fukui, Nakamura, & Steinsson (2025)**: Constructed 65-country effective exchange rate database in `data/examples/academic/fukui_nakamura_steinsson_2025/effective_exchange_rates.parquet`.
+- **Gertler & Karadi (2015)**: Proxy-SVAR MATLAB benchmark workbook, registered as `gertler_karadi_2015` (alias of `gk_2015`, single copy in `matlab_examples/`).
 
 ### 4.3 Time-Series Textbook Datasets (`data/examples/timeseries/`)
 - **Ghysels & Marcellino (2018) Chapter 6 & 7**: Datasets for US monetary series, EU GDP growth, UK term structure, and US leading economic indicators in `data/examples/timeseries/ghysels_ch6/` and `ghysels_ch7/`.

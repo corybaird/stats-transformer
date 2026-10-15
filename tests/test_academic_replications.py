@@ -2,6 +2,7 @@
 import pytest
 from examples.academic.vanderwel_2026 import Vanderwel2026Replication
 from examples.academic.nakamura_steinsson_2018b_jorda import NakamuraSteinsson2018bJordaReplication
+from examples.academic.bauer_swanson_2023 import BauerSwanson2023Replication
 from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel
 from stats_transformer.models.timeseries.reduced_form.local_projections import LocalProjectionsModel
@@ -25,6 +26,26 @@ def test_nakamura_steinsson_2018b_jorda_replication():
     res = rep.run()
     assert res["passed"], f"Nakamura & Steinsson multiplier error {res['multiplier_error']} or IRF diff {res['max_irf_diff']}"
     assert abs(res["multiplier_h36"] - 1.95) < 0.01
+
+
+def test_bauer_swanson_2023_news_predictability():
+    """Verify Bauer & Swanson (2023) raw mps is predictable from pre-FOMC news.
+
+    Published coefficient tables are not available in the source replication
+    repository (shipped folder is confidential/empty), so two things are
+    asserted instead: (1) RobustOLSModel HC3 coefficients and R^2 match a
+    direct statsmodels HC3 computation on the identical sample (tolerance
+    1e-4), and (2) the paper's economic finding: raw mps has materially
+    positive R^2 with at least one news coefficient significant at 5%, while
+    the mps_orth placebo regression has near-zero R^2.
+    """
+    rep = BauerSwanson2023Replication()
+    res = rep.run()
+    assert res["passed"], f"Bauer & Swanson replication failed: coef error {res['max_coef_error']}, r2 {res['r_squared']}, placebo r2 {res['placebo_r_squared']}, significant news {res['significant_news']}"
+    assert res["n_observations"] > 0
+    assert res["r_squared"] >= rep.MIN_NEWS_R2
+    assert res["placebo_r_squared"] < rep.MAX_PLACEBO_R2
+    assert len(res["significant_news"]) >= 1
 
 
 def test_regression_predict_accessor():
