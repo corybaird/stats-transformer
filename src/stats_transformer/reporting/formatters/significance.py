@@ -1,3 +1,4 @@
+import math
 import pandas as pd
 import numpy as np
 
@@ -16,6 +17,20 @@ def star(pval, thresholds=None):
         if pval < thresh:
             return thresholds[thresh]
     return ""
+
+def format_number(value, sig=3, min_decimals=3):
+    """
+    Fixed decimals for table output, extended past min_decimals so the requested
+    number of significant digits survive (a nonzero value never prints as 0.000).
+    NaN -> empty string.
+    """
+    if pd.isna(value):
+        return ""
+    v = float(value)
+    decimals = min_decimals
+    if v != 0:
+        decimals = max(min_decimals, sig - 1 - int(math.floor(math.log10(abs(v)))))
+    return f"{v:.{decimals}f}"
 
 def format_pvalue(pval):
     """

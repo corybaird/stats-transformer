@@ -2,6 +2,9 @@ import logging
 import pandas as pd
 import numpy as np
 
+from stats_transformer.reporting.formatters.significance import format_number
+from stats_transformer.reporting.tables.table_generator import TableGenerator
+
 class DescriptiveStatsTable:
     """
     Standardized summary statistics generator for "Table 1" format in academic papers.
@@ -94,6 +97,53 @@ class DescriptiveStatsTable:
                 
         final_df = pd.DataFrame(rows)
         return final_df
+
+    @staticmethod
+    def from_dataframe(df, variables=None):
+        """
+        Numeric N/Mean/SD/Min/Max table for each numeric variable of `df`.
+        
+        Args:
+            df (pd.DataFrame): Source data (only numeric dtype columns contribute).
+            variables (list, optional): Column names to include; defaults to all numeric columns.
+            
+        Returns:
+            pd.DataFrame: One row per variable, columns [Variable, N, Mean, SD, Min, Max],
+                unformatted so callers can compare directly against pandas describe().
+        """
+        cols = ["Variable", "N", "Mean", "SD", "Min", "Max"]
+        if df is None or df.empty:
+            return pd.DataFrame(columns=cols)
+        selected = list(variables) if variables else list(df.select_dtypes(include="number").columns)
+        rows = []
+        for col in selected:
+            if col not in df.columns or not pd.api.types.is_numeric_dtype(df[col]):
+                continue
+            s = df[col].dropna()
+            rows.append({
+                "Variable": col,
+                "N": len(s),
+                "Mean": s.mean() if not s.empty else np.nan,
+                "SD": s.std() if not s.empty else np.nan,
+                "Min": s.min() if not s.empty else np.nan,
+                "Max": s.max() if not s.empty else np.nan,
+            })
+        return pd.DataFrame(rows, columns=cols)
+
+    def export_dataframe(self, df, filename, variables=None):
+        """
+        Builds the from_dataframe() table and exports it via TableGenerator (LaTeX).
+        Returns the written path, or None when there is nothing to export.
+        """
+        stats = self.from_dataframe(df, variables)
+        if stats.empty:
+            self.logger.warning("Generated table is empty. Nothing to export.")
+            return None
+        formatted = stats.copy()
+        formatted["N"] = formatted["N"].apply(lambda n: f"{int(n):,}")
+        for col in ["Mean", "SD", "Min", "Max"]:
+            formatted[col] = formatted[col].apply(format_number)
+        return self.table_gen.export_latex(formatted, filename)
 
     def export(self, sections, filename, **kwargs):
         """
