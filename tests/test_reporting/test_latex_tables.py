@@ -27,6 +27,7 @@ def _ols_metadata():
         "coefficients": {
             "const": {"value": 1.0, "std_err": 0.1, "p_value": 0.0},
             "educ_lag": {"value": 0.05, "std_err": 0.012, "p_value": 0.032},
+            "expersq": {"value": -0.000688, "std_err": 0.000110, "p_value": 0.6},
             "tenure": {"value": -0.2, "std_err": None, "p_value": 0.5},
         },
         "summary": {"dependent_variable": "lwage", "nobs": 526.0, "rsquared": 0.42, "rsquared_adj": 0.41},
@@ -67,12 +68,21 @@ def test_regression_table_tex_has_stars_parenthesised_se_and_n_row(tmp_path):
 
     tex = path.read_text()
     assert "\\toprule" in tex and "\\bottomrule" in tex
-    assert "0.050**" in tex  # star from the 0.05 threshold
-    assert "(0.012)" in tex  # parenthesised SE below the coefficient
+    assert "0.0500**" in tex  # star from the 0.05 threshold
+    assert "\\midrule" in tex.split("N &", 1)[0]  # break between coefficients and N row
+    assert "(0.0120)" in tex  # parenthesised SE below the coefficient
+    assert "-0.000688" in tex and "(0.000110)" in tex  # 3 significant digits, never 0.000
     assert "educ\\_lag" in tex  # underscores escaped
     assert "526" in tex  # N row
-    assert "R$^2$" in tex and "Adj. R$^2$" in tex
-    assert "Note:" in tex and "p$<$0.01" in tex  # star-threshold note line
+    assert "0.420" in tex and "0.410" in tex
+    # Constant last, note inside the tabular as the final row
+    body_rows = [l for l in tex.splitlines() if l and not l.startswith("\\")]
+    const_idx = next(i for i, l in enumerate(body_rows) if l.startswith("Constant"))
+    n_idx = next(i for i, l in enumerate(body_rows) if l.startswith("N &"))
+    assert const_idx < n_idx
+    assert "\\par\\smallskip" not in tex
+    assert r"\multicolumn{2}{l}{\footnotesize * p$<$0.1, ** p$<$0.05, *** p$<$0.01}" in tex
+    assert tex.rindex("p$<$0.01") < tex.rindex("\\end{tabular}")
 
 
 def test_regression_table_skips_non_regression_models(caplog, tmp_path):
@@ -88,6 +98,8 @@ def test_regression_table_supports_two_models_side_by_side(tmp_path):
     assert list(combined.columns) == ["Variable", "lwage", "Model 2"]
     assert combined["lwage"].iloc[0] != ""  # regression contributes coefficients
     assert combined["Model 2"].iloc[0] == ""  # VAR column empty
+    variables = list(combined["Variable"])
+    assert variables.index("Constant") > variables.index("educ_lag")  # constant listed last among coefficients
 
 
 # --- descriptive stats numbers ---
@@ -155,8 +167,11 @@ def test_mincer_full_run_writes_both_tables_and_charts_under_run_folder(tmp_path
     stats_tex = (tables_dir / "descriptive_stats.tex").read_text()
     reg_tex = (tables_dir / "regression_table.tex").read_text()
 
-    assert "lwage" in stats_tex and "\\toprule" in stats_tex
-    assert "educ" in reg_tex and "(" in reg_tex
+    # Dependent variable first, then regressors in model order
+    assert stats_tex.index("lwage") < stats_tex.index("educ &") < stats_tex.index("exper") < stats_tex.index("expersq") < stats_tex.index("tenure")
+    assert "\\toprule" in stats_tex
+    assert "Constant &" in reg_tex  # constant row present
+    assert "\\midrule" in reg_tex.split("N &", 1)[0]
     charts = list((run_dir / "04_reporting").rglob("*.png"))
     assert charts, "expected charts under 04_reporting"
 

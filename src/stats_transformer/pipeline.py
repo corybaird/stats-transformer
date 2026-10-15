@@ -477,16 +477,10 @@ class Pipeline:
             self.save_model_summary(summary_path)
             self._run_files.append(summary_path)
         if self.model is not None:  # args-mode pipelines without target/features have no model
-            df_clean = getattr(self.model, "df_clean", None)
-            if df_clean is not None:
-                # The exact data the model was fitted on: df_clean restricted to the
-                # columns the model uses (entity/time live in the index where the
-                # model indexed them there).
-                try:
-                    cols = [c for c in self.model._get_required_columns() if c in df_clean.columns]
-                except Exception:
-                    cols = []
-                model_df = df_clean[cols].dropna() if cols else df_clean.dropna()
+            model_df = self._model_data()
+            if model_df is not None:
+                # The exact data the model was fitted on (df_clean restricted to the
+                # columns the model uses); the descriptive-stats table reads the same.
                 model_data_path = os.path.join(model_dir, "model_data.parquet")
                 model_df.to_parquet(model_data_path)
                 self._run_files.append(model_data_path)
@@ -550,20 +544,44 @@ class Pipeline:
             if table_path:
                 self._run_files.append(str(table_path))
 
+    def _model_data(self) -> Optional[pd.DataFrame]:
+        """The exact data the model was fitted on: df_clean restricted to the
+        columns the model uses (entity/time stay in the index where the model
+        indexed them there), rows with NaNs dropped. Shared by the
+        model_data.parquet artefact (run_model) and the descriptive-stats table"""
+        if self.model is None:
+            return None
+        df_clean = getattr(self.model, "df_clean", None)
+        if df_clean is None:
+            return None
+        try:
+            cols = [c for c in self.model._get_required_columns() if c in df_clean.columns]
+        except Exception:
+            cols = []
+        return (df_clean[cols].dropna() if cols else df_clean.dropna())
+
     def _descriptive_stats_table(self, tables_dir: str) -> Optional[str]:
-        """Descriptive stats of the data the model was fitted on (numeric columns only)."""
-        df: Optional[pd.DataFrame] = None
-        if self.model is not None and getattr(self.model, "df_clean", None) is not None:
-            df = self.model.df_clean
-            assert df is not None
-            required = [c for c in self.model._get_required_columns() if c in df.columns]
-            if required:
-                df = df[required]
+        """Descriptive stats of the data the model was fitted on (numeric columns only,
+        dependent variable first, then regressors in model order)."""
+        df = self._model_data()
+        if df is None and self.model is not None and self.transformed_data is not None:
+            # Reporting-only run (model never fitted): use the transformed data,
+            # still restricted to the model's used columns.
+            try:
+                cols = [c for c in self.model._get_required_columns() if c in self.transformed_data.columns]
+            except Exception:
+                cols = []
+            if cols:
+                df = self.transformed_data[cols]
         if df is None:
             df = self.transformed_data
         if df is None:
             self.logger.info("No fitted data available; skipping descriptive_stats table.")
             return None
+        if self.target and self.target in df.columns:
+            # Most tables list the dependent variable first; _get_required_columns
+            # puts it last (independent_variables first).
+            df = df[[self.target] + [c for c in df.columns if c != self.target]]
         df = df.select_dtypes(include="number")
         table = DescriptiveStatsTable(table_generator=TableGenerator(output_dir=tables_dir))
         path = table.export_dataframe(df, "descriptive_stats")
