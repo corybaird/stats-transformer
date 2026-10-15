@@ -220,6 +220,16 @@ def test_proxy_svar_gk2015_matches_matlab():
     np.testing.assert_allclose(m.impact_column, np.asarray(_ref("matlab", "gk2015_iv")["B"])[:, 0], rtol=1e-6)
 
 
+def test_proxy_svar_gk2015_irf_matches_matlab():
+    inp = _inputs("gk2015_iv")
+    df = pd.DataFrame(np.asarray(inp["ENDO"], dtype=float), columns=["gs1", "logcpi", "logip", "ebp"])
+    df["ff4_tc"] = _vec(inp["IV"])
+    m = ProxySVARModel(target_variables=["gs1", "logcpi", "logip", "ebp"], instrument_variable="ff4_tc", maxlags=12)
+    m.fit(df)
+    ir = np.asarray(_ref("matlab", "gk2015_iv")["IR"], dtype=float)
+    np.testing.assert_allclose(m.irf(horizons=ir.shape[0]).to_numpy(), ir[:, :, 0], rtol=1e-6, atol=1e-12)
+
+
 GHYSELS_CH7 = [
     ("sim", "data/examples/timeseries/ghysels_ch7/simulated_cointegration.csv", ["x", "y"], slice(0, 400), 1),
     ("uk_r1", "data/examples/timeseries/ghysels_ch7/dataonly_uktermstructure.csv", ["r1", "r3", "r6", "r24"], slice(0, 216), 2),

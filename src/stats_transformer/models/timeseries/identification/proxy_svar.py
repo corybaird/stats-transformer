@@ -84,6 +84,14 @@ class ProxySVARModel(ModelBase):
         b11 = np.sqrt(sig11 - s12s12)
         self.impact_column = np.r_[b11, b11 * s21]
 
+    def irf(self, horizons=24):
+        # Responses of every variable to a one-std-dev proxy-identified shock at
+        # h = 0..horizons-1: VAR MA coefficients times the impact column
+        if self.var_result is None or self.impact_column is None:
+            raise ValueError("Model not trained with an instrument")
+        responses = self.var_result.ma_rep(horizons - 1) @ self.impact_column
+        return pd.DataFrame(responses, columns=self.target_variables)
+
     def get_summary(self):
         if self.var_result is None:
             raise ValueError("Model not trained")
