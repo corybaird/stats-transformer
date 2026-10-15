@@ -80,6 +80,33 @@ def test_original_error_propagates_when_check_cannot_run():
     assert not isinstance(excinfo.value, ValueError)
 
 
+def test_numpy_x_with_nan_raises_valueerror():
+    # X kept as a 2-D numpy array holding NaN: the ValueError must name the
+    # NaN column instead of hiding the real error
+    class _NumpyNaNX(_MinimalOLS):
+        def build_model(self):
+            self.X = np.array([[1.0], [2.0], [np.nan]])
+            self.y = pd.Series([1.0, 2.0, 3.0], name="target")
+            raise RuntimeError("exog contains inf or nans")
+
+    model = _NumpyNaNX(target="target", independent_variables=["x1", "x2"])
+    with pytest.raises(ValueError, match=r"1 rows contain NaN/inf in \['X0'\]"):
+        model.fit(_make_df())
+
+
+def test_numpy_x_clean_propagates_original_error():
+    # Clean 2-D numpy X: no NaN/inf ValueError, the original error propagates
+    class _NumpyCleanX(_MinimalOLS):
+        def build_model(self):
+            self.X = np.arange(6, dtype=float).reshape(3, 2)
+            self.y = pd.Series([1.0, 2.0, 3.0], name="target")
+            raise RuntimeError("exog contains inf or nans")
+
+    model = _NumpyCleanX(target="target", independent_variables=["x1", "x2"])
+    with pytest.raises(RuntimeError, match="^exog contains inf or nans$"):
+        model.fit(_make_df())
+
+
 class _DropNaOLS(_MinimalOLS):
     """Like statsmodels missing='drop': fits after dropping NaN rows itself,
     but leaves the NaN row in self.X."""

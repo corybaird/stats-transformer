@@ -253,31 +253,34 @@ class ModelBase(ABC):
         X/y are optional and may be anything (some models keep numpy arrays),
         and if the check cannot run the original exception must propagate.
         """
+        detail = None
         try:
             parts = []
             for name in ("X", "y"):
                 obj = getattr(self, name, None)
                 if isinstance(obj, pd.DataFrame):
-                    parts.append(obj)
+                    part = obj
                 elif isinstance(obj, pd.Series):
-                    parts.append(obj.to_frame(name=str(obj.name) if obj.name is not None else name.lower()))
+                    part = obj.to_frame(name=str(obj.name) if obj.name is not None else name.lower())
                 elif isinstance(obj, np.ndarray):
-                    parts.append(pd.DataFrame(obj, columns=[name.lower()]))
-            if not parts:
-                return
-            combined = pd.concat(parts, axis=1)
-            bad = combined.isna()
-            numeric = combined.select_dtypes(include=[np.number])
-            bad[numeric.columns] = bad[numeric.columns] | numeric.abs().eq(np.inf)
-            if not bad.any().any():
-                return
-            cols = sorted(set(bad.columns[bad.any()]))
-            rows = int(bad.any(axis=1).sum())
-            raise ValueError(f"{rows} rows contain NaN/inf in {cols}; clean or drop them in the data/features stage; original error: {type(original).__name__}: {original}") from original
-        except ValueError:
-            raise
+                    part = pd.DataFrame(obj).add_prefix(name)
+                else:
+                    part = None
+                if part is not None:
+                    parts.append(part)
+            if parts:
+                combined = pd.concat(parts, axis=1)
+                bad = combined.isna()
+                numeric = combined.select_dtypes(include=[np.number])
+                bad[numeric.columns] = bad[numeric.columns] | numeric.abs().eq(np.inf)
+                if bad.any().any():
+                    cols = sorted(set(bad.columns[bad.any()]))
+                    rows = int(bad.any(axis=1).sum())
+                    detail = f"{rows} rows contain NaN/inf in {cols}; clean or drop them in the data/features stage"
         except Exception:
             return
+        if detail is not None:
+            raise ValueError(f"{detail}; original error: {type(original).__name__}: {original}") from original
 
     def fit(self, data: Union[str, pd.DataFrame]) -> Dict[str, Any]:
         self.load_data(data)
