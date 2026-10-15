@@ -1,0 +1,9 @@
+data:
+  raw_data_file: data/examples/timeseries/bq1989.csv
+
+model:
+  model_type: blanchard_quah
+  target_variables:
+    - y
+    - u
+  maxlags: 8
