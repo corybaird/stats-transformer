@@ -2,6 +2,7 @@
 import pytest
 from examples.academic.vanderwel_2026 import Vanderwel2026Replication
 from examples.academic.nakamura_steinsson_2018b_jorda import NakamuraSteinsson2018bJordaReplication
+from examples.academic.bauer_swanson_2023 import BauerSwanson2023Replication
 from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel
 from stats_transformer.models.timeseries.reduced_form.local_projections import LocalProjectionsModel
@@ -25,6 +26,23 @@ def test_nakamura_steinsson_2018b_jorda_replication():
     res = rep.run()
     assert res["passed"], f"Nakamura & Steinsson multiplier error {res['multiplier_error']} or IRF diff {res['max_irf_diff']}"
     assert abs(res["multiplier_h36"] - 1.95) < 0.01
+
+
+def test_bauer_swanson_2023_replication():
+    """Verify Bauer & Swanson (2023) macro news regression replicates with RobustOLSModel HC3.
+
+    Published coefficient tables are not available in the source replication
+    repository (shipped folder is confidential/empty), so the coefficients and
+    R^2 are asserted against a direct statsmodels HC3 computation on the
+    identical sample (BauerSwanson2023Replication.TOLERANCE = 1e-4).
+    """
+    rep = BauerSwanson2023Replication()
+    res = rep.run()
+    assert res["passed"], f"Bauer & Swanson replication failed: coef error {res['max_coef_error']}, r2 error {res['r2_error']}"
+    assert res["n_observations"] > 0
+    assert res["r_squared"] >= 0.0
+    for name in rep.NEWS:
+        assert abs(res["coefficients"][name] - res["reference_coefficients"][name]) <= rep.TOLERANCE
 
 
 def test_regression_predict_accessor():

@@ -189,7 +189,7 @@ This document catalogs the academic literature, econometric papers, benchmark da
 
 - **Description**: Updated high-frequency monetary policy surprise dataset orthogonalized against economic forecasts.
 - **Citation**: Bauer, M. D., & Swanson, E. T. (2023). A reassessment of monetary policy surprises and high-frequency identification. _NBER Macroeconomics Annual_, _37_(1), 87-155.
-- **Location**: `src/examples/academic/bauer_swanson.py`
+- **Location**: `src/examples/academic/bauer_swanson_2023.py`
 - **Usage**: Monetary shock transformation sanity checks.
 
 ### 2.5 Longley Benchmark Dataset (1967)

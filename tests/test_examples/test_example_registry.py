@@ -18,6 +18,7 @@ EXPECTED_EXAMPLES = {
     "bbm_2023",
     "bq_1989",
     "fomc_surprises",
+    "fukui_nakamura_steinsson_2025",
     "ghysels_ch1",
     "ghysels_ch2",
     "ghysels_ch5",
@@ -25,11 +26,14 @@ EXPECTED_EXAMPLES = {
     "ghysels_ch7",
     "ghysels_ch8",
     "ghysels_ch10",
+    "gertler_karadi_2015",
     "gk_2015",
     "global_factor",
     "greenbook_forecast_errors",
     "grunfeld",
+    "jarocinski_2024",
     "jt_2025",
+    "karadi_schoenle_wursten_2024",
     "longley",
     "macrodata",
     "macrodb_gdp_inflation",
@@ -88,7 +92,13 @@ def test_registry_covers_every_repository_data_file(project_root):
 
 
 def test_multi_file_example_can_load_one_member():
-    assert list_example_files("bauer_swanson_2023") == ["cpi", "nonfarm_payrolls", "unemployment"]
+    assert list_example_files("bauer_swanson_2023") == [
+        "cpi",
+        "fomc_surprises_monthly",
+        "fomc_surprises_update2023",
+        "nonfarm_payrolls",
+        "unemployment",
+    ]
 
     cpi = load_example("bauer_swanson_2023", member="cpi")
 
