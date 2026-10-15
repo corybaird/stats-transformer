@@ -3,11 +3,12 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import yaml
 
 from stats_transformer.data import load_example
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
-from stats_transformer.models.timeseries.reduced_form.var import VARModel
+from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
 from stats_transformer.reporting.charts.bar import CoefficientBarChart
 from stats_transformer.reporting.charts.time_series import IRFPlot
 
@@ -75,31 +76,41 @@ class PaperFigureBuilder:
         fig, _ = chart.plot(variables, coefficients, standard_errors, p_values, ylabel="Coefficient", title="Mincer wage equation", footer="HC3 robust standard errors; Wooldridge wage1 data")
         self._save_figure(fig, "mincer_coefficients.pdf")
 
-    def _make_macro_irf(self):
-        data = load_example().sort_values(["country", "date"]).copy()
-        data["gdp_growth"] = data.groupby("country")["gdp"].transform(lambda values: 100 * np.log(values).diff())
-        annual = data.groupby("date", as_index=False)[["gdp_growth", "inflation"]].mean().dropna()
-        annual[["gdp_growth", "inflation"]] = annual[["gdp_growth", "inflation"]].apply(lambda values: (values - values.mean()) / values.std())
-        model = VARModel(target_variables=["gdp_growth", "inflation"], date_column="date", maxlags=2)
-        model.fit(annual)
-        irf = model.model.irf(8)
-        lower, upper = irf.errband_mc(orth=False, repl=200, signif=0.05)
+    def _make_bq_irf(self):
+        """Blanchard--Quah structural IRFs on the committed bq1989 config:
+        responses of output level (cumulated y) and unemployment to the supply
+        and demand shocks. y is quarterly GNP growth, so its level response is
+        the cumulative sum of the growth response."""
+        with open("references/configs/timeseries/identification/blanchard_quah_1989.yaml") as stream:
+            spec = yaml.safe_load(stream)["model"]
+        model = BlanchardQuahModel(target_variables=spec["target_variables"], maxlags=spec["maxlags"])
+        model.fit(pd.read_csv("data/examples/timeseries/bq1989.csv"))
+        irf = model.var_result.irf(40)  # ~40 quarters, horizon 0..40
+        structural = irf.irfs @ model.B_0  # structural: variable i to shock j
+        variables = ["Output level", "Unemployment"]
+        shocks = ["Supply shock", "Demand shock"]
         rows = []
-        for response_index, response in enumerate(["gdp_growth", "inflation"]):
-            for horizon in range(9):
-                rows.append((horizon, response, irf.irfs[horizon, response_index, 1], lower[horizon, response_index, 1], upper[horizon, response_index, 1]))
-        plot_data = pd.DataFrame(rows, columns=["horizon", "response", "coef", "lower", "upper"])
+        for variable_index in (0, 1):  # output level, unemployment
+            variable = variables[variable_index]
+            for shock_index, shock in enumerate(shocks):
+                for horizon, response in enumerate(
+                    np.cumsum(structural[:, variable_index, shock_index]) if variable_index == 0 else structural[:, variable_index, shock_index]
+                ):
+                    rows.append((horizon, (variable, shock), float(response), float(response), float(response)))
+        plot_data = pd.DataFrame(rows, columns=["horizon", "facet", "coef", "lower", "upper"])
+        labels = {(variable, shock): f"{variable}, {shock.lower()}" for variable in variables for shock in shocks}
         chart = IRFPlot()
-        fig, _ = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "response", labels={"gdp_growth": "GDP per capita growth", "inflation": "Inflation"}, title="Macro VAR impulse responses", ylabel="Response in standardized units")
-        fig.suptitle("Macro VAR impulse responses", y=0.97)
-        fig.subplots_adjust(top=0.84)
-        self._save_figure(fig, "macro_irf.pdf")
+        fig, axes = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "facet", labels=labels, title="Blanchard--Quah structural impulse responses", ylabel="Response")
+        for ax in axes:
+            ax.set_xticks(range(0, irf.irfs.shape[0] + 1, 8))  # 41 horizons: thin the ticks
+        fig.suptitle("Blanchard--Quah structural impulse responses", y=1.02)
+        self._save_figure(fig, "bq_irf.pdf")
 
     def run(self):
         np.random.seed(42)
         self._make_architecture()
         self._make_mincer_coefficients()
-        self._make_macro_irf()
+        self._make_bq_irf()
 
 
 if __name__ == "__main__":
