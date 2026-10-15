@@ -64,7 +64,7 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| 8 example scripts re-download data and overwrite tracked `data/` files | `src/examples/discrete/spector_logit.py:17`, `timeseries/macro_var.py:26`, `regression/{mincer_wage:25, okuns_law:65, mroz_iv:27, longley:17, grunfeld:20}.py`, `academic/nakamura_steinsson_pca.py:34` | P0 | S | open |
+| 8 example scripts re-download data and overwrite tracked `data/` files | `src/examples/discrete/spector_logit.py:17`, `timeseries/macro_var.py:26`, `regression/{mincer_wage:25, okuns_law:65, mroz_iv:27, longley:17, grunfeld:20}.py`, `academic/nakamura_steinsson_pca.py:34` | P0 | S | in progress (#106) |
 | Ghysels Ch 7 example uses `deterministic='co'` on 500 rows; book uses `'ci'` on rows 1–400 | `src/examples/timeseries/ghysels_chap7.py:13` | P2 | S | open |
 | Undefined name `r_sim_data_est` | `data/examples/regression/ghysels_ch2/Chap2.py:84` | P1 | S | open |
 | Move `src/examples/` to top-level `examples/` | `src/examples/` | P2 | S | open |
