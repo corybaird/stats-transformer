@@ -25,6 +25,10 @@ class DiDModel(ModelBase):
         return list(dict.fromkeys(c for c in cols if c))
 
     def build_model(self):
+        # ATT(g,t) below is an unconditional difference in means; conditioning
+        # on covariates is not implemented, so refuse silently-ignored controls.
+        if self.control_variables:
+            raise ValueError("control_variables is not supported: conditional (covariate-adjusted) DiD is not implemented yet; drop control_variables")
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
 
