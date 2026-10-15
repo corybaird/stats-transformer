@@ -168,12 +168,15 @@ flowchart LR
 
 ```text
 <output.root>/<config_stem>/<YYYYMMDD_HHMMSS>/
-├── 01_data/merged.parquet        # copy of the merged data; the canonical chaining copy lives at
-│                                 # data.merge.output_path (or the data/pipeline default, as before)
+├── 01_data/merged.parquet        # copy of the merged data (always written); the canonical chaining copy
+│   │                             # lives at data.merge.output_path (or the data/pipeline default, as before)
+│   └── raw/<dataset>.parquet     # each loaded source, pre-resample, named after the config's dataset key
 ├── 02_features/features.parquet  # always written; keeps dtypes
 ├── 03_model/model_summary.json   # written when the model stage runs
+│   ├── model_data.parquet        # the exact data the model was fitted on (df_clean, used columns only)
+│   └── model.joblib              # joblib dump of the fitted model (skipped with a warning if it cannot be pickled)
 └── manifest.json                 # config copy + sha256, input file checksums, git SHA (when available),
-                                  # package version, stages run, UTC timestamps, written files
+                                  # package version, stages run, UTC timestamps, written files, artifact shapes
 ```
 
 - Explicit output paths (`data.merge.output_path`, `data.featurization.output_path`, `model.summary_output_path`, `reporting.output_dir`) are still written exactly as configured; the run folder is an addition, not a replacement. Single-stage runs chain through these explicit paths; a run folder does not replace them.

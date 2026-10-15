@@ -1,4 +1,5 @@
 import json
+import joblib
 import logging
 import os
 import numpy as np
@@ -296,3 +297,14 @@ class ModelBase(ABC):
             self._raise_if_nan_or_inf(e)
             raise
         return self.get_model_metrics()
+
+    def save(self, path: str) -> None:
+        """Joblib dump of the fitted model instance."""
+        if os.path.dirname(path):
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+        joblib.dump(self, path)
+
+    @classmethod
+    def load(cls, path: str) -> "ModelBase":
+        """Load a model previously written by save()."""
+        return joblib.load(path)
