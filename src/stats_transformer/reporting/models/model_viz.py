@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from stats_transformer.reporting.base import BaseVisualizer
 from stats_transformer.reporting.defaults.labels import get_readable_label
-from stats_transformer.reporting.charts.bar import CoefficientBarChart
+from stats_transformer.reporting.charts.bar import CoefficientBarChart, CoefficientForestPlot
 
 class ModelVisualizer(BaseVisualizer):
 
@@ -21,7 +21,7 @@ class ModelVisualizer(BaseVisualizer):
             self.logger.error(f"Error loading model data: {str(e)}")
             raise
     
-    def create_coefficient_plot_from_json(self, model_summary, subdir="regression", display_only=False):
+    def create_coefficient_plot_from_json(self, model_summary, subdir="regression", display_only=False, kind=None, include_intercept=None):
         self.logger.info("Creating coefficient plot from JSON")
         if 'coefficients' in model_summary:
             coefficients = model_summary['coefficients']
@@ -40,32 +40,52 @@ class ModelVisualizer(BaseVisualizer):
             self.logger.warning("Coefficients dictionary is empty")
             return None
         
+        # Optional plot settings from the existing reporting config.
+        plot_config = (self.viz_params.get("regression") or {}).get("coefficient_plot", {})
+        if kind is None:
+            kind = plot_config.get("kind", "forest")
+        if include_intercept is None:
+            include_intercept = plot_config.get("include_intercept", False)
+        
         plot_data = []
         for var, coef_info in coefficients.items():
-            value = coef_info.get('value', 0)
-            std_err = coef_info.get('std_err', None)
-            p_val = coef_info.get('p_value', np.nan)
-            if var.lower() in ['const', 'intercept']:
+            if include_intercept is not True and var.lower() in ['const', 'intercept']:
                 continue
-            plot_data.append({'variable': var, 'coefficient': value, 'std_error': std_err if std_err else 0, 'p_value': p_val})
+            plot_data.append({
+                'variable': var,
+                'coefficient': coef_info.get('value', 0),
+                'std_error': coef_info.get('std_err') or 0,
+                'p_value': coef_info.get('p_value', np.nan),
+            })
         
         if not plot_data:
             self.logger.warning("No non-intercept coefficients to plot")
             return None
         
         df = pd.DataFrame(plot_data)
-        df['abs_coef'] = df['coefficient'].abs()
-        df = df.sort_values('abs_coef', ascending=True)
         
-        chart = CoefficientBarChart(style_path=self.viz_params.get("style", "barchart"))
-        fig, ax = chart.plot(
-            labels=df['variable'].tolist(),
-            coefficients=df['coefficient'].tolist(),
-            std_errors=df['std_error'].tolist(),
-            p_values=df['p_value'].tolist(),
-            title='Regression Coefficients with Standard Errors',
-            ylabel='Coefficient Value'
-        )
+        if kind == "bar":
+            df['abs_coef'] = df['coefficient'].abs()
+            df = df.sort_values('abs_coef', ascending=True)
+            chart = CoefficientBarChart(style_path=self.viz_params.get("style", "barchart"))
+            fig, ax = chart.plot(
+                labels=df['variable'].tolist(),
+                coefficients=df['coefficient'].tolist(),
+                std_errors=df['std_error'].tolist(),
+                p_values=df['p_value'].tolist(),
+                title='Regression Coefficients with Standard Errors',
+                ylabel='Coefficient Value'
+            )
+        else:
+            chart = CoefficientForestPlot(style_path=self.viz_params.get("style", "barchart"))
+            fig, ax = chart.plot(
+                labels=df['variable'].tolist(),
+                coefficients=df['coefficient'].tolist(),
+                std_errors=df['std_error'].tolist(),
+                p_values=df['p_value'].tolist(),
+                title='Regression Coefficients with 95% Confidence Intervals',
+                ylabel='Coefficient'
+            )
         
         plt.tight_layout()
         return self.save_figure(fig, "coefficient_plot", subdir, display_only=display_only)
