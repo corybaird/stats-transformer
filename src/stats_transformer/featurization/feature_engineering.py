@@ -235,7 +235,14 @@ class FeatureEngineer:
         else:
             entity = "Unknown"
         transformed_group = group.copy()
-        
+
+        # Time-ordered transformations (shift/diff/pct_change/rolling) require rows
+        # sorted by date within the entity; stable sort keeps ties in input order and
+        # unparseable dates (all-NaT key) keep the original row order.
+        if self.date_column and self.date_column in transformed_group.columns:
+            date_sort = pd.to_datetime(transformed_group[self.date_column], errors="coerce")
+            transformed_group = transformed_group.iloc[date_sort.to_numpy().argsort(kind="stable")]
+
         # Ensure the entity column is present in the transformed group
         if self.entity_column not in transformed_group.columns and entity != "Unknown":
             transformed_group[self.entity_column] = entity
@@ -309,7 +316,9 @@ class FeatureEngineer:
                             raise ValueError(f"Invalid fwd_diff format: {transform}")
 
             except Exception as e:
-                self.logger.error(f"Error calculating transformations for column '{column}' in entity '{entity}': {str(e)}")
+                error_msg = f"Error calculating transformations for column '{column}' in entity '{entity}': {str(e)}"
+                self.logger.error(error_msg)
+                raise ValueError(error_msg) from e
 
         return transformed_group
 
@@ -354,7 +363,7 @@ class FeatureEngineer:
                 transformed_df = grouped.apply(self._apply_entity_transformations).reset_index(drop=True)
             else:
                 # Cross-sectional data: apply transformations on the whole frame
-                # in row order (no entity, no sorting).
+                # (no entity; rows sorted by date first when a date column exists).
                 transformed_df = self._apply_entity_transformations(df.copy())
             
             self.logger.info("Feature transformations completed.")
