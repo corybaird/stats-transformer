@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import numpy as np
 import pandas as pd
 import sys
 import yaml
@@ -245,25 +246,37 @@ class ModelBase(ABC):
             json.dump(metadata, f, indent=4)
         return metadata_path
 
+    def _raise_if_nan_or_inf(self) -> None:
+        """Raise ValueError naming the offending columns if X/y hold NaN or +/-inf."""
+        parts = []
+        if self.X is not None:
+            parts.append(self.X)
+        if self.y is not None:
+            parts.append(self.y if isinstance(self.y, pd.DataFrame) else self.y.to_frame(name=str(self.y.name) if self.y.name is not None else "y"))
+        if not parts:
+            return
+        combined = pd.concat(parts, axis=1)
+        bad = combined.isna()
+        numeric = combined.select_dtypes(include=[np.number])
+        bad[numeric.columns] = bad[numeric.columns] | numeric.abs().eq(np.inf)
+        if not bad.any().any():
+            return
+        cols = sorted(set(bad.columns[bad.any()]))
+        rows = int(bad.any(axis=1).sum())
+        raise ValueError(f"{rows} rows contain NaN/inf in {cols}; clean or drop them in the data/features stage")
+
     def fit(self, data: Union[str, pd.DataFrame]) -> Dict[str, Any]:
         self.load_data(data)
         if hasattr(self, 'df_clean') and self.df_clean is not None:
             self.df_clean = self.df_clean.dropna()
-        
+
+        self._raise_if_nan_or_inf()
         try:
             self.build_model()
-        except Exception as e:
-            if "NaN" in str(e) or "inf" in str(e):
-                if hasattr(self, 'X') and self.X is not None and hasattr(self, 'y') and self.y is not None:
-                    nan_mask = self.X.isna().any(axis=1) | self.y.isna()
-                    if nan_mask.any():
-                        self.X = self.X[~nan_mask]
-                        self.y = self.y[~nan_mask]
-                        self.build_model()
-                    else:
-                        raise
-                else:
-                    self.build_model()
-            else:
-                raise
+        except Exception:
+            # X/y are usually built inside build_model, so a NaN/inf problem only
+            # becomes visible on failure; re-raise with column detail instead of
+            # silently dropping rows and refitting.
+            self._raise_if_nan_or_inf()
+            raise
         return self.get_model_metrics()
