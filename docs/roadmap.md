@@ -31,8 +31,8 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
 | `save_features` only logs metrics; writes nothing to disk | `st/featurization/feature_engineering.py:478-481` | P1 | S | open |
-| Featurization does not sort rows by date within entity before lag/lead shifts | `st/featurization/feature_engineering.py:354` | P1 | S | open |
-| Featurization logs and swallows per-column transformation failures | `st/featurization/feature_engineering.py:311-313` | P1 | S | open |
+| Featurization does not sort rows by date within entity before lag/lead shifts | `st/featurization/feature_engineering.py:354` | P1 | S | in progress |
+| Featurization logs and swallows per-column transformation failures | `st/featurization/feature_engineering.py:311-313` | P1 | S | in progress |
 | `zscore` uses full-sample mean/std per entity (look-ahead leakage) | `st/featurization/feature_engineering.py:272-276` | P1 | M | open |
 | `EventStudyBuilder` clamps event horizon to sample end, fabricating tail values | `st/featurization/event_study.py:131` | P1 | S | open |
 | `KMeansModel` `n_clusters` not configurable from YAML; seed hardcoded to 42 | `st/models/unsupervised/unsupervised.py:127` | P1 | S | open |

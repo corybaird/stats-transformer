@@ -50,3 +50,58 @@ def test_feature_engineering_truncate_data():
     truncated = fe.truncate_data(df)
     assert len(truncated) == 2
     assert "MEX" not in truncated["country"].values
+
+def test_unsorted_dates_match_sorted_features():
+    # Shuffled dates must give the same lag/diff/changepct values as sorted input.
+    fe = FeatureEngineer(
+        params_path=None,
+        transformations=["changeraw", "changepct", "lag1"],
+        entity_column="country",
+        date_column="date",
+        data_columns=["val"],
+        verbose=False
+    )
+    shuffled = pd.DataFrame({
+        "country": ["A"] * 4,
+        "date": ["2020-03-01", "2020-01-01", "2020-04-01", "2020-02-01"],
+        "val": [30.0, 10.0, 40.0, 20.0],
+    })
+    sorted_df = shuffled.sort_values("date").reset_index(drop=True)
+    res_shuffled = fe.transform(shuffled).sort_values("date").reset_index(drop=True)
+    res_sorted = fe.transform(sorted_df)
+    for col in ["val_changeraw", "val_changepct", "val_lag1"]:
+        assert res_shuffled[col].equals(res_sorted[col])
+
+def test_no_entity_path_sorts_by_date():
+    fe = FeatureEngineer(
+        params_path=None,
+        transformations=["changeraw"],
+        entity_column=None,
+        date_column="date",
+        data_columns=["val"],
+        verbose=False
+    )
+    df = pd.DataFrame({
+        "date": ["2020-03-01", "2020-01-01", "2020-02-01"],
+        "val": [30.0, 10.0, 20.0],
+    })
+    out = fe.transform(df)
+    assert np.isnan(out["val_changeraw"].iloc[0])
+    assert out["val_changeraw"].iloc[1:].tolist() == [10.0, 10.0]
+
+def test_failing_transformation_raises():
+    fe = FeatureEngineer(
+        params_path=None,
+        transformations=["log"],
+        entity_column="country",
+        date_column="date",
+        data_columns=["val"],
+        verbose=False
+    )
+    df = pd.DataFrame({
+        "country": ["A", "A"],
+        "date": ["2020-01-01", "2021-01-01"],
+        "val": [10.0, -5.0],
+    })
+    with pytest.raises(ValueError, match="column 'val' in entity 'A'"):
+        fe.transform(df)
