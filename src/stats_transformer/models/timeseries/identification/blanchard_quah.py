@@ -59,6 +59,12 @@ class BlanchardQuahModel(ModelBase):
             raise ValueError("Model not trained")
         return f"Blanchard-Quah SVAR Model\nB_0 Matrix:\n{self.B_0}\n\nVAR Summary:\n{self.var_result.summary()}"
 
+    def get_model_metadata(self, metrics=None):
+        metadata = super().get_model_metadata(metrics)
+        if self.B_0 is not None:
+            metadata["impact_matrix"] = np.asarray(self.B_0).tolist()
+        return metadata
+
     def get_model_metrics(self):
         if self.var_result is None:
             raise ValueError("Model not trained")
