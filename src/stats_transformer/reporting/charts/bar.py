@@ -49,6 +49,66 @@ class CoefficientBarChart:
 
         return fig, ax
 
+class CoefficientForestPlot:
+    """
+    Dot-and-whisker (forest) plot of coefficients with 95% CI whiskers and
+    significant vs non-significant markers (filled vs hollow).
+    """
+    def __init__(self, style_path="barchart"):
+        self.style_path = style_path
+
+    def plot(self, labels, coefficients, std_errors, p_values, ylabel=None, footer=None, title=None, ax=None, color='#2196F3'):
+        if ax is None:
+            apply_style(self.style_path)
+            # Height scales with the number of coefficients.
+            fig, ax = plt.subplots(figsize=(7, max(2.5, 0.5 * len(labels) + 1.5)))
+        else:
+            fig = ax.figure
+        ax.grid(axis='y', visible=False)
+
+        valid = [not pd.isna(c) for c in coefficients]
+        v_labels = [l for l, v in zip(labels, valid) if v]
+        y_pos = np.arange(len(labels))[valid]
+        v_coefs = [coefficients[i] for i in range(len(coefficients)) if valid[i]]
+        v_ses = [std_errors[i] for i in range(len(std_errors)) if valid[i]]
+        v_pvals = [p_values[i] for i in range(len(p_values)) if valid[i]]
+
+        # 95% CI whiskers from SEs.
+        for y, c, se in zip(y_pos, v_coefs, v_ses):
+            if not pd.isna(se) and se > 0:
+                lo, hi = c - 1.96 * se, c + 1.96 * se
+                ax.plot([lo, hi], [y, y], color=color, linewidth=1.2)
+                ax.plot([lo, lo], [y - 0.12, y + 0.12], color=color, linewidth=1.2)
+                ax.plot([hi, hi], [y - 0.12, y + 0.12], color=color, linewidth=1.2)
+
+        # Filled marker = significant at 5%, hollow = not.
+        for y, c, se, p in zip(y_pos, v_coefs, v_ses, v_pvals):
+            significant = (not pd.isna(p)) and p < 0.05
+            if significant:
+                ax.plot(c, y, marker='o', color=color, markersize=7)
+            else:
+                ax.plot(c, y, marker='o', color=color, markersize=7,
+                        markerfacecolor='white', markeredgecolor=color, markeredgewidth=1.2)
+
+        ax.axvline(x=0, color='black', linewidth=0.8, linestyle='--')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.grid(axis='x', linestyle='--', alpha=0.5, color='grey')
+        ax.set_axisbelow(True)
+
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels([get_readable_label(l) for l in v_labels])
+        ax.invert_yaxis()
+
+        if ylabel:
+            ax.set_xlabel(ylabel, size=11)
+        if title:
+            ax.set_title(title, size=12, fontweight='normal')
+        if footer:
+            ax.text(0.99, 0.01, footer, transform=ax.transAxes, ha='right', va='bottom', fontsize=9, color='grey')
+
+        return fig, ax
+
 class GroupedBarChart:
     """
     Multiple groups side-by-side (e.g., conventional vs information shocks).
