@@ -31,6 +31,25 @@ def test_robust_ols_model():
     assert hasattr(model.model, 'cov_type')
     assert model.model.cov_type == "HC3"
 
+def test_robust_ols_cov_type_from_params_yaml(tmp_path):
+    import yaml
+
+    config_path = tmp_path / "params.yaml"
+    config_path.write_text(yaml.dump({
+        "model": {
+            "model_type": "robust_ols",
+            "target_variable": "target",
+            "independent_variables": ["feature1", "feature2"],
+            "robust_ols": {"cov_type": "HC1"}
+        }
+    }))
+
+    model = RobustOLSModel(params_path=str(config_path))
+    assert model.cov_type == "HC1"
+
+    model = RobustOLSModel(params_path=str(config_path), cov_type="HC3")
+    assert model.cov_type == "HC3"
+
 def test_panel_regression_model():
     # linearmodels PanelOLS expects a MultiIndex or entity/time columns
     

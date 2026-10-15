@@ -16,7 +16,7 @@ class IndependenceSVARModel(ModelBase):
     def __init__(self, target_variables=None, maxlags=1, n_starts=5, seed=42, **kwargs):
         super().__init__(**kwargs)
 
-        self.target_variables = target_variables or []
+        self.target_variables = target_variables or getattr(self, "target_variables", [])
         self.maxlags = maxlags
         self.n_starts = n_starts
         self.seed = seed

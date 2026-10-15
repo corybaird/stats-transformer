@@ -15,7 +15,7 @@ class VolatilitySVARModel(ModelBase):
     def __init__(self, target_variables=None, regime_column=None, maxlags=1, **kwargs):
         super().__init__(**kwargs)
         
-        self.target_variables = target_variables or []
+        self.target_variables = target_variables or getattr(self, "target_variables", [])
         self.regime_column = regime_column
         self.maxlags = maxlags
         
