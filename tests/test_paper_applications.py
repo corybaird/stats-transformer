@@ -4,12 +4,14 @@ scripts/generate_paper_applications.py renders the applications table body,
 per-application TikZ flow strips, and per-application verbatim config files.
 These tests pin the contract the paper relies on: one row per application,
 exact integer counts, exact integer counts with a thousands separator, flow
-strips limited to four boxes (config, data, pipeline, outputs) with short node
-labels, per-application config files in table order, and a five-cell table
-body (Application, Data, Config, Estimator / SE, Checked-against - outputs
-live in the flow strips only).
+strips limited to four boxes (config, data, pipeline, a plain "Outputs" box)
+with short node labels, per-application config files in table order, and a
+clean five-cell table body (Application, Data, Config, Estimator / SE,
+Checked-against - no output-file names anywhere).
 """
 
+import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -52,11 +54,12 @@ def test_generator_writes_one_row_per_application(tmp_path, monkeypatch):
     # Exact counts, never rounded or in scientific notation.
     for exact in ("526", "220", "202", "159"):
         assert exact in tex, tex
-    assert tex.count("statsmodels OLS (HC3), same design matrix") == 1
-    # Grunfeld two-way FE made it into the config and the generated row; the
-    # parity caveat is disclosed.
+    assert tex.count("Python: \\texttt{statsmodels}") == 1
+    assert "R: \\texttt{plm::plm}; Stata: \\texttt{xtreg, fe}" in tex
+    assert "Stata: \\texttt{var}; R: \\texttt{vars::VAR}" in tex
+    assert "MATLAB: VAR-Toolbox 4.0; R: \\texttt{vars::BQ}" in tex
+    # Grunfeld two-way FE made it into the config and the generated row.
     assert "entity + time FE" in tex
-    assert "one-way FE parity" in tex
     # The row is the whole table body: no note rows, nothing but ' \\\\' lines.
     assert all(line.endswith(" \\\\") for line in tex.splitlines())
     # Config cells print basenames only; the appendix holds the full paths.
@@ -105,13 +108,15 @@ def test_flow_files_come_from_the_manifest(tmp_path, monkeypatch):
     assert "\\node[box] (n0)" in flow
     # The pipeline box is the third one.
     assert nodes[2].startswith("\\node[box, right=of n1] (n2) {stats-transformer pipeline};")
-    # Every file the strip references exists in the run (key outputs) or is
-    # an input; the full run_files list is kept in the record.
+    # The flow strip's last box is the plain word 'Outputs': no file names
+    # beyond the config and data inputs, and run_files comes from the manifest.
+    run_root = tmp_path / "runs"
+    run_dir = max((run_root / app["name"] / "data" / "pipeline" / "mincer_wage").iterdir())
     unescaped = flow.replace("\\_", "_")
     referenced = set(re.findall(r"[\w.-]+\.(?:parquet|json|joblib|csv|yaml|tex|png)", unescaped))
-    assert Path(record["data_rel"]).name in referenced
-    assert {Path(f).name for f in record["key_outputs"]} <= referenced
-    assert record["key_outputs"] == gen._key_outputs(record["run_files"])
+    assert referenced == {Path(record["data_rel"]).name, Path(app["config"]).name}
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert record["run_files"] == sorted(os.path.relpath(run_root / app["name"] / path, run_dir) for path in manifest["files"])
 
 
 def test_flow_nodes_use_short_labels(tmp_path, monkeypatch):
