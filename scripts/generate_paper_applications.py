@@ -4,24 +4,20 @@ For each YAML application under references/configs/ this script runs the full
 pipeline in a temporary directory (CWD = tmp, config copy with input paths
 redirected to the repo's data files) and renders, into --out-dir:
 
-- applications.tex          booktabs table BODY rows (the paper owns \\begin{table})
-- app_<name>_flow.tex       one tikzpicture strip per YAML application
-- application_configs.tex   the committed YAML files for a compact appendix
+- applications.tex           booktabs table BODY rows (the paper owns \\begin{table})
+- app_<name>_flow.tex        one 4-box flow strip per YAML application
+                             (config -> data -> pipeline -> outputs)
+- app_<name>_config.tex      the committed YAML of each application, so the
+                             paper can \\input one per subsection
 
 Everything in the .tex is generated from the runs (estimates from
-03_model/model_summary.json, outputs and stages from manifest.json); numbers
-are rounded to at most 3 significant figures by fmt3 so no long numbers end
-up in prose. The country-panel VAR (application 5) is Python-API-only; its
-fields are fitted through the library API in this script.
-
-Usage:
-    uv run python scripts/generate_paper_applications.py --out-dir <dir>
+03_model/model_summary.json, outputs and stages from manifest.json); counts
+(Observations) are exact integers with a thousands separator by fmt_count.
 """
 
 import argparse
 import json
 import os
-import re
 import tempfile
 from pathlib import Path
 
@@ -30,9 +26,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Per-application metadata: descriptive labels (source, frequency, parity test)
-# plus the coefficients shown in the table. Numbers (N, effective observations,
-# estimates, outputs) always come from the run or the API fit.
+# Per-application metadata: descriptive labels (source, frequency, parity test).
+# Numbers (N, effective observations, outputs) always come from the run.
 APPLICATIONS = [
     {
         "name": "mincer_wage",
@@ -40,16 +35,6 @@ APPLICATIONS = [
         "label": "Mincer wage",
         "source": "Wooldridge wage1",
         "frequency": "cross-section",
-        "key": [("educ", None), ("exper", None)],
-        "checked": "statsmodels OLS (HC3), same design matrix",
-    },
-    {
-        "name": "okuns_law",
-        "config": "references/configs/regression/okuns_law.yaml",
-        "label": "Okun's law",
-        "source": "FRED UNRATE + real GDP",
-        "frequency": "quarterly",
-        "key": [("gdp_pct_change", None)],
         "checked": "statsmodels OLS (HC3), same design matrix",
     },
     {
@@ -58,7 +43,6 @@ APPLICATIONS = [
         "label": "Two-way FE panel",
         "source": "Grunfeld",
         "frequency": "annual",
-        "key": [("value", None), ("capital", None)],
         "checked": "R plm / Stata xtreg, one-way FE parity (\\texttt{test\\_panel\\_fe\\_grunfeld\\_matches\\_r\\_and\\_stata})",
     },
     {
@@ -67,30 +51,17 @@ APPLICATIONS = [
         "label": "Macro VAR",
         "source": "statsmodels macrodata",
         "frequency": "quarterly",
-        "key": [("L1.realgdp", "realgdp"), ("L1.realcons", "realgdp")],
         "checked": "\\texttt{test\\_var\\_macro\\_matches\\_r\\_and\\_stata}",
-        "footnote": "\\dag",  # marked in the table row, explained in the note row
-        "note": "Macro VAR key estimates were fitted through the Python API; the pipeline's model stage does not yet fit multivariate configs.",
     },
     {
-        "name": "country_panel_var",
-        "config": None,  # Python API only, no YAML and no manifest
-        "label": "Country-panel VAR",
-        "source": "MacroDB",
-        "frequency": "annual",
-        "key": [("L1.gdp_growth", "gdp_growth")],
-        "checked": "---",
+        "name": "blanchard_quah",
+        "config": "references/configs/timeseries/identification/blanchard_quah_1989.yaml",
+        "label": "Blanchard--Quah SVAR",
+        "source": "Blanchard & Quah (1989)",
+        "frequency": "quarterly",
+        "checked": "MATLAB VAR-Toolbox 4.0 / R vars::BQ (\\texttt{test\\_blanchard\\_quah\\_1989\\_pipeline\\_config\\_matches\\_matlab})",
     },
 ]
-
-
-def fmt(value) -> str:
-    """Fixed 3-significant-figure rule for estimates and statistics in the generated .tex."""
-    text = f"{float(value):.3g}"
-    if "e" in text:  # tiny/huge estimates: keep 3 significant figures in math mode
-        mantissa, exponent = text.split("e")
-        return f"${mantissa}\\times 10^{{{int(exponent)}}}$"
-    return f"${text}$"
 
 
 def fmt_count(value) -> str:
@@ -117,46 +88,11 @@ def _redirect_inputs(obj):
     return obj
 
 
-def _fit_var_model(config: dict, data_path: Path) -> dict:
-    """Fit the configured VAR estimator directly.
-
-    Used where a full pipeline run cannot fit the model: the pipeline's model
-    stage gates on a single target_variable, so multivariate configs reach
-    1.9.1 without a model summary. Returns the model's metadata.
-    """
-    from stats_transformer.models.timeseries.reduced_form.var import VARModel
-
-    model_config = config.get("model", {})
-    model = VARModel(target_variables=model_config.get("target_variables"), maxlags=model_config.get("maxlags"))
-    data = pd.read_csv(data_path) if isinstance(data_path, (str, Path)) else data_path
-    model.fit(data)
-    return model.get_model_metadata()
-
-
-def _country_panel_var_record() -> dict:
-    """Fit application 5 (country-panel VAR) through the library API."""
-    import numpy as np
-    from stats_transformer.data import load_example
-
-    data = load_example().sort_values(["country", "date"]).copy()
-    data["gdp_growth"] = data.groupby("country")["gdp"].transform(lambda v: 100 * np.log(v).diff())
-    annual = data.groupby("date", as_index=False)[["gdp_growth", "inflation"]].mean().dropna()
-    annual[["gdp_growth", "inflation"]] = annual[["gdp_growth", "inflation"]].apply(lambda v: (v - v.mean()) / v.std())
-    summary = _fit_var_model({"model": {"target_variables": ["gdp_growth", "inflation"], "maxlags": 2}}, annual)
-    return {
-        "maxlags": 2,
-        "n_raw": len(data),
-        "n_countries": data["country"].nunique(),
-        "n_annual": len(annual),
-        "summary": summary,
-    }
-
-
 def run_yaml_application(app: dict, run_root: Path) -> dict:
     """Run one YAML application's full pipeline with CWD inside run_root.
 
-    Returns the run's model summary (or a direct API fit for the multivariate
-    VAR config) plus the manifest. Never writes outside run_root.
+    Returns the run's model summary plus the manifest. Never writes outside
+    run_root.
     """
     original_cwd = os.getcwd()
     work = run_root / app["name"]
@@ -176,12 +112,7 @@ def run_yaml_application(app: dict, run_root: Path) -> dict:
         run_dir = max((Path("data") / "pipeline" / Path(config_rel).stem).iterdir())
         manifest = json.loads((run_dir / "manifest.json").read_text())
         run_files = sorted(os.path.relpath(path, run_dir) for path in manifest["files"])
-
-        summary_path = run_dir / "03_model" / "model_summary.json"
-        if summary_path.is_file():
-            summary = json.loads(summary_path.read_text())
-        else:
-            summary = _fit_var_model(committed, ROOT / committed["data"]["raw_data_file"])
+        summary = json.loads((run_dir / "03_model" / "model_summary.json").read_text())
         model_config = committed.get("model", {})
         return {
             "config_rel": config_rel,
@@ -200,20 +131,11 @@ def run_yaml_application(app: dict, run_root: Path) -> dict:
 
 def build_records(run_root: Path) -> list[tuple[dict, dict]]:
     """Run every application; returns (app, record) pairs in table order."""
-    records = []
-    for app in APPLICATIONS:
-        if app["config"]:
-            records.append((app, run_yaml_application(app, run_root)))
-        else:
-            records.append((app, {"country_panel": _country_panel_var_record(), "run_files": []}))
-    return records
+    return [(app, run_yaml_application(app, run_root)) for app in APPLICATIONS]
 
 
 def _estimator_se(app: dict, record: dict) -> str:
     """Estimator / SE cell, generated from the config and the fit."""
-    if app["config"] is None:
-        effective = record["country_panel"]["summary"]["metrics"]["num_observations"]
-        return f"VAR({record['country_panel']['maxlags']}), constant, {fmt_count(effective)} effective obs"
     model_type = record["model_type"]
     if model_type == "robust_ols":
         return f"{_code(model_type)}, {_code(record['cov_type'])}"
@@ -221,66 +143,38 @@ def _estimator_se(app: dict, record: dict) -> str:
         fe = record["summary"]["summary"]
         effects = " + ".join(e for e, on in (("entity", fe["entity_effects"]), ("time", fe["time_effects"])) if on)
         return f"{_code(model_type)}, {effects} FE"
-    if model_type == "var":
+    if model_type in ("var", "blanchard_quah"):
         return f"VAR({record['maxlags']}), constant"
     return _code(model_type)
 
 
-def _key_estimates(app: dict, record: dict) -> str:
-    """Key coefficients with SEs in parentheses, all via fmt3."""
-    summary = record.get("summary") or record["country_panel"]["summary"]
-    coefficients = summary["coefficients"]
-    parts = []
-    for term, equation in app["key"]:
-        if equation is not None:
-            entry = coefficients[equation][term]
-            name = f"{_code(term)} $\\rightarrow$ {_code(equation)}"
-        else:
-            entry = coefficients[term]
-            name = _code(term)
-        parts.append(f"{name} {fmt(entry['value'])} ({fmt(entry['std_err'])})")
-    return "; ".join(parts)
-
-
 def _data_cell(app: dict, record: dict) -> str:
-    if app["config"] is None:
-        country = record["country_panel"]
-        return (
-            f"{_tex_escape(app['source'])}, {fmt_count(country['n_raw'])} obs "
-            f"({fmt_count(country['n_countries'])} countries), {fmt_count(country['n_annual'])} annual"
-        )
     return f"{_tex_escape(app['source'])}, {fmt_count(record['n_obs'])} obs, {app['frequency']}"
 
 
 def render_rows(records: list[tuple[dict, dict]]) -> str:
-    """Booktabs body rows of the applications table.
-
-    The last body row is a \\multicolumn note disclosing any estimates that
-    did not come from the pipeline run (the paper owns the table environment).
-    """
-    rows, notes = [], []
+    """Booktabs body rows of the applications table (the paper owns the table environment)."""
+    rows = []
     for app, record in records:
-        label = app["label"] + (f" {app['footnote']}" if app.get("footnote") else "")
-        config_cell = _code(Path(app["config"]).name) if app["config"] else "Python API"
-        outputs = ", ".join(_code(f) for f in record["run_files"]) or "---"
-        cells = [label, _data_cell(app, record), config_cell, _estimator_se(app, record), _key_estimates(app, record), outputs, app["checked"]]
+        config_cell = _code(Path(app["config"]).name)
+        outputs = ", ".join(_code(Path(f).name) for f in record["run_files"]) or "---"
+        cells = [app["label"], _data_cell(app, record), config_cell, _estimator_se(app, record), outputs, app["checked"]]
         rows.append(" & ".join(cells) + " \\\\")
-        if app.get("footnote"):
-            notes.append(f"\\multicolumn{{7}}{{l}}{{\\footnotesize {app['footnote']}~{app['note']}}} \\\\")
-    return "\n".join(rows + notes) + "\n"
+    return "\n".join(rows) + "\n"
 
 
 def render_flow(app: dict, record: dict) -> str:
-    """Compact tikzpicture: config -> data -> stages that ran -> output files.
-    Basenames only; the full repository paths live in the config appendix."""
-    nodes = [_code(Path(app["config"]).name), _code(Path(record["data_rel"]).name)]
-    nodes += [_tex_escape(stage) for stage in record["manifest"]["stages_run"]]
-    nodes += ["outputs:" + "\\\\".join(("", *(_tex_escape(Path(f).name) for f in record["run_files"])))]
+    """Compact 4-box flow strip: config -> data -> pipeline -> output files.
+
+    Basenames only; the full repository paths live in the config appendix.
+    """
+    outputs = "outputs:" + "\\\\".join(("", *(_tex_escape(Path(f).name) for f in record["run_files"])))
+    nodes = [_code(Path(app["config"]).name), _code(Path(record["data_rel"]).name), "stats-transformer pipeline", outputs]
     lines = [
         f"% Generated by scripts/generate_paper_applications.py for {_tex_escape(app['config'])}:",
-        "% stages and output files come from the run's manifest.json.",
+        "% output files come from the run's manifest.json.",
         "\\begin{tikzpicture}[>=Stealth, node distance=2mm,",
-        "  box/.style={draw, rounded corners=1pt, font=\\tiny, align=center, inner sep=1pt, text width=1.75cm}]",
+        "  box/.style={draw, rounded corners=1pt, font=\\tiny, align=center, inner sep=1pt, text width=3.2cm}]",
         f"\\node[box] (n0) {{{nodes[0]}}};",
     ]
     for i, label in enumerate(nodes[1:], start=1):
@@ -291,16 +185,10 @@ def render_flow(app: dict, record: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_configs(records: list[tuple[dict, dict]]) -> str:
-    """Committed YAML of each application for a compact appendix."""
-    blocks = []
-    for app, _ in records:
-        if not app["config"]:
-            continue  # Python-API application: no config file to show
-        rel = app["config"]
-        body = (ROOT / rel).read_text().rstrip()
-        blocks.append(f"\\paragraph{{\\texttt{{{_tex_escape(rel)}}}}}\n\\begin{{verbatim}}\n{body}\n\\end{{verbatim}}")
-    return "\n\n".join(blocks) + "\n"
+def render_config(app: dict) -> str:
+    """Committed YAML of one application as a verbatim block (no heading)."""
+    body = (ROOT / app["config"]).read_text().rstrip()
+    return f"\\begin{{verbatim}}\n{body}\n\\end{{verbatim}}"
 
 
 def main(argv=None) -> None:
@@ -315,11 +203,9 @@ def main(argv=None) -> None:
 
     (out_dir / "applications.tex").write_text(render_rows(records))
     for app, record in records:
-        if app["config"]:  # flow strips need a manifest; the API application has none
-            (out_dir / f"app_{app['name']}_flow.tex").write_text(render_flow(app, record))
-    (out_dir / "application_configs.tex").write_text(render_configs(records))
-    yaml_apps = sum(1 for app, _ in records if app["config"])
-    print(f"Wrote applications.tex, application_configs.tex and {yaml_apps} flow strips to {out_dir}")
+        (out_dir / f"app_{app['name']}_flow.tex").write_text(render_flow(app, record))
+        (out_dir / f"app_{app['name']}_config.tex").write_text(render_config(app) + "\n")
+    print(f"Wrote applications.tex, {len(records)} flow strips and {len(records)} per-application configs to {out_dir}")
 
 
 if __name__ == "__main__":
