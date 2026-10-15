@@ -87,6 +87,12 @@ class PaperFigureBuilder:
         model.fit(pd.read_csv("data/examples/timeseries/bq1989.csv"))
         irf = model.var_result.irf(40)  # ~40 quarters, horizon 0..40
         structural = irf.irfs @ model.B_0  # structural: variable i to shock j
+        # BQ identification leaves each shock's sign free (the parity test pins
+        # the MATLAB B_0, so the model stays untouched). For the figure only,
+        # present both shocks as expansionary as in the paper: flip a shock's
+        # column when its impact effect on output (y, variable 0, horizon 0)
+        # is negative.
+        structural = structural * np.where(structural[0, 0, :] >= 0, 1.0, -1.0)[None, None, :]
         variables = ["Output level", "Unemployment"]
         shocks = ["Supply shock", "Demand shock"]
         rows = []
@@ -99,8 +105,13 @@ class PaperFigureBuilder:
                     rows.append((horizon, (variable, shock), float(response), float(response), float(response)))
         plot_data = pd.DataFrame(rows, columns=["horizon", "facet", "coef", "lower", "upper"])
         labels = {(variable, shock): f"{variable}, {shock.lower()}" for variable in variables for shock in shocks}
+        from stats_transformer.reporting.defaults.colors import PALETTE_CATEGORICAL
+
         chart = IRFPlot()
-        fig, axes = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "facet", labels=labels, title="Blanchard--Quah structural impulse responses", ylabel="Response")
+        # One colour per shock: group order alternates variables within a shock
+        # column (output, unemployment, output, unemployment).
+        colors = [PALETTE_CATEGORICAL[0], PALETTE_CATEGORICAL[1], PALETTE_CATEGORICAL[0], PALETTE_CATEGORICAL[1]]
+        fig, axes = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "facet", labels=labels, title="Blanchard--Quah structural impulse responses", ylabel="Response", colors=colors)
         for ax in axes:
             ax.set_xticks(range(0, irf.irfs.shape[0] + 1, 8))  # 41 horizons: thin the ticks
         fig.suptitle("Blanchard--Quah structural impulse responses", y=1.02)
