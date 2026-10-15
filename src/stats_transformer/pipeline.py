@@ -220,6 +220,14 @@ class Pipeline:
             return cls(entity_column=self.entity_column, time_column=self.kwargs.get("time_column", self.date_column), cohort_column=self.kwargs.get("cohort_column"), outcome_column=self.target, control_variables=self.features, control_group=self.kwargs.get("control_group", "never_treated"))
         raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
 
+    def _has_model_target(self) -> bool:
+        """True when the configured model defines its outcome(s) — via a single
+        target (univariate) or target_variables on the model (multivariate:
+        VAR/VECM/SVAR set target_variables instead of target)."""
+        if self.target:
+            return True
+        return bool(getattr(self.model, "target_variables", None) or getattr(self.model, "target_variable", None))
+
     def fit_transform(self, data: Union[str, pd.DataFrame], fit_model: bool = True) -> pd.DataFrame:
         self.logger.info("Starting pipeline fit_transform")
         if self.params_path:
@@ -237,7 +245,7 @@ class Pipeline:
         else:
             raise ValueError("No feature engineering component initialized")
 
-        if fit_model and self.model and self.target:
+        if fit_model and self.model and self._has_model_target():
             self.model.fit(self.transformed_data)
             self.model_results = self.model.get_model_metadata()
 
@@ -430,7 +438,7 @@ class Pipeline:
 
         if transformed_data is not None:
             # Full run: fit on the in-memory features, not the CSV round-trip (keeps dtypes such as dates)
-            if self.model and self.target:
+            if self.model and self._has_model_target():
                 self.model.fit(transformed_data)
                 self.model_results = self.model.get_model_metadata()
         elif processed_path and os.path.exists(processed_path):

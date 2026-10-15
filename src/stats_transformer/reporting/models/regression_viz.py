@@ -92,10 +92,15 @@ class RegressionVisualizer(ModelVisualizer):
             ])
 
         n_fit = len(fit_rows)
-        n_coef = len(coef_data) + 1
-        fig_height = 1.4 + n_fit * 0.38 + 0.7 + n_coef * 0.40
-        fig, axes = plt.subplots(2, 1, figsize=(13, fig_height),
-                                 gridspec_kw={"height_ratios": [n_fit, n_coef]})
+        # Multivariate models (e.g. VECM) may report no coefficient table.
+        if coef_data:
+            n_coef = len(coef_data) + 1
+            fig, axes = plt.subplots(2, 1, figsize=(13, 1.4 + n_fit * 0.38 + 0.7 + n_coef * 0.40),
+                                     gridspec_kw={"height_ratios": [n_fit, n_coef]})
+            axes = list(axes)
+        else:
+            fig, single_ax = plt.subplots(1, 1, figsize=(13, 1.4 + n_fit * 0.38))
+            axes = [single_ax]
         for ax in axes:
             ax.axis("off")
 
@@ -123,27 +128,28 @@ class RegressionVisualizer(ModelVisualizer):
                 cell.set_facecolor("white")
         axes[0].set_title("Model Fit Statistics", fontsize=11, fontweight="bold", pad=6, loc="left")
 
-        coef_col_widths = [0.22, 0.12, 0.12, 0.10, 0.12, 0.12, 0.12]
-        coef_table = axes[1].table(
-            cellText=coef_data,
-            colLabels=coef_headers,
-            cellLoc="left",
-            loc="center",
-            colWidths=coef_col_widths,
-        )
-        coef_table.auto_set_font_size(False)
-        coef_table.set_fontsize(11)
-        coef_table.scale(1, 1.65)
-        for (i, j), cell in coef_table.get_celld().items():
-            cell.set_edgecolor("#cccccc")
-            if i == 0:
-                cell.set_text_props(weight="bold", color="white")
-                cell.set_facecolor(header_color)
-            elif i % 2 == 1:
-                cell.set_facecolor(alt_color)
-            else:
-                cell.set_facecolor("white")
-        axes[1].set_title("Coefficient Estimates (95% Confidence Interval)", fontsize=11, fontweight="bold", pad=6, loc="left")
+        if coef_data:
+            coef_col_widths = [0.22, 0.12, 0.12, 0.10, 0.12, 0.12, 0.12]
+            coef_table = axes[1].table(
+                cellText=coef_data,
+                colLabels=coef_headers,
+                cellLoc="left",
+                loc="center",
+                colWidths=coef_col_widths,
+            )
+            coef_table.auto_set_font_size(False)
+            coef_table.set_fontsize(11)
+            coef_table.scale(1, 1.65)
+            for (i, j), cell in coef_table.get_celld().items():
+                cell.set_edgecolor("#cccccc")
+                if i == 0:
+                    cell.set_text_props(weight="bold", color="white")
+                    cell.set_facecolor(header_color)
+                elif i % 2 == 1:
+                    cell.set_facecolor(alt_color)
+                else:
+                    cell.set_facecolor("white")
+            axes[1].set_title("Coefficient Estimates (95% Confidence Interval)", fontsize=11, fontweight="bold", pad=6, loc="left")
 
         dep_var = summary.get("dependent_variable", "")
         if dep_var:

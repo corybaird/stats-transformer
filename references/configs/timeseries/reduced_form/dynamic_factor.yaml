@@ -4,10 +4,15 @@ data:
 model:
   model_type: dynamic_factor
   target_variables:
-    - EA_GDP
-    - EA_CPI
-    - US_GDP
-    - US_CPI
+    - WORLDPLIQ
+    - GFCFAC
+    - WORLDCBFLOWs
+    - INDPRO
+    - PCEPILFE
+    - GS2
+    - GS10
+    - USDEER
+    - VIX
   n_factors: 1
   factor_lags: 1
   max_iter: 100
