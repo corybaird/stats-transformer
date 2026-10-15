@@ -13,6 +13,9 @@ from stats_transformer.featurization.data_merger import DataMerger
 from stats_transformer.reporting.models.regression_viz import RegressionVisualizer
 from stats_transformer.reporting.eda.data_viz import DataVisualizer
 from stats_transformer.reporting.eda.eda import EDAVisualizer
+from stats_transformer.reporting.tables.regression_table import RegressionTable
+from stats_transformer.reporting.tables.descriptive_stats import DescriptiveStatsTable
+from stats_transformer.reporting.tables.table_generator import TableGenerator
 from stats_transformer.models.base import ModelBase
 from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
 from stats_transformer.utils.config import Config, resolve_reporting_config
@@ -475,13 +478,74 @@ class Pipeline:
             import json
             with open(summary_path, "r") as f:
                 self.model_results = json.load(f)
-        self._begin_run()
-        results = self.create_visualizations(output_dir=paths["report_output_dir"])
-        for path in results.values():
+
+        report_config = resolve_reporting_config(paths["params"])
+        run_dir = self._begin_run()
+        # Charts live under the run folder's 04_reporting; an explicit
+        # reporting.output_dir still receives a copy when one is configured.
+        results = self.create_visualizations(output_dir=os.path.join(run_dir, "04_reporting"))
+        explicit_output_dir = report_config.get("output_dir")
+        chart_values: List[Any] = []
+        for value in results.values():
+            chart_values.extend(value if isinstance(value, list) else [value])
+        for path in chart_values:
             if isinstance(path, str) and os.path.isfile(path):
                 self._run_files.append(path)
+                if explicit_output_dir:
+                    os.makedirs(explicit_output_dir, exist_ok=True)
+                    self._run_files.append(shutil.copyfile(path, os.path.join(explicit_output_dir, os.path.basename(path))))
+        self._generate_tables(report_config.get("tables"), run_dir)
         self._end_stage("reporting")
         return results
+
+    def _generate_tables(self, table_names: Optional[List[str]], run_dir: str) -> None:
+        """Write the selected LaTeX tables into <run_dir>/04_reporting/tables and register them."""
+        if table_names is None:
+            # Key absent -> generate both (cheap, broadly useful).
+            table_names = ["descriptive_stats", "regression_table"]
+        tables_dir = os.path.join(run_dir, "04_reporting", "tables")
+        for name in table_names:
+            if name == "descriptive_stats":
+                table_path = self._descriptive_stats_table(tables_dir)
+            elif name == "regression_table":
+                table_path = self._regression_table(tables_dir)
+            else:
+                self.logger.warning(f"Unknown reporting table '{name}'; expected 'descriptive_stats' or 'regression_table'.")
+                continue
+            if table_path:
+                self._run_files.append(str(table_path))
+
+    def _descriptive_stats_table(self, tables_dir: str) -> Optional[str]:
+        """Descriptive stats of the data the model was fitted on (numeric columns only)."""
+        df: Optional[pd.DataFrame] = None
+        if self.model is not None and getattr(self.model, "df_clean", None) is not None:
+            df = self.model.df_clean
+            assert df is not None
+            required = [c for c in self.model._get_required_columns() if c in df.columns]
+            if required:
+                df = df[required]
+        if df is None:
+            df = self.transformed_data
+        if df is None:
+            self.logger.info("No fitted data available; skipping descriptive_stats table.")
+            return None
+        df = df.select_dtypes(include="number")
+        table = DescriptiveStatsTable(table_generator=TableGenerator(output_dir=tables_dir))
+        path = table.export_dataframe(df, "descriptive_stats")
+        if path is None:
+            self.logger.info("No numeric columns available; skipping descriptive_stats table.")
+        return path
+
+    def _regression_table(self, tables_dir: str) -> Optional[str]:
+        """Coefficient table from the fitted model's metadata (regression-family models only)."""
+        if self.model_results is None:
+            self.logger.info("No model results available; skipping regression_table table.")
+            return None
+        table = RegressionTable(table_generator=TableGenerator(output_dir=tables_dir))
+        path = table.export(self.model_results, "regression_table")
+        if path is None:
+            self.logger.info("Model is not regression-family; skipping regression_table table.")
+        return path
 
     def run_eda(self, data_path: Optional[str] = None) -> Any:
         """EDA: exploratory charts of the merged (or raw) data."""
