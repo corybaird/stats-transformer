@@ -81,6 +81,25 @@ class ModelBase(ABC):
         except FileNotFoundError:
             raise FileNotFoundError(f"Parameter file {params_path} not found.")
 
+    def _param(self, name: str, value: Any, default: Any) -> Any:
+        """Resolve a model parameter: explicit non-default constructor kwarg >
+        YAML model section > constructor default. (An explicit kwarg equal to
+        the constructor default is indistinguishable from not passed, so the
+        YAML value wins in that case.)"""
+        if value is not None:
+            try:
+                explicitly_passed = bool(value != default)
+            except ValueError:
+                # Array-like value (e.g. SVAR A/B restriction matrices): element-wise
+                # comparison is ambiguous, but such a value is never a default.
+                explicitly_passed = True
+            if explicitly_passed:
+                return value
+        yaml_value = self.params.get("model", {}).get(name)
+        if yaml_value is not None:
+            return yaml_value
+        return default if value is None else value
+
     def load_data(self, data: Union[str, pd.DataFrame]) -> pd.DataFrame:
         self.logger.info("Loading data")
         if isinstance(data, str):

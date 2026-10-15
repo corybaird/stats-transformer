@@ -17,9 +17,9 @@ class IndependenceSVARModel(ModelBase):
         super().__init__(**kwargs)
 
         self.target_variables = target_variables or getattr(self, "target_variables", [])
-        self.maxlags = maxlags
-        self.n_starts = n_starts
-        self.seed = seed
+        self.maxlags = self._param("maxlags", maxlags, 1)
+        self.n_starts = self._param("n_starts", n_starts, 5)
+        self.seed = self._param("seed", seed, 42)
 
         self.var_result = None
         self.structural_impact = None
