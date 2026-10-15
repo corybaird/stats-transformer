@@ -2,6 +2,7 @@
 import pytest
 from examples.academic.vanderwel_2026 import Vanderwel2026Replication
 from examples.academic.nakamura_steinsson_2018b_jorda import NakamuraSteinsson2018bJordaReplication
+from examples.academic.nakamura_steinsson import NakamuraSteinssonExample
 from examples.academic.bauer_swanson_2023 import BauerSwanson2023Replication
 from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel
@@ -18,6 +19,14 @@ def test_vanderwel_2026_replication():
     assert res["passed"], f"Vanderwel replication failed with max error {res['max_error']}"
     for replicated, published in zip(res["r2_oos_replicated"], res["r2_oos_published"], strict=False):
         assert abs(replicated - published) <= rep.TOLERANCE
+
+
+def test_nakamura_steinsson_transform_check():
+    """Verify FeatureEngineer changeraw on SVENY01 matches master.dta DNY1 (n = 4,786)."""
+    res = NakamuraSteinssonExample().run()
+    assert res["passed"], f"max error {res['max_error']}"
+    assert res["n"] == 4786
+    assert res["max_error"] < 1e-6
 
 
 def test_nakamura_steinsson_2018b_jorda_replication():
