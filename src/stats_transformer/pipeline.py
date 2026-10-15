@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import warnings
@@ -43,6 +44,7 @@ class Pipeline:
         self._config: Optional[Config] = None
         self._run_dir: Optional[str] = None
         self._run_files: List[str] = []
+        self._run_shapes: Dict[str, Any] = {}
         self._stages_run: List[str] = []
         self._run_start: Optional[str] = None
         self._full_run_active: bool = False
@@ -63,6 +65,7 @@ class Pipeline:
             os.makedirs(candidate, exist_ok=True)
             self._run_dir = candidate
             self._run_files = []
+            self._run_shapes = {}
             self._stages_run = []
             self._run_start = datetime.now(timezone.utc).isoformat()
         return self._run_dir
@@ -122,6 +125,7 @@ class Pipeline:
             "git_sha": git_sha,
             "package_version": package_version,
             "files": list(self._run_files),
+            "shapes": dict(self._run_shapes),
         }
         with open(os.path.join(self._run_dir, "manifest.json"), "w") as f:
             json.dump(manifest, f, indent=2)
@@ -378,15 +382,22 @@ class Pipeline:
             raise ValueError("Data stage requires data.datasets in the config; this config only sets data.raw_data_file, which the features stage consumes directly (a full run skips the data stage automatically).")
         run_dir = self._begin_run()
         # The canonical chaining location stays exactly as on main: the explicit
-        # merge output_path, or the data/pipeline default. The run folder also
-        # receives a copy so each run is self-contained.
-        explicit_output_path = data_config.get("merge", {}).get("output_path")
+        # merge output_path when set, or the data/pipeline default. The run folder
+        # also always receives a copy so each run is self-contained.
         output_path = paths["merged_output_path"]
 
+        raw_dir = os.path.join(run_dir, "01_data", "raw")
+        os.makedirs(raw_dir, exist_ok=True)
         resampled = []
         for ds_cfg in datasets:
             self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
             df = self.feature_engineer.load_data(ds_cfg.get("path"))
+            # Raw (pre-resample) source copy, named after the config's dataset key.
+            raw_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(ds_cfg.get("name") or os.path.splitext(os.path.basename(str(ds_cfg.get("path"))))[0]))
+            raw_path = os.path.join(raw_dir, f"{raw_name}.parquet")
+            df.to_parquet(raw_path)
+            self._run_files.append(raw_path)
+            self._run_shapes.setdefault("raw", {})[raw_name] = list(df.shape)
             resampled_df = self.feature_engineer.resample_dataset(df, ds_cfg)
             resampled.append(resampled_df)
         dm = DataMerger(params_path=self.params_path)
@@ -401,11 +412,11 @@ class Pipeline:
         merged_df.to_parquet(output_path)
         self.logger.info(f"Merged data saved to {output_path} with shape {merged_df.shape}")
         self._run_files.append(output_path)
-        if explicit_output_path is None:
-            run_copy = os.path.join(run_dir, "01_data", "merged.parquet")
-            os.makedirs(os.path.dirname(run_copy), exist_ok=True)
-            shutil.copyfile(output_path, run_copy)
-            self._run_files.append(run_copy)
+        self._run_shapes["merged"] = list(merged_df.shape)
+        run_copy = os.path.join(run_dir, "01_data", "merged.parquet")
+        os.makedirs(os.path.dirname(run_copy), exist_ok=True)
+        shutil.copyfile(output_path, run_copy)
+        self._run_files.append(run_copy)
         self._end_stage("data")
         return merged_df
 
@@ -427,6 +438,7 @@ class Pipeline:
         if processed_path:
             self._run_files.append(processed_path)
         self._run_files.append(features_path)
+        self._run_shapes["features"] = list(transformed_data.shape)
         self._end_stage("features")
         return transformed_data
 
@@ -453,13 +465,36 @@ class Pipeline:
 
         # Model artefacts go to the run folder; the hardcoded reports/ default is gone.
         run_dir = self._begin_run()
+        model_dir = os.path.join(run_dir, "03_model")
         if self.model_results is not None:
-            summary_run_path = os.path.join(run_dir, "03_model", "model_summary.json")
+            summary_run_path = os.path.join(model_dir, "model_summary.json")
             self.save_model_summary(summary_run_path)
             self._run_files.append(summary_run_path)
         if summary_path:
             self.save_model_summary(summary_path)
             self._run_files.append(summary_path)
+        if self.model is not None:  # args-mode pipelines without target/features have no model
+            df_clean = getattr(self.model, "df_clean", None)
+            if df_clean is not None:
+                # The exact data the model was fitted on: df_clean restricted to the
+                # columns the model uses (entity/time live in the index where the
+                # model indexed them there).
+                try:
+                    cols = [c for c in self.model._get_required_columns() if c in df_clean.columns]
+                except Exception:
+                    cols = []
+                model_df = df_clean[cols].dropna() if cols else df_clean.dropna()
+                model_data_path = os.path.join(model_dir, "model_data.parquet")
+                model_df.to_parquet(model_data_path)
+                self._run_files.append(model_data_path)
+                self._run_shapes["model_data"] = list(model_df.shape)
+            try:
+                model_path = os.path.join(model_dir, "model.joblib")
+                self.model.save(model_path)
+                self._run_files.append(model_path)
+            except Exception as e:
+                # An unpicklable attribute must not fail the run.
+                self.logger.warning(f"Could not save fitted model {type(self.model).__name__}: {e}")
         self._end_stage("model")
         return self.model_results
 
