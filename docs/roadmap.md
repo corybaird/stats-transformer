@@ -17,7 +17,7 @@ Actionable open items verified against `origin/main` (release 1.10.0). Columns: 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
 | `DiDModel` accepts `control_variables` but never conditions on them; SEs are unclustered | `st/models/regression/did.py:73-92` | P0 | M | open |
-| `ProxySVARModel` impact scaled by $\sqrt{\Sigma_{11}}$ instead of GK/MR shock-size formula; missing-instrument rows dropped before VAR | `st/models/timeseries/identification/proxy_svar.py:62` | P1 | M | open (strict xfail) |
+| `ProxySVARModel` impact scaled by $\sqrt{\Sigma_{11}}$ instead of GK/MR shock-size formula; missing-instrument rows dropped before VAR | `st/models/timeseries/identification/proxy_svar.py:62` | P1 | M | in progress (#<PR>) |
 | `BayesianSignZeroSVARModel` draws not re-weighted to the ARW conditional posterior | `st/models/timeseries/identification/bayesian_sign_zero.py:176-188` | P1 | M | open |
 | `VolatilitySVARModel` regime variance ratio differs from R `svars::id.cv` | `docs/validation/model_status.yaml:200-207` | P1 | M | open |
 | `RobustOLSModel` ignores YAML `cov_type` (truthy `"HC3"` default shadows config) | `st/models/regression/robust_ols.py:13` | P1 | S | open |

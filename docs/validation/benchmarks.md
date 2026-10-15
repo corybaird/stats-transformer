@@ -41,6 +41,7 @@ The table below is generated from `docs/validation/model_status.yaml`; edit that
 | **Reduced-form time series** | `LocalProjectionsModel`, `LocalProjectionsIVModel` | Stata (`regress`, per horizon, HC3), Stata (`ivregress 2sls`, per horizon) | Jorda & Taylor (`data/examples/matlab_examples/JT2025_Data.xlsx`) | **Verified** ($10^{-6}$) |
 | **Structural and nonlinear time series** | `SVARModel` | R (`vars::SVAR`) | Canada (`tests/integration/var/canada.csv`) | **Verified** (A-model, $10^{-4}$) |
 | **Structural and nonlinear time series** | `BlanchardQuahModel` | MATLAB (VAR-Toolbox 4.0), R (`vars::BQ`) | Blanchard & Quah (`data/examples/matlab_examples/BQ1989_Data.xlsx`) | **Verified** ($2.22 \times 10^{-16}$) |
+| **Structural and nonlinear time series** | `ProxySVARModel` | MATLAB (VAR-Toolbox 4.0) | Gertler--Karadi (`data/examples/matlab_examples/GK2015_Data.xlsx`) | **Verified** ($2 \times 10^{-8}$) |
 | **Structural and nonlinear time series** | `SVECModel` | R (`vars::SVEC`) | Canada (`tests/integration/var/canada.csv`) | **Verified** (R `vars::SVEC`, $10^{-6}$) |
 | **Discrete choice** | `LogitModel` | Stata (`logit`), R (`stats::glm`), Python (`statsmodels`) | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | **Verified** ($10^{-5}$) |
 | **Discrete choice** | `ProbitModel` | R (`stats::glm`, probit), Stata (`probit`), Python (`statsmodels`) | Spector & Mazzeo (`data/examples/discrete/spector.csv`) | **Verified** ($10^{-5}$) |
@@ -52,9 +53,8 @@ The table below is generated from `docs/validation/model_status.yaml`; edit that
 
 | Model | Cause | Reference |
 | --- | --- | --- |
-| `ProxySVARModel` | impact column scaled by sqrt(Sigma_11) instead of the Gertler-Karadi / Mertens-Ravn shock-size formula; rows with a missing instrument are dropped before the VAR is estimated | MATLAB `gk2015_iv` |
 
-**Severity notes.** Some discrepancies are conventions rather than runtime failures, which is why they are P1/P2 and not correctness regressions: proxy-SVAR $\sqrt{\Sigma_{11}}$ scaling is a normalization difference (shock-size convention), not a numerical error; Newey-West HAC vs HC3 standard errors on local projections affect inference precision, not point estimates; multivariate AIC/BIC computed from summed SSR instead of $\log\det\hat\Sigma_u$ affect lag-order selection, not coefficient estimates.
+**Severity notes.** Some discrepancies are conventions rather than runtime failures, which is why they are P1/P2 and not correctness regressions: Newey-West HAC vs HC3 standard errors on local projections affect inference precision, not point estimates; multivariate AIC/BIC computed from summed SSR instead of $\log\det\hat\Sigma_u$ affect lag-order selection, not coefficient estimates.
 
 #### 2.2.2 Recorded References Not Yet Usable
 

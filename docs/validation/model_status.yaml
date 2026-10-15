@@ -212,8 +212,9 @@
   benchmark: {name: "Gertler--Karadi", path: data/examples/matlab_examples/GK2015_Data.xlsx}
   targets:
     - {software: MATLAB, desc: VAR-Toolbox 4.0, note: gk2015_iv}
-  status: known_issue
-  note: The impact column is scaled by sqrt(Sigma_11) instead of the Gertler-Karadi / Mertens-Ravn shock-size formula, and rows with a missing instrument are dropped before the VAR is estimated; strict xfail (benchmarks.md 2.2.1).
+  status: verified
+  tolerance: $2 \times 10^{-8}$
+  note: Impact column matches the MATLAB VAR-Toolbox `gk2015_iv` reference; Gertler--Karadi / Mertens--Ravn shock-size closed form on the instrument common sample (benchmarks.md 2.2.1).
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_proxy_svar_gk2015_matches_matlab]
 
 - family: Structural and nonlinear time series

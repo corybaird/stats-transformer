@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
 from statsmodels.tsa.api import VAR
 from stats_transformer.models.base import ModelBase
 
@@ -17,6 +16,7 @@ class ProxySVARModel(ModelBase):
         self.maxlags = maxlags
         self.var_result = None
         self.impact_column = None
+        self._instrument_missing = None
 
     def _get_required_columns(self):
         cols = list(self.target_variables)
@@ -25,6 +25,25 @@ class ProxySVARModel(ModelBase):
         if self.date_column:
             cols.append(self.date_column)
         return cols
+
+    def load_data(self, data):
+        # The reduced-form VAR is estimated on the full sample of endogenous
+        # variables; rows where the instrument is missing only drop out of the
+        # proxy moments. Mask the instrument's NaNs so ModelBase.load_data's
+        # row cleaning keeps them, and record which rows are missing (indexed
+        # the same way df_clean will be) so the true values can be restored.
+        if isinstance(data, str):
+            data = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
+        else:
+            data = data.copy()
+        if self.instrument_variable and self.instrument_variable in data.columns:
+            missing = data[self.instrument_variable].isna()
+            if missing.any():
+                data[self.instrument_variable] = data[self.instrument_variable].fillna(0.0)
+                key_col = self.time_column or ('date' if 'date' in data.columns else None)
+                key = data[key_col] if key_col else data.index
+                self._instrument_missing = pd.Series(missing.to_numpy(), index=key)
+        return super().load_data(data)
 
     def build_model(self):
         if getattr(self, 'df_clean', None) is None:
@@ -41,26 +60,31 @@ class ProxySVARModel(ModelBase):
 
     def _estimate_proxy_svar(self):
         residuals = self.var_result.resid
-        z = self.df_clean.loc[residuals.index, self.instrument_variable].values
-        u1 = residuals.iloc[:, 0].values
-        valid_mask = ~np.isnan(z) & ~np.isnan(u1)
-        z_valid = z[valid_mask]
-        u1_valid = u1[valid_mask]
-        stage1 = sm.OLS(u1_valid, sm.add_constant(z_valid)).fit()
-        u1_hat = stage1.fittedvalues
-        k = residuals.shape[1]
-        b1_estimates = np.zeros(k)
-        b1_estimates[0] = 1.0
-        for i in range(1, k):
-            ui_valid = residuals.iloc[:, i].values[valid_mask]
-            stage2 = sm.OLS(ui_valid, u1_hat).fit()
-            b1_estimates[i] = stage2.params[0]
-        sigma_u = self.var_result.sigma_u
-        if type(sigma_u) == pd.DataFrame:
-            sigma_u = sigma_u.values
-        sig11 = sigma_u[0, 0]
-        scale = np.sqrt(max(sig11, 1e-8))
-        self.impact_column = b1_estimates * scale
+        # restore the instrument's true values (load_data masked the NaNs)
+        z_col = self.df_clean[self.instrument_variable]
+        if self._instrument_missing is not None:
+            z_col = z_col.where(~self._instrument_missing.loc[self.df_clean.index])
+            self.df_clean[self.instrument_variable] = z_col
+        z = z_col.loc[residuals.index].to_numpy()
+        u = residuals.to_numpy()
+        # Gertler-Karadi (2015) / Mertens-Ravn (2014): with a proxy-external
+        # instrument the impact ratios are the demeaned moments relative to the
+        # instrumented residual, and the shock size follows the closed form
+        # below; both use the common sample where the instrument is observed
+        common = ~np.isnan(z) & ~np.isnan(u[:, 0])
+        uc = u[common] - u[common].mean(axis=0)
+        zc = z[common] - z[common].mean()
+        n = int(common.sum())
+        nparams = self.var_result.params.shape[0]
+        sigma = uc.T @ uc / (n - nparams)
+        s21 = (uc[:, 1:].T @ zc) / (uc[:, 0] @ zc)
+        sig11 = sigma[0, 0]
+        sig21 = sigma[1:, 0]
+        sig22 = sigma[1:, 1:]
+        q = np.outer(s21, s21) * sig11 - (np.outer(sig21, s21) + np.outer(s21, sig21)) + sig22
+        s12s12 = (sig21 - s21 * sig11) @ np.linalg.solve(q, sig21 - s21 * sig11)
+        b11 = np.sqrt(sig11 - s12s12)
+        self.impact_column = np.r_[b11, b11 * s21]
 
     def get_summary(self):
         if self.var_result is None:
