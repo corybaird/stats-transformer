@@ -2657,6 +2657,7 @@ name = "stats-transformer"
 version = "1.10.1"
 source = { editable = "." }
 dependencies = [
+    { name = "joblib" },
     { name = "linearmodels" },
     { name = "matplotlib" },
     { name = "openpyxl" },
@@ -2692,6 +2693,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "joblib", specifier = ">=1.4" },
     { name = "jupyter", marker = "extra == 'notebooks'", specifier = ">=1.1.1" },
     { name = "linearmodels", specifier = ">=7.0" },
     { name = "matplotlib", specifier = ">=3.10.9" },

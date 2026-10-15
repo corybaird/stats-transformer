@@ -157,7 +157,8 @@ def test_run_data_stage_with_explicit_merge_path_still_gets_run_manifest(tmp_pat
 
     run_dir = _single_run_dir(tmp_path / "output_root")
     assert (run_dir / "manifest.json").exists()
-    assert not (run_dir / "01_data").exists()
+    # merged.parquet is always copied into the run folder, even with an explicit merge output_path.
+    assert (run_dir / "01_data" / "merged.parquet").exists()
     with open(run_dir / "manifest.json") as f:
         manifest = json.load(f)
     assert manifest["stages_run"] == ["data"]
@@ -192,7 +193,7 @@ def test_full_run_manifest_contents(tmp_path, monkeypatch):
     with open(_single_run_dir(tmp_path / "output_root") / "manifest.json") as f:
         manifest = json.load(f)
 
-    assert set(manifest) == {"stages_run", "started_at_utc", "finished_at_utc", "config", "config_sha256", "inputs_sha256", "git_sha", "package_version", "files"}
+    assert set(manifest) == {"stages_run", "started_at_utc", "finished_at_utc", "config", "config_sha256", "inputs_sha256", "git_sha", "package_version", "files", "shapes"}
     assert manifest["stages_run"] == ["data", "features", "model", "reporting"]
     assert manifest["finished_at_utc"] >= manifest["started_at_utc"]
     assert manifest["finished_at_utc"].endswith("+00:00")
@@ -243,9 +244,10 @@ def test_explicit_output_paths_still_honoured(tmp_path, monkeypatch):
     assert (tmp_path / "merged.parquet").exists()
     assert (tmp_path / "processed.csv").exists()
     assert (tmp_path / "summary.json").exists()
-    # Run folder still written, minus 01_data (explicit merge path wins)
+    # Run folder written as usual; 01_data/merged.parquet is always written (the
+    # explicit merge output_path keeps its canonical copy too).
     run_dir = _single_run_dir(tmp_path / "output_root")
-    assert not (run_dir / "01_data").exists()
+    assert (run_dir / "01_data" / "merged.parquet").exists()
     assert (run_dir / "02_features" / "features.parquet").exists()
     assert (run_dir / "03_model" / "model_summary.json").exists()
     assert (run_dir / "manifest.json").exists()
