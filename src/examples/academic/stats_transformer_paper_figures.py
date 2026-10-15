@@ -172,7 +172,7 @@ class PaperFigureBuilder:
             ax.set_xticks(range(0, irf.irfs.shape[0] + 1, 8))  # 41 horizons: thin the ticks
         # IRFPlot's suptitle sits at y=1.02 and gets clipped by _save_figure;
         # draw it inside the canvas instead.
-        fig.suptitle("Blanchard--Quah structural impulse responses", size=18, y=1.0)
+        fig.suptitle("Blanchard–Quah structural impulse responses", size=18, y=1.0)
         fig.tight_layout(rect=(0, 0, 1, 0.955))
         self._save_figure(fig, "bq_irf.pdf")
 
