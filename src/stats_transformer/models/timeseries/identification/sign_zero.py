@@ -72,7 +72,7 @@ class SignZeroSVARModel(ModelBase):
 
     def __init__(self, target_variables=None, config_path=None, date_column=None, maxlags=1, max_draws=10000, required_accepts=100, seed=42, **kwargs):
         super().__init__(**kwargs)
-        self.target_variables = target_variables or []
+        self.target_variables = target_variables or getattr(self, "target_variables", [])
         self.config_path = config_path
         self.date_column = date_column
         self.time_column = date_column

@@ -8,7 +8,7 @@ class SVARModel(ModelBase):
 
     def __init__(self, target_variables=None, date_column=None, svar_type='A', A=None, B=None, maxlags=None, **kwargs):
         super().__init__(**kwargs)
-        self.target_variables = target_variables or []
+        self.target_variables = target_variables or getattr(self, "target_variables", [])
         self.date_column = date_column
         self.svar_type = svar_type
         self.A = np.asarray(A) if A is not None else None

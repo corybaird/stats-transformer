@@ -20,9 +20,9 @@ Actionable open items verified against `origin/main` (release 1.10.0). Columns: 
 | `ProxySVARModel` impact scaled by $\sqrt{\Sigma_{11}}$ instead of GK/MR shock-size formula; missing-instrument rows dropped before VAR | `st/models/timeseries/identification/proxy_svar.py:62` | P1 | M | open (strict xfail) |
 | `BayesianSignZeroSVARModel` draws not re-weighted to the ARW conditional posterior | `st/models/timeseries/identification/bayesian_sign_zero.py:176-188` | P1 | M | open |
 | `VolatilitySVARModel` regime variance ratio differs from R `svars::id.cv` | `docs/validation/model_status.yaml:200-207` | P1 | M | open |
-| `RobustOLSModel` ignores YAML `cov_type` (truthy `"HC3"` default shadows config) | `st/models/regression/robust_ols.py:13` | P1 | S | open |
+| `RobustOLSModel` ignores YAML `cov_type` (truthy `"HC3"` default shadows config) | `st/models/regression/robust_ols.py:13` | P1 | S | in progress (#T6PR) |
 | `LocalProjectionsIVModel` uses non-robust standard errors | `st/models/timeseries/reduced_form/local_projections_iv.py:57` | P1 | S | open |
-| Identification models (`SVAR`, `ProxySVAR`, `Volatility`, `Independence`, `SignZero`, `BlanchardQuah`) discard YAML `target_variables` | `st/models/timeseries/identification/svar.py:11` (+5 siblings) | P1 | S | open |
+| Identification models (`SVAR`, `ProxySVAR`, `Volatility`, `Independence`, `SignZero`, `BlanchardQuah`) discard YAML `target_variables` | `st/models/timeseries/identification/svar.py:11` (+5 siblings) | P1 | S | in progress (#T6PR) |
 | `ModelBase.fit` silently row-drops and refits when the error message contains "NaN"/"inf" | `st/models/base.py:236-250` | P1 | S | open |
 | Nonlinear models compute AIC/BIC from summed SSR instead of $\log\det\hat\Sigma_u$ | `st/models/timeseries/nonlinear/tvar.py:172-173` (+`tvecm.py`, `stvar.py`) | P2 | S | open |
 | Nonlinear models overwrite config `self.params` with the regime-1 DataFrame | `st/models/timeseries/nonlinear/tvar.py:185` | P2 | S | open |
