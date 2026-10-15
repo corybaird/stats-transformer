@@ -68,8 +68,9 @@ class LocalProjectionsIVModel(ModelBase):
         cov_type_norm = self.cov_type.upper() if isinstance(self.cov_type, str) else str(self.cov_type)
         if cov_type_norm in ("HAC", "NW", "NEWEY_WEST", "NEWEYWEST"):
             return IV2SLS(y_h, exog, endog, instrument).fit(cov_type="kernel", kernel="bartlett", bandwidth=h + 1)
-        if cov_type_norm in ("HC1", "HC3", "ROBUST"):
-            # ponytail: linearmodels has no HC3; HC3 maps to the debiased robust (HC1-form) estimator
+        if cov_type_norm == "HC3":
+            raise ValueError("HC3 is not supported for IV; use HC1 or HAC")
+        if cov_type_norm in ("HC1", "ROBUST"):
             return IV2SLS(y_h, exog, endog, instrument).fit(cov_type="robust", debiased=True)
         return IV2SLS(y_h, exog, endog, instrument).fit(cov_type="unadjusted", debiased=True)
 

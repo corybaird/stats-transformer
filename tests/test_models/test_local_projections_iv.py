@@ -32,6 +32,11 @@ def test_cumulative_and_multiplier_are_mutually_exclusive():
     with pytest.raises(ValueError, match="mutually exclusive"):
         LocalProjectionsIVModel(target_variable="y1", shock_variable="y2", instrument_variable="z", horizons=2, cumulative=True, multiplier=True).fit(df)
 
+def test_hc3_is_rejected_for_iv():
+    df = create_synthetic_data()
+    with pytest.raises(ValueError, match="HC3 is not supported"):
+        LocalProjectionsIVModel(target_variable="y1", shock_variable="y2", instrument_variable="z", horizons=2, cov_type="HC3").fit(df)
+
 def test_hac_std_errors_differ_from_nonrobust_and_are_positive():
     df = create_synthetic_data()
     base = LocalProjectionsIVModel(target_variable="y1", shock_variable="y2", instrument_variable="z", horizons=3, date_column="date")
