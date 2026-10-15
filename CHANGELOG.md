@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **API fixes (`stats_transformer` top level and applied-macro models):**
+  - Restored the top-level `TableGenerator` export (listed in `__all__` but not importable); a new test asserts every `__all__` name is importable from the package.
+  - `LocalProjectionsModel(cumulative="baseline")` now produces cumulative responses ($y_{t+h} - y_{t-1}$) as documented instead of falling back to levels; unknown `cumulative` strings raise `ValueError` (`"change"` remains a documented alias of `"diff"`).
+  - `LocalProjectionsModel(cov_type="standard")` now maps to statsmodels `"nonrobust"` instead of erroring.
+  - `LocalProjectionsModel(cov_type="HAC")` now merges its default bandwidth ($h+1$ per horizon) with user-supplied `cov_kwds`; a user-supplied `maxlags` applies to every horizon.
+  - `RegressionModel.predict()` now accepts a `pd.Series` (single row); with entity fixed effects it raises `ValueError` when the entity column is missing or contains an entity not seen in training, instead of silently predicting zero effects.
+  - `PCAModel(with_mean=False)` now performs a true non-centered SVD (sklearn `PCA` always centers), with PCA-consistent explained-variance ratios.
+- **Packaging:** added `academic/vanderwel_2026` and `academic/nakamura_steinsson_2018_b` to both hatch force-include tables so `load_example()` works from built sdist/wheel distributions.
+- **Docs:** benchmarks.md local-projections cross-check rows and `docs/applied_macro_enhancements.md` updated to reflect current capabilities and accurate replication tolerances.
+
 ## [1.10.0] - 2026-10-14
 
 ### Added
