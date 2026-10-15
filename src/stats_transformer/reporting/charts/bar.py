@@ -61,9 +61,10 @@ class CoefficientForestPlot:
         if ax is None:
             apply_style(self.style_path)
             # Height scales with the number of coefficients.
-            fig, ax = plt.subplots(figsize=(10, max(2.5, 0.5 * len(labels) + 1.5)))
+            fig, ax = plt.subplots(figsize=(7, max(2.5, 0.5 * len(labels) + 1.5)))
         else:
             fig = ax.figure
+        ax.grid(axis='y', visible=False)
 
         valid = [not pd.isna(c) for c in coefficients]
         v_labels = [l for l, v in zip(labels, valid) if v]
@@ -77,8 +78,8 @@ class CoefficientForestPlot:
             if not pd.isna(se) and se > 0:
                 lo, hi = c - 1.96 * se, c + 1.96 * se
                 ax.plot([lo, hi], [y, y], color=color, linewidth=1.2)
-                ax.plot([lo, lo], [y - 0.25, y + 0.25], color=color, linewidth=1.2)
-                ax.plot([hi, hi], [y - 0.25, y + 0.25], color=color, linewidth=1.2)
+                ax.plot([lo, lo], [y - 0.12, y + 0.12], color=color, linewidth=1.2)
+                ax.plot([hi, hi], [y - 0.12, y + 0.12], color=color, linewidth=1.2)
 
         # Filled marker = significant at 5%, hollow = not.
         for y, c, se, p in zip(y_pos, v_coefs, v_ses, v_pvals):
@@ -100,9 +101,9 @@ class CoefficientForestPlot:
         ax.invert_yaxis()
 
         if ylabel:
-            ax.set_xlabel(ylabel, size=16)
+            ax.set_xlabel(ylabel, size=11)
         if title:
-            ax.set_title(title, size=18)
+            ax.set_title(title, size=12, fontweight='normal')
         if footer:
             ax.text(0.99, 0.01, footer, transform=ax.transAxes, ha='right', va='bottom', fontsize=9, color='grey')
 
