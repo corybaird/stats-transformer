@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`LocalProjectionsIVModel` cumulative responses, integral multipliers, lag blocks and robust inference** (#105): `cumulative=True` ($y_{t+h} - y_{t-1}$), `multiplier=True` (Ramey & Zubairy 2018 integral multiplier, $\sum_{j=0}^h x_{t+j}$ instrumented by $z_t$), `lags=P`, and `cov_type` `"HC1"` / `"HAC"` (Newey-West, bandwidth $h+1$). Estimation now uses `linearmodels` IV2SLS; the default stays `"nonrobust"` to keep Stata parity, and `"HC3"` raises `ValueError`.
+- **Gürkaynak, Sack & Swanson (2005) Target & Path rotation** (#108): `PCAModel.rotate_target_path()` and a standalone `rotate_target_path(factors, loadings, target_index, path_index)`.
+- **Academic datasets** (#109): FRBSF FOMC surprises (update 2023 and monthly) under `bauer_swanson_2023`, plus `jarocinski_2024`, `karadi_schoenle_wursten_2024`, `fukui_nakamura_steinsson_2025`, and a `gertler_karadi_2015` alias of the GK2015 workbook.
+- **Bauer & Swanson (2023) benchmark** (#109): `src/examples/academic/bauer_swanson_2023.py` regresses raw `mps` on pre-FOMC news with `RobustOLSModel(cov_type="HC3")` and checks the `mps_orth` placebo.
+
+### Fixed
+
+- **`ProxySVARModel` shock scaling** (#111): impact column now uses the Gertler-Karadi / Mertens-Ravn closed form, and the reduced-form VAR uses the full endogenous sample (missing-instrument rows only drop out of the proxy moments). The MATLAB `gk2015_iv` parity test passes (previously strict xfail).
+- **`RobustOLSModel` YAML `cov_type`** (#107): precedence is now explicit kwarg > YAML > `"HC3"`.
+- **SVAR-family YAML params** (#107, #112): identification models read `target_variables` and their other model params (`maxlags`, `n_starts`, `regime_column`, `instrument_variable`, `A`/`B`, ...) from YAML via `ModelBase._param`. `volatility_svar.yaml` uses a new `regime` column in `macrodata.csv` (1984 Great Moderation break).
+- **Pipeline multivariate configs** (#110): the model stage fits VAR / VECM / SVAR / DynamicFactor / ARIMA configs declared with `target_variables` and writes `03_model/model_summary.json`; ARIMA via pipeline no longer raises `KeyError: None`. `dynamic_factor.yaml` now lists series present in `var_panel`.
+- **Example scripts no longer overwrite tracked data** (#106): eight scripts load packaged files via `load_example()` instead of downloading into `data/`.
+- **Docs:** roadmap open-work tables drop the items completed above.
+
 ## [1.10.1] - 2026-10-15
 
 ### Fixed
