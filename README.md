@@ -2,7 +2,7 @@
 
 ## Table of Contents
 
-- [1. Features](#1-features)
+- [1. Overview](#1-overview)
 - [2. Documentation](#2-documentation)
 - [3. Quickstart](#3-quickstart)
   - [3.1. Installation](#31-installation)
@@ -16,15 +16,20 @@
 
 ## 1. Overview
 
-`stats-transformer` is a Python library for data transformation, econometric modeling, and visualization. It automates feature engineering, model estimation, and reporting across time-series, panel, and cross-sectional datasets using a reproducible configuration workflow.
+`stats-transformer` is an open-source Python pipeline for applied econometrics in which a single configuration file (YAML) records every research decision. The pipeline
 
-- **Reproducible Workflows:** Research decisions from data ingestion to publication output are driven by a single config (`params.yaml`), in four stages; each run lands in a timestamped run folder with a provenance `manifest.json` (config and input checksums, git SHA, stages run, written files)
-  - **Data stage:** ingest, resample, merge
-  - **Features stage:** transform into analysis variables
-  - **Model stage:** estimate with diagnostics and a JSON summary
-  - **Reporting stage:** charts and publication tables
-- **Broad Econometric Coverage:** Covers cross-sectional (OLS, robust OLS), panel (fixed effects), time-series (VAR, VECM, SVAR, local projections), IV (2SLS), discrete choice (Logit), and unsupervised methods (PCA, KMeans).
-  - **Validated via legacy software**: Model estimation and transformation validated against MATLAB, R, and Stata
+1. ingests, resamples, and merges raw data,
+2. constructs analysis variables,
+3. estimates cross-sectional, panel, and time-series models, and
+4. saves the inputs, fitted model, and LaTeX tables and figures of each run.
+
+It offers:
+
+- **One configuration file per analysis:** each research decision from data ingestion to reporting is recorded in `params.yaml`, so an analysis can be rerun, shared, or reviewed in version control. Each run is written to a timestamped folder with the raw sources, the data the model was fitted on (`model_data.parquet`), the fitted model (`model.joblib`), LaTeX tables, figures, and a `manifest.json` (config and input checksums, git SHA, stages run, written files).
+- **Frequency-aware data preparation:** aligns, merges, and transforms data (lags, differences, growth rates) within each entity, without hand-written reshaping.
+- **Verification:** estimators are tested against recorded Stata, R, and MATLAB output, and data transformations against series published by the original authors.
+
+Models cover cross-sectional (OLS, robust OLS), panel (fixed effects), time-series (VAR, VECM, SVAR including Blanchard-Quah, proxy, and sign restrictions, local projections), IV (2SLS), discrete choice (Logit, Probit), and unsupervised methods (PCA, KMeans).
 
 ---
 
