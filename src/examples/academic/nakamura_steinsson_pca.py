@@ -1,38 +1,13 @@
-import os
 import numpy as np
-import pandas as pd
+from stats_transformer.data import load_example
 from stats_transformer.models.unsupervised.unsupervised import PCAModel
 
 class NakamuraSteinssonPCAExample:
     def __init__(self):
-        self.n_samples = 150
         self.features = ['mp1', 'ff4', 'ed2', 'ed3', 'ed4']
 
-    def generate_synthetic_data(self):
-        np.random.seed(42)
-        # Latent factor: the unobserved "policy news shock"
-        true_shock = np.random.normal(0, 1, self.n_samples)
-        
-        # Loadings typically increase for longer horizons (forward guidance)
-        loadings = np.array([0.2, 0.5, 0.8, 0.9, 0.95])
-        
-        data = {}
-        for i, feature in enumerate(self.features):
-            # Observed changes in futures = loading * shock + idiosyncratic noise
-            data[feature] = true_shock * loadings[i] + np.random.normal(0, 0.1, self.n_samples)
-            
-        df = pd.DataFrame(data)
-        return df
-
     def run(self):
-        df = self.generate_synthetic_data()
-        
-        # Save for YAML example
-        data_dir = "data/examples/academic"
-        os.makedirs(data_dir, exist_ok=True)
-        data_path = os.path.join(data_dir, "synthetic_nakamura.csv")
-        df.to_csv(data_path, index=False)
-        print(f"Synthetic data saved to {data_path}")
+        df = load_example('synthetic_nakamura')
         
         # Instantiate the PCA model to extract 1 component
         model = PCAModel(features=self.features, n_components=1)

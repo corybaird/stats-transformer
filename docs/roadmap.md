@@ -21,7 +21,7 @@ Actionable open items verified against `origin/main` (release 1.10.0). Columns: 
 | `BayesianSignZeroSVARModel` draws not re-weighted to the ARW conditional posterior | `st/models/timeseries/identification/bayesian_sign_zero.py:176-188` | P1 | M | open |
 | `VolatilitySVARModel` regime variance ratio differs from R `svars::id.cv` | `docs/validation/model_status.yaml:200-207` | P1 | M | open |
 | `RobustOLSModel` ignores YAML `cov_type` (truthy `"HC3"` default shadows config) | `st/models/regression/robust_ols.py:13` | P1 | S | in progress (#107) |
-| `LocalProjectionsIVModel` uses non-robust standard errors | `st/models/timeseries/reduced_form/local_projections_iv.py:57` | P1 | S | open |
+| `LocalProjectionsIVModel` uses non-robust standard errors | `st/models/timeseries/reduced_form/local_projections_iv.py:57` | P1 | S | in progress (#105) |
 | Identification models (`SVAR`, `ProxySVAR`, `Volatility`, `Independence`, `SignZero`, `BlanchardQuah`) discard YAML `target_variables` | `st/models/timeseries/identification/svar.py:11` (+5 siblings) | P1 | S | in progress (#107) |
 | `ModelBase.fit` silently row-drops and refits when the error message contains "NaN"/"inf" | `st/models/base.py:236-250` | P1 | S | open |
 | Nonlinear models compute AIC/BIC from summed SSR instead of $\log\det\hat\Sigma_u$ | `st/models/timeseries/nonlinear/tvar.py:172-173` (+`tvecm.py`, `stvar.py`) | P2 | S | open |
@@ -64,7 +64,7 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| 8 example scripts re-download data and overwrite tracked `data/` files | `src/examples/discrete/spector_logit.py:17`, `timeseries/macro_var.py:26`, `regression/{mincer_wage:25, okuns_law:65, mroz_iv:27, longley:17, grunfeld:20}.py`, `academic/nakamura_steinsson_pca.py:34` | P0 | S | open |
+| 8 example scripts re-download data and overwrite tracked `data/` files | `src/examples/discrete/spector_logit.py:17`, `timeseries/macro_var.py:26`, `regression/{mincer_wage:25, okuns_law:65, mroz_iv:27, longley:17, grunfeld:20}.py`, `academic/nakamura_steinsson_pca.py:34` | P0 | S | in progress (#106) |
 | Ghysels Ch 7 example uses `deterministic='co'` on 500 rows; book uses `'ci'` on rows 1–400 | `src/examples/timeseries/ghysels_chap7.py:13` | P2 | S | open |
 | Undefined name `r_sim_data_est` | `data/examples/regression/ghysels_ch2/Chap2.py:84` | P1 | S | open |
 | Move `src/examples/` to top-level `examples/` | `src/examples/` | P2 | S | open |
@@ -150,7 +150,7 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Target Benchmark**: `ambropo/VAR-Toolbox` (`VARmodel.m`), R (`vars::VAR(..., exogen=)`)
 
 ### 2.2 Local Projections Multipliers (`lp_multiplier`) [Partially delivered]
-- **Status**: 1.10.0 (PR #98) added `cumulative`, `lags` and HAC inference to `LocalProjectionsModel`. Still open: the 2SLS cumulative multiplier in `LocalProjectionsIVModel` (`local_projections_iv.py:48-57` estimates only single-period $y_{t+h}$ on $X_t$).
+- **Status**: PR #98 added `cumulative`, `lags` and HAC inference to `LocalProjectionsModel`. PR #105 adds the 2SLS counterparts to `LocalProjectionsIVModel` (`cumulative`, `multiplier`, `lags`, `cov_type` with HAC bandwidth $h+1$).
 - **Description**: Cumulative and integral multiplier estimation using local projections, estimated via 2SLS instrumented by narrative shocks $Z_t$:
   $$\sum_{j=0}^h Y_{t+j} = \beta_h \left(\sum_{j=0}^h X_{t+j}\right) + \Gamma_h W_t + \epsilon_{t+h}$$
 - **Implementation Strategy**: Add cumulative summation transformations inside `LocalProjectionsIVModel`.
