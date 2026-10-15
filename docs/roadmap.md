@@ -8,35 +8,29 @@ For correctness fixes to existing models and the plan for external verification 
 
 ---
 
-## 0. Open Work at 1.10.0
+## 0. Open Work after 1.10.1
 
-Actionable open items verified against `origin/main` (release 1.10.0). Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
+Actionable open items verified against `origin/main` (release 1.10.1 plus PRs #105–#112). Completed items are removed from these tables and recorded in [CHANGELOG.md](../CHANGELOG.md). Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
 
 ### Library correctness
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
 | `DiDModel` accepts `control_variables` but never conditions on them; SEs are unclustered | `st/models/regression/did.py:73-92` | P0 | M | open |
-| `ProxySVARModel` impact scaled by $\sqrt{\Sigma_{11}}$ instead of GK/MR shock-size formula; missing-instrument rows dropped before VAR | `st/models/timeseries/identification/proxy_svar.py:62` | P1 | M | in progress (#<PR>) |
 | `BayesianSignZeroSVARModel` draws not re-weighted to the ARW conditional posterior | `st/models/timeseries/identification/bayesian_sign_zero.py:176-188` | P1 | M | open |
 | `VolatilitySVARModel` regime variance ratio differs from R `svars::id.cv` | `docs/validation/model_status.yaml:200-207` | P1 | M | open |
-| `RobustOLSModel` ignores YAML `cov_type` (truthy `"HC3"` default shadows config) | `st/models/regression/robust_ols.py:13` | P1 | S | in progress (#107) |
-| `LocalProjectionsIVModel` uses non-robust standard errors | `st/models/timeseries/reduced_form/local_projections_iv.py:57` | P1 | S | in progress (#105) |
-| Identification models (`SVAR`, `ProxySVAR`, `Volatility`, `Independence`, `SignZero`, `BlanchardQuah`) discard YAML `target_variables` | `st/models/timeseries/identification/svar.py:11` (+5 siblings) | P1 | S | in progress (#107) |
 | `ModelBase.fit` silently row-drops and refits when the error message contains "NaN"/"inf" | `st/models/base.py:236-250` | P1 | S | open |
 | Nonlinear models compute AIC/BIC from summed SSR instead of $\log\det\hat\Sigma_u$ | `st/models/timeseries/nonlinear/tvar.py:172-173` (+`tvecm.py`, `stvar.py`) | P2 | S | open |
 | Nonlinear models overwrite config `self.params` with the regime-1 DataFrame | `st/models/timeseries/nonlinear/tvar.py:185` | P2 | S | open |
 | Upstream statsmodels SVAR type-A, $K=2$, 1-free-parameter crash | `tests/test_models/test_svar.py:42` | P2 | S | open (upstream xfail) |
 
-Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§2.6 Fry–Pagan is delivered; §2.2 status updated below).
+Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§2.2 LP multipliers and §2.6 Fry–Pagan are completed).
 
 ### Pipeline / data
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| Pipeline model stage does not fit multivariate configs (VAR/VECM/SVAR YAML with `target_variables`): a full run writes no model summary | `st/pipeline.py:240,433` (gates on `self.target`) | P1 | M | in progress (#110) |
 | `save_features` only logs metrics; writes nothing to disk | `st/featurization/feature_engineering.py:478-481` | P1 | S | open |
-| ARIMA via pipeline raises `KeyError: None` (registered as `svar_family`, `self.target` stays `None`) | `st/models/registry.py:39`, `st/pipeline.py:212` | P1 | S | fixed (#110) |
 | Featurization does not sort rows by date within entity before lag/lead shifts | `st/featurization/feature_engineering.py:354` | P1 | S | open |
 | Featurization logs and swallows per-column transformation failures | `st/featurization/feature_engineering.py:311-313` | P1 | S | open |
 | `zscore` uses full-sample mean/std per entity (look-ahead leakage) | `st/featurization/feature_engineering.py:272-276` | P1 | M | open |
@@ -44,7 +38,6 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | `KMeansModel` `n_clusters` not configurable from YAML; seed hardcoded to 42 | `st/models/unsupervised/unsupervised.py:127` | P1 | S | open |
 | `local_projections.yaml` declares `date_column: date` absent from `sofr_surprises` | `references/configs/timeseries/reduced_form/local_projections.yaml`, `tests/test_cross_sectional_configs.py:153` (xfail) | P1 | S | open |
 | `structural_restrictions.yaml` is a restriction-matrix input, not a standalone pipeline config | `references/configs/timeseries/identification/structural_restrictions.yaml`, `tests/test_cross_sectional_configs.py:152` (xfail) | P2 | S | open |
-| SVAR-family models ignore YAML model params (only `target_variables` read; `maxlags`, `regime_column`, `instrument_variable`, ... dropped) | `st/models/base.py`, `st/models/timeseries/identification/` | P1 | S | in progress (#112) |
 
 ### Validation / parity
 
@@ -65,7 +58,6 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| 8 example scripts re-download data and overwrite tracked `data/` files | `src/examples/discrete/spector_logit.py:17`, `timeseries/macro_var.py:26`, `regression/{mincer_wage:25, okuns_law:65, mroz_iv:27, longley:17, grunfeld:20}.py`, `academic/nakamura_steinsson_pca.py:34` | P0 | S | in progress (#106) |
 | Ghysels Ch 7 example uses `deterministic='co'` on 500 rows; book uses `'ci'` on rows 1–400 | `src/examples/timeseries/ghysels_chap7.py:13` | P2 | S | open |
 | Undefined name `r_sim_data_est` | `data/examples/regression/ghysels_ch2/Chap2.py:84` | P1 | S | open |
 | Move `src/examples/` to top-level `examples/` | `src/examples/` | P2 | S | open |
@@ -150,8 +142,8 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Implementation Strategy**: Extend regressor matrix assembly in `VARModel` to append exogenous columns and calculate dynamic multipliers.
 - **Target Benchmark**: `ambropo/VAR-Toolbox` (`VARmodel.m`), R (`vars::VAR(..., exogen=)`)
 
-### 2.2 Local Projections Multipliers (`lp_multiplier`) [Partially delivered]
-- **Status**: PR #98 added `cumulative`, `lags` and HAC inference to `LocalProjectionsModel`. PR #105 adds the 2SLS counterparts to `LocalProjectionsIVModel` (`cumulative`, `multiplier`, `lags`, `cov_type` with HAC bandwidth $h+1$).
+### 2.2 Local Projections Multipliers (`lp_multiplier`) [Completed]
+- **Status**: PR #98 added `cumulative`, `lags` and HAC inference to `LocalProjectionsModel`. PR #105 added the 2SLS counterparts to `LocalProjectionsIVModel` (`cumulative`, `multiplier`, `lags`, `cov_type` with HAC bandwidth $h+1$).
 - **Description**: Cumulative and integral multiplier estimation using local projections, estimated via 2SLS instrumented by narrative shocks $Z_t$:
   $$\sum_{j=0}^h Y_{t+j} = \beta_h \left(\sum_{j=0}^h X_{t+j}\right) + \Gamma_h W_t + \epsilon_{t+h}$$
 - **Implementation Strategy**: Add cumulative summation transformations inside `LocalProjectionsIVModel`.
