@@ -28,21 +28,24 @@ def test_nakamura_steinsson_2018b_jorda_replication():
     assert abs(res["multiplier_h36"] - 1.95) < 0.01
 
 
-def test_bauer_swanson_2023_replication():
-    """Verify Bauer & Swanson (2023) macro news regression replicates with RobustOLSModel HC3.
+def test_bauer_swanson_2023_news_predictability():
+    """Verify Bauer & Swanson (2023) raw mps is predictable from pre-FOMC news.
 
     Published coefficient tables are not available in the source replication
-    repository (shipped folder is confidential/empty), so the coefficients and
-    R^2 are asserted against a direct statsmodels HC3 computation on the
-    identical sample (BauerSwanson2023Replication.TOLERANCE = 1e-4).
+    repository (shipped folder is confidential/empty), so two things are
+    asserted instead: (1) RobustOLSModel HC3 coefficients and R^2 match a
+    direct statsmodels HC3 computation on the identical sample (tolerance
+    1e-4), and (2) the paper's economic finding: raw mps has materially
+    positive R^2 with at least one news coefficient significant at 5%, while
+    the mps_orth placebo regression has near-zero R^2.
     """
     rep = BauerSwanson2023Replication()
     res = rep.run()
-    assert res["passed"], f"Bauer & Swanson replication failed: coef error {res['max_coef_error']}, r2 error {res['r2_error']}"
+    assert res["passed"], f"Bauer & Swanson replication failed: coef error {res['max_coef_error']}, r2 {res['r_squared']}, placebo r2 {res['placebo_r_squared']}, significant news {res['significant_news']}"
     assert res["n_observations"] > 0
-    assert res["r_squared"] >= 0.0
-    for name in rep.NEWS:
-        assert abs(res["coefficients"][name] - res["reference_coefficients"][name]) <= rep.TOLERANCE
+    assert res["r_squared"] >= rep.MIN_NEWS_R2
+    assert res["placebo_r_squared"] < rep.MAX_PLACEBO_R2
+    assert len(res["significant_news"]) >= 1
 
 
 def test_regression_predict_accessor():
