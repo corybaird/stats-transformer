@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 
 from stats_transformer.models.discrete.logit import LogitModel
 from stats_transformer.models.discrete.probit import ProbitModel
@@ -166,6 +167,30 @@ def test_blanchard_quah_matches_matlab_and_r():
     m.fit(pd.DataFrame(endo, columns=["y", "u"]))
     np.testing.assert_allclose(m.B_0, np.asarray(_ref("matlab", "bq1989_long")["B"]), rtol=1e-8, atol=1e-12)
     np.testing.assert_allclose(m.B_0, np.asarray(_ref("r", "bq1989_long")["B_impact"]), rtol=1e-8, atol=1e-12)
+
+
+def test_blanchard_quah_1989_pipeline_config_matches_matlab(tmp_path, monkeypatch):
+    """The committed bq1989 config reproduces the MATLAB impact matrix via a pipeline run.
+
+    The paper's Blanchard--Quah application runs through references/configs/, so
+    the impact_matrix in the run's model_summary.json must match the recorded
+    VAR-Toolbox output at the parity tolerance.
+    """
+    config_rel = "references/configs/timeseries/identification/blanchard_quah_1989.yaml"
+    config = yaml.safe_load((ROOT / config_rel).read_text())
+    config["data"]["raw_data_file"] = str(ROOT / config["data"]["raw_data_file"])
+    monkeypatch.chdir(tmp_path)
+    config_path = tmp_path / "blanchard_quah_1989.yaml"
+    config_path.write_text(yaml.dump(config, sort_keys=False))
+
+    from stats_transformer.pipeline import Pipeline
+
+    Pipeline(params_path=str(config_path)).run()
+
+    run_dir = max((tmp_path / "data" / "pipeline" / config_path.stem).iterdir())
+    summary = json.loads((run_dir / "03_model" / "model_summary.json").read_text())
+    np.testing.assert_allclose(np.asarray(summary["impact_matrix"]), np.asarray(_ref("matlab", "bq1989_long")["B"]), rtol=1e-8, atol=1e-12)
+    assert summary["metrics"]["nobs"] == 159 - 8
 
 
 def test_svar_a_model_canada_matches_r():

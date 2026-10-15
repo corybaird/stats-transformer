@@ -84,11 +84,6 @@ def _tex_escape(text: str) -> str:
     return text
 
 
-def _tex_code(text: str) -> str:
-    """Turn `code` spans into \\texttt{}; $...$ math passes through as LaTeX."""
-    return re.sub(r"`([^`]+)`", lambda match: f"\\texttt{{{_tex_escape(match.group(1))}}}", text)
-
-
 def _benchmark_tex(entry: dict[str, Any]) -> str:
     benchmark = entry.get("benchmark") or {}
     if benchmark.get("tex"):
@@ -117,10 +112,9 @@ def _model_tex(entry: dict[str, Any]) -> str:
 
 
 def _status_tex(entry: dict[str, Any]) -> str:
-    word = STATUS_WORDS[entry["status"]]
-    if entry["status"] == "verified" and entry.get("tolerance"):
-        return f"{word} ({_tex_code(entry['tolerance'])})"
-    return word
+    # The paper's Table 1 shows the status word only; tolerances live in the
+    # YAML (and in the markdown output).
+    return STATUS_WORDS[entry["status"]]
 
 
 def render_tex(entries: list[dict[str, Any]]) -> str:

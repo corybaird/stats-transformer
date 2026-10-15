@@ -269,12 +269,17 @@ EXAMPLE_DATASETS = {
         "Workbook-defined",
         "Antolin-Diaz and Rubio-Ramirez (2018)",
     ),
-    "bq_1989": _single(
-        "matlab_examples/BQ1989_Data.xlsx",
-        "Blanchard-Quah long-run SVAR benchmark workbook",
-        "Quarterly",
-        "Blanchard and Quah (1989)",
-    ),
+    "bq_1989": {
+        "description": "Blanchard-Quah long-run SVAR benchmark",
+        "time_period": "Quarterly",
+        "source": "Blanchard and Quah (1989)",
+        "files": {
+            "data": _file("matlab_examples/BQ1989_Data.xlsx"),
+            # CSV export of the parity-fixture series with quarterly dates:
+            # consumption of the paper's pipeline application.
+            "csv": _file("timeseries/bq1989.csv"),
+        },
+    },
     "gk_2015": _single(
         "matlab_examples/GK2015_Data.xlsx",
         "Proxy SVAR monetary-policy benchmark workbook",

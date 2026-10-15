@@ -1,12 +1,11 @@
 """The paper's empirical-application artefacts are generated from real runs.
 
 scripts/generate_paper_applications.py renders the applications table body,
-per-application TikZ flow strips, and an appendix of the committed YAML
-configs. These tests pin the contract the paper relies on: one row per
-application, exact integer counts, estimates/statistics rounded to at most
-3 significant figures (scientific notation only inside math mode), flow-strip
-files taken from each run's manifest, short TikZ node labels, and estimates
-equal to the model summary values rounded by the same helper.
+per-application TikZ flow strips, and per-application verbatim config files.
+These tests pin the contract the paper relies on: one row per application,
+exact integer counts, exact integer counts with a thousands separator, flow
+strips limited to four boxes (config, data, pipeline, outputs) with short node
+labels, and per-application config files in table order.
 """
 
 import re
@@ -38,38 +37,54 @@ def run_generator(tmp_path, monkeypatch) -> Path:
 def test_generator_writes_one_row_per_application(tmp_path, monkeypatch):
     out_dir = run_generator(tmp_path, monkeypatch)
     tex = (out_dir / "applications.tex").read_text()
-    rows = [row for row in tex.splitlines() if not row.startswith("\\multicolumn")]
-    assert len(rows) == len(gen.APPLICATIONS) == 5
+    rows = [row for row in tex.splitlines() if row.endswith(" \\\\")]
+    assert len(rows) == len(gen.APPLICATIONS) == 4
     assert all(row.endswith(" \\\\") for row in rows)
     for app in gen.APPLICATIONS:
         assert app["label"] in tex
+    # Okun's law and the country-panel VAR are gone (and with them the
+    # footnote machinery and the Key-estimates column).
+    assert "Okun" not in tex and "okuns" not in tex
+    assert "Country-panel" not in tex and "Python API" not in tex
+    assert "\\multicolumn" not in tex and "\\dag" not in tex
     # Exact counts, never rounded or in scientific notation.
-    for exact in ("526", "304", "220", "202", "11{,}490", "207", "225", "223"):
+    for exact in ("526", "220", "202", "159"):
         assert exact in tex, tex
+    assert tex.count("statsmodels OLS (HC3), same design matrix") == 1
     # Grunfeld two-way FE made it into the config and the generated row; the
     # parity caveat is disclosed.
     assert "entity + time FE" in tex
     assert "one-way FE parity" in tex
-    # Mincer/Okun state what was actually compared, not the Longley benchmark.
-    assert tex.count("statsmodels OLS (HC3), same design matrix") == 2
-    # The Macro VAR row is marked and a note row discloses the API fallback.
-    assert "\\dag~Macro VAR key estimates were fitted through the Python API" in tex
-    assert "multivariate configs" in tex
+    # The row is the whole table body: no note rows, nothing but ' \\\\' lines.
+    assert all(line.endswith(" \\\\") for line in tex.splitlines())
     # Config cells print basenames only; the appendix holds the full paths.
     assert "references/configs" not in tex
-    assert tex.count("VAR(2), constant") == 2
-    # The four YAML applications have flow strips; every config appears in the
-    # appendix, in table order.
-    for app in gen.APPLICATIONS:
-        if app["config"]:
-            assert (out_dir / f"app_{app['name']}_flow.tex").is_file()
-            assert gen._tex_escape(app["config"]) in (out_dir / "application_configs.tex").read_text()
+    assert tex.count("VAR(2), constant") == 1
+    assert "VAR(8), constant" in tex
+    # Output cells show bare file names, no stage folders (file names appear
+    # inside \texttt cells, dots unescaped).
+    assert "02\\_features" not in tex and "03\\_model" not in tex
+    assert tex.count("features.parquet") == len(gen.APPLICATIONS)
+    assert tex.count("model\\_summary.json") == len(gen.APPLICATIONS)
+    # One flow strip and one verbatim config per application; 
+    # application_configs.tex is no longer emitted.
+    for name in (app["name"] for app in gen.APPLICATIONS):
+        assert (out_dir / f"app_{name}_flow.tex").is_file()
+        assert (out_dir / f"app_{name}_config.tex").is_file()
+    assert not (out_dir / "application_configs.tex").exists()
+    configs = [(out_dir / f"app_{app['name']}_config.tex").read_text() for app in gen.APPLICATIONS]
+    assert "references" not in "".join(c.splitlines()[0] for c in configs)
+    assert all(c.startswith("\\begin{verbatim}") for c in configs)
 
 
 def test_estimates_have_three_significant_figures_and_math_wrapped_scientific_notation(tmp_path, monkeypatch):
     out_dir = run_generator(tmp_path, monkeypatch)
     tex = (out_dir / "applications.tex").read_text()
+    # Numbers inside \texttt cells are identifiers (test names, file names),
+    # not statistics; only numbers outside them follow the 3-sig-fig rule.
+    tex = re.sub(r"\\texttt\{[^}]*\}", "", tex)
     estimates = COUNT.sub("", tex)  # counts are exact by test above
+    estimates = re.sub(r"\(\d{4}\)", "", estimates)  # citation years (Blanchard & Quah 1989)
     worst = max(sig_figs(match) for match in NUM.findall(estimates))
     assert worst <= 3, tex
     # \times, ^ and any minus directly before a digit may appear only in math mode.
@@ -83,9 +98,12 @@ def test_flow_files_come_from_the_manifest(tmp_path, monkeypatch):
     record = gen.run_yaml_application(app, tmp_path / "runs")
     flow = gen.render_flow(app, record)
     assert flow.count("{") == flow.count("}")
-    # Stages that ran come from manifest.stages_run, in order.
-    for stage in record["manifest"]["stages_run"]:
-        assert stage in flow
+    # Four boxes: config, data, the pipeline, the outputs.
+    nodes = [line for line in flow.splitlines() if line.startswith("\\node[box")]
+    assert len(nodes) == 4
+    assert "\\node[box] (n0)" in flow
+    # The pipeline box is the third one.
+    assert nodes[2].startswith("\\node[box, right=of n1] (n2) {stats-transformer pipeline};")
     # Every file the strip references exists in the run (manifest) or is an input.
     unescaped = flow.replace("\\_", "_")
     referenced = set(re.findall(r"[\w.-]+\.(?:parquet|json|csv|yaml|tex|png)", unescaped))
@@ -95,8 +113,6 @@ def test_flow_files_come_from_the_manifest(tmp_path, monkeypatch):
 
 def test_flow_nodes_use_short_labels(tmp_path, monkeypatch):
     for app in gen.APPLICATIONS:
-        if not app["config"]:
-            continue  # flow strips need a manifest; the API application has none
         monkeypatch.chdir(tmp_path)
         record = gen.run_yaml_application(app, tmp_path / app["name"])
         flow = gen.render_flow(app, record)
@@ -112,22 +128,9 @@ def test_flow_nodes_use_short_labels(tmp_path, monkeypatch):
                 assert len(visible) <= 28, (app["name"], part)
 
 
-def test_key_estimates_equal_summary_values_rounded_by_fmt3(tmp_path, monkeypatch):
-    app = gen.APPLICATIONS[0]
-    monkeypatch.chdir(tmp_path)
-    record = gen.run_yaml_application(app, tmp_path / "runs")
-    row = gen.render_rows([(app, record)])
-    coefficients = record["summary"]["coefficients"]
-    for term, _ in app["key"]:
-        entry = coefficients[term]
-        assert f"{gen.fmt(entry['value'])} ({gen.fmt(entry['std_err'])})" in row
-
-
-def test_fmt3_and_counts_are_the_fixed_rounding_rules():
-    assert gen.fmt(0.08534893684706603) == "$0.0853$"
-    assert gen.fmt(0.16986) == "$0.17$"
-    assert gen.fmt(-0.474) == "$-0.474$"
-    assert gen.fmt(1.234e-05) == "$1.23\\times 10^{-5}$"
-    assert gen.fmt(220) == "$220$"
+def test_fmt_count_and_config_body_are_the_fixed_rounding_and_source_rules():
     assert gen.fmt_count(526) == "526"
     assert gen.fmt_count(11490) == "11{,}490"
+    # The verbatim block is exactly the committed YAML file.
+    app = gen.APPLICATIONS[0]
+    assert gen.render_config(app) == f"\\begin{{verbatim}}\n{(gen.ROOT / app['config']).read_text().rstrip()}\n\\end{{verbatim}}"
