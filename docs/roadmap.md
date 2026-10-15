@@ -8,6 +8,113 @@ For correctness fixes to existing models and the plan for external verification 
 
 ---
 
+## 0. Open Work at 1.10.0
+
+Actionable open items verified against `origin/main` (release 1.10.0). Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
+
+### Library correctness
+
+| Item | Location | Pri | Size | Status |
+| --- | --- | --- | --- | --- |
+| `DiDModel` accepts `control_variables` but never conditions on them; SEs are unclustered | `st/models/regression/did.py:73-92` | P0 | M | open |
+| `ProxySVARModel` impact scaled by $\sqrt{\Sigma_{11}}$ instead of GK/MR shock-size formula; missing-instrument rows dropped before VAR | `st/models/timeseries/identification/proxy_svar.py:62` | P1 | M | open (strict xfail) |
+| `BayesianSignZeroSVARModel` draws not re-weighted to the ARW conditional posterior | `st/models/timeseries/identification/bayesian_sign_zero.py:176-188` | P1 | M | open |
+| `VolatilitySVARModel` regime variance ratio differs from R `svars::id.cv` | `docs/validation/model_status.yaml:200-207` | P1 | M | open |
+| `RobustOLSModel` ignores YAML `cov_type` (truthy `"HC3"` default shadows config) | `st/models/regression/robust_ols.py:13` | P1 | S | open |
+| `LocalProjectionsIVModel` uses non-robust standard errors | `st/models/timeseries/reduced_form/local_projections_iv.py:57` | P1 | S | open |
+| Identification models (`SVAR`, `ProxySVAR`, `Volatility`, `Independence`, `SignZero`, `BlanchardQuah`) discard YAML `target_variables` | `st/models/timeseries/identification/svar.py:11` (+5 siblings) | P1 | S | open |
+| `ModelBase.fit` silently row-drops and refits when the error message contains "NaN"/"inf" | `st/models/base.py:236-250` | P1 | S | open |
+| Nonlinear models compute AIC/BIC from summed SSR instead of $\log\det\hat\Sigma_u$ | `st/models/timeseries/nonlinear/tvar.py:172-173` (+`tvecm.py`, `stvar.py`) | P2 | S | open |
+| Nonlinear models overwrite config `self.params` with the regime-1 DataFrame | `st/models/timeseries/nonlinear/tvar.py:185` | P2 | S | open |
+| Upstream statsmodels SVAR type-A, $K=2$, 1-free-parameter crash | `tests/test_models/test_svar.py:42` | P2 | S | open (upstream xfail) |
+
+Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§2.6 Fry–Pagan is delivered; §2.2 status updated below).
+
+### Pipeline / data
+
+| Item | Location | Pri | Size | Status |
+| --- | --- | --- | --- | --- |
+| Pipeline model stage does not fit multivariate configs (VAR/VECM/SVAR YAML with `target_variables`): a full run writes no model summary | `st/pipeline.py:240,433` (gates on `self.target`) | P1 | M | open (related: identification models ignoring `target_variables`, above) |
+| `save_features` only logs metrics; writes nothing to disk | `st/featurization/feature_engineering.py:478-481` | P1 | S | open |
+| ARIMA via pipeline raises `KeyError: None` (registered as `svar_family`, `self.target` stays `None`) | `st/models/registry.py:39`, `st/pipeline.py:212` | P1 | S | open |
+| Featurization does not sort rows by date within entity before lag/lead shifts | `st/featurization/feature_engineering.py:354` | P1 | S | open |
+| Featurization logs and swallows per-column transformation failures | `st/featurization/feature_engineering.py:311-313` | P1 | S | open |
+| `zscore` uses full-sample mean/std per entity (look-ahead leakage) | `st/featurization/feature_engineering.py:272-276` | P1 | M | open |
+| `EventStudyBuilder` clamps event horizon to sample end, fabricating tail values | `st/featurization/event_study.py:131` | P1 | S | open |
+| `KMeansModel` `n_clusters` not configurable from YAML; seed hardcoded to 42 | `st/models/unsupervised/unsupervised.py:127` | P1 | S | open |
+| `local_projections.yaml` declares `date_column: date` absent from `sofr_surprises` | `references/configs/timeseries/reduced_form/local_projections.yaml`, `tests/test_cross_sectional_configs.py:153` (xfail) | P1 | S | open |
+| `structural_restrictions.yaml` is a restriction-matrix input, not a standalone pipeline config | `references/configs/timeseries/identification/structural_restrictions.yaml`, `tests/test_cross_sectional_configs.py:152` (xfail) | P2 | S | open |
+
+### Validation / parity
+
+| Item | Location | Pri | Size | Status |
+| --- | --- | --- | --- | --- |
+| R `svars::id.cv` wrapper test for `VolatilitySVARModel` | `docs/validation/model_status.yaml:207`, `benchmarks.md` §2.2.4 | P1 | M | open |
+| R `svars` drivers for `IndependenceSVAR`, `CVMSVAR`, `NonGaussianSVAR` (`id.dc`/`id.cvm`/`id.ngml`) | `docs/validation/model_status.yaml:220-228` | P1 | M | open |
+| R `tsDyn` drivers for `TVARModel`/`TVECMModel` | `docs/validation/model_status.yaml:241-257` | P1 | M | open |
+| MATLAB host benchmarks: `BVARModel` (fixed-hyperparameter), `PandemicBVARModel` (Cascaldi-Garcia) | `tests/external_benchmarks/matlab/`, `benchmarks.md` §2.2.4 | P1 | M | open |
+| Wrapper tests against MATLAB paper-spec `lp_jt2025`/`lpiv_jt2025` (long differences, lagged controls) | `benchmarks.md` §2.2.2 | P1 | S | open |
+| R `lpirfs` comparator for the LP wrappers | `benchmarks.md` §2.2.4 | P2 | M | open |
+| DGP-recovery simulation tests for nonlinear and Bayesian models | `tests/test_models/` | P2 | M | open |
+| Stata/R drivers for `PanelIV2SLSModel` and `GMMModel` | `docs/validation/model_status.yaml:73-86` | P2 | M | open |
+| External driver for `DynamicFactorModel` (MATLAB `ssm` / R `dfms`) | `docs/validation/model_status.yaml:155-160` | P2 | M | open |
+| External driver for `KMeansModel` with fixed starts | `docs/validation/model_status.yaml:299-307` | P2 | S | open |
+
+### Examples
+
+| Item | Location | Pri | Size | Status |
+| --- | --- | --- | --- | --- |
+| 8 example scripts re-download data and overwrite tracked `data/` files | `src/examples/discrete/spector_logit.py:17`, `timeseries/macro_var.py:26`, `regression/{mincer_wage:25, okuns_law:65, mroz_iv:27, longley:17, grunfeld:20}.py`, `academic/nakamura_steinsson_pca.py:34` | P0 | S | open |
+| Ghysels Ch 7 example uses `deterministic='co'` on 500 rows; book uses `'ci'` on rows 1–400 | `src/examples/timeseries/ghysels_chap7.py:13` | P2 | S | open |
+| Undefined name `r_sim_data_est` | `data/examples/regression/ghysels_ch2/Chap2.py:84` | P1 | S | open |
+| Move `src/examples/` to top-level `examples/` | `src/examples/` | P2 | S | open |
+| Move `canada.csv`/`data_usa.csv` to `data/examples/timeseries/`; document in `data.md` | `tests/integration/var/canada.csv`, `tests/integration/{,svar/}data_usa.csv` | P2 | S | open |
+
+### Docs
+
+| Item | Location | Pri | Size | Status |
+| --- | --- | --- | --- | --- |
+| Wrong module locations (`pca.py`, `kmeans.py`, `timeseries/structural/decompositions.py`) | `docs/library/models.md:160,168,373` | P1 | S | open |
+| `architecture.md` claims every model implements `predict`; stale model count | `docs/library/architecture.md:141,143` | P1 | S | open |
+| Hardcoded `/opt/homebrew/bin/uv` paths | `docs/validation/benchmarks.md:114-128`, `docs/validation/testing_suite.md:18,47` | P1 | S | open |
+| Sample YAML uses `country`/`date` columns absent from `macrodata.csv` | `docs/library/data.md:113-128` | P1 | S | open |
+| Model counts disagree across docs (registry: 32) | `docs/library/architecture.md:143`, `docs/library/models.md` | P2 | S | open |
+| `macrodata.csv` = 100 × log-diff growth of statsmodels macrodata; say so, recommend Ghysels Ch 7 for cointegration | `docs/library/data.md:63` | P2 | S | open |
+| `data.md` omits packaged `ghysels_ch5/ch8/ch10` | `docs/library/data.md:55-65` | P2 | S | open |
+| Reference to deleted `tests/verification/` | `docs/validation/testing_suite.md:42` | P2 | S | open |
+| Agent skill model docs: obsolete class names, dispatcher claims | `.agents/skills/stats-transformer-architecture/models.md` | P2 | S | open |
+
+### Packaging / CI
+
+| Item | Location | Pri | Size | Status |
+| --- | --- | --- | --- | --- |
+| Mypy covers only 5 files while shipping `py.typed` | `pyproject.toml:71-80`, `src/stats_transformer/py.typed` | P1 | M | open |
+| Notebook ruff F821: `SignRestrictionsSVARModel` undefined | `notebooks/08_structural_timeseries_models.ipynb` (cell 11) | P1 | S | open |
+| `test_data_loading.py` resolves `PROJECT_ROOT` to `tests/`, test skips | `tests/test_data/test_data_loading.py:6` | P1 | S | open |
+| Duplicate `*_results.json` fixtures (subdir + root) | `tests/integration/{panel,regression,svars,var}_results.json` | P2 | S | open |
+| No pre-commit hook / notebook output stripping | `.pre-commit-config.yaml` missing | P2 | S | open |
+| Wheel force-includes example data files | `pyproject.toml:117` | P2 | M | open |
+| Pin R Docker image by digest | `tests/external_benchmarks/r/Dockerfile:1` | P2 | S | open |
+| Retire legacy `tests/integration/*.R` raw-library suite | `tests/integration/` | P2 | S | open |
+
+### Refactor
+
+| Item | Location | Pri | Size | Status |
+| --- | --- | --- | --- | --- |
+| Root-logger `basicConfig`/StreamHandler in library code | `st/reporting/base.py:19` | P1 | S | open |
+| Custom exception hierarchy | absent (`src/stats_transformer/exceptions.py`) | P1 | S | open |
+| Uniform `random_state` handling | `st/models/unsupervised/unsupervised.py:127` | P2 | M | open |
+| Decouple config loading / I/O from `ModelBase` | `st/models/base.py:20-68` | P2 | M | open |
+| Split `params_` (fitted) from `params` (config) | `st/models/timeseries/nonlinear/tvar.py:185` | P2 | S | open |
+| Declarative model registry replacing `if/elif` build ladders | `st/pipeline.py:173-200` | P2 | M | open |
+| Expose `RestrictedVAR` (or `VARModel(mask=...)`) through YAML | `st/models/registry.py` | P2 | S | open |
+| Relocate `SpecificationRunner`, `GIRFEngine` out of `models/` | `st/models/regression/spec_runner.py`, `st/models/timeseries/nonlinear/girf.py` | P2 | S | open |
+| Standardized result objects / uniform multivariate schema | absent | P2 | L | open |
+| Public API exports & deprecation policy | `src/stats_transformer/__init__.py` (no `Logit`/`Probit`/`ARIMA`/`SVEC`) | P2 | S | open |
+| MkDocs Material docs site built in CI | absent (no `mkdocs.yml`) | P2 | M | open |
+
+---
+
 ## 1. Roadmap Architecture & Complexity Tiers
 
 Planned models are triaged across four implementation tiers based on mathematical complexity, optimization routines, and algorithmic dependencies:
@@ -42,10 +149,10 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Implementation Strategy**: Extend regressor matrix assembly in `VARModel` to append exogenous columns and calculate dynamic multipliers.
 - **Target Benchmark**: `ambropo/VAR-Toolbox` (`VARmodel.m`), R (`vars::VAR(..., exogen=)`)
 
-### 2.2 Local Projections Multipliers (`lp_multiplier`)
-- **Description**: Cumulative and integral multiplier estimation using local projections:
+### 2.2 Local Projections Multipliers (`lp_multiplier`) [Partially delivered]
+- **Status**: 1.10.0 (PR #98) added `cumulative`, `lags` and HAC inference to `LocalProjectionsModel`. Still open: the 2SLS cumulative multiplier in `LocalProjectionsIVModel` (`local_projections_iv.py:48-57` estimates only single-period $y_{t+h}$ on $X_t$).
+- **Description**: Cumulative and integral multiplier estimation using local projections, estimated via 2SLS instrumented by narrative shocks $Z_t$:
   $$\sum_{j=0}^h Y_{t+j} = \beta_h \left(\sum_{j=0}^h X_{t+j}\right) + \Gamma_h W_t + \epsilon_{t+h}$$
-  estimated via 2SLS instrumented by narrative shocks $Z_t$.
 - **Implementation Strategy**: Add cumulative summation transformations inside `LocalProjectionsIVModel`.
 - **Target Benchmark**: Ramey & Zubairy (2018), `cacoleman16/tsecon` (`lp_multiplier`)
 

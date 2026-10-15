@@ -1,6 +1,6 @@
 """Cross-sectional configs (no entity column) must run the features and model stages.
 
-Regression tests for the paper's Mincer example (docs/wrapup triage P0):
+Regression tests for the paper's Mincer example (triage P0):
 FeatureEngineer used to demand [None, 'date'] when a config declared neither
 entity nor date columns.
 """

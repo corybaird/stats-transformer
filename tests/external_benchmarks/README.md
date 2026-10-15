@@ -16,3 +16,5 @@ Recorded outputs from MATLAB, R and Stata. None of the recorders import stats-tr
 - `matlab/bvar_kl_minnesota` uses the Litterman fixed-Sigma Minnesota prior, not the natural-conjugate prior in `BVARModel`
 - `matlab/lp_jt2025` and `lpiv_jt2025` use long differences and lagged controls; `stata/lp_plain_jt2025` and `lpiv_plain_jt2025` run the regression the wrappers actually estimate
 - A failing case writes `<case>.error.txt`
+- No third-party code is vendored here: only driver/recorder scripts (`.m`, `.R`, `.do`) and recorded JSON outputs are committed. Large upstream packages (VAR-Toolbox, Kilian-Lütkepohl book code, R libraries) stay out of git; pin upstream tags in a fetch script instead if you need them.
+- DVC is deliberately not used: all recorded fixtures and inputs are well under 2MB, so git is sufficient. Revisit only if full historical datasets (e.g. Kilian 2017's 183MB or unextracted Ghysels 2018) need binary pinning (see `docs/library/data.md`).

@@ -54,6 +54,8 @@ The table below is generated from `docs/validation/model_status.yaml`; edit that
 | --- | --- | --- |
 | `ProxySVARModel` | impact column scaled by sqrt(Sigma_11) instead of the Gertler-Karadi / Mertens-Ravn shock-size formula; rows with a missing instrument are dropped before the VAR is estimated | MATLAB `gk2015_iv` |
 
+**Severity notes.** Some discrepancies are conventions rather than runtime failures, which is why they are P1/P2 and not correctness regressions: proxy-SVAR $\sqrt{\Sigma_{11}}$ scaling is a normalization difference (shock-size convention), not a numerical error; Newey-West HAC vs HC3 standard errors on local projections affect inference precision, not point estimates; multivariate AIC/BIC computed from summed SSR instead of $\log\det\hat\Sigma_u$ affect lag-order selection, not coefficient estimates.
+
 #### 2.2.2 Recorded References Not Yet Usable
 
 | Reference | Why not |
