@@ -2,6 +2,7 @@ import logging
 import pandas as pd
 import numpy as np
 
+from stats_transformer.reporting.formatters.significance import format_number
 from stats_transformer.reporting.tables.table_generator import TableGenerator
 
 class DescriptiveStatsTable:
@@ -141,7 +142,7 @@ class DescriptiveStatsTable:
         formatted = stats.copy()
         formatted["N"] = formatted["N"].apply(lambda n: f"{int(n):,}")
         for col in ["Mean", "SD", "Min", "Max"]:
-            formatted[col] = formatted[col].apply(lambda v: f"{v:.3f}" if pd.notna(v) else "")
+            formatted[col] = formatted[col].apply(format_number)
         return self.table_gen.export_latex(formatted, filename)
 
     def export(self, sections, filename, **kwargs):

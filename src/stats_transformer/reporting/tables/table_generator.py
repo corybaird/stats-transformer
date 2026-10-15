@@ -32,7 +32,7 @@ class TableGenerator:
             
         return tbl
 
-    def export_latex(self, df, filename, col_format=None, align_first_n_left=1):
+    def export_latex(self, df, filename, col_format=None, align_first_n_left=1, midrule_before=None, note=None):
         """
         Export a DataFrame to a styled LaTeX table with multi-line headers.
         
@@ -41,16 +41,21 @@ class TableGenerator:
             filename (str): Name of the file (e.g., 'table1').
             col_format (str): Custom column format (e.g., 'llcccccc'). If None, generated automatically.
             align_first_n_left (int): If col_format is None, how many of the first columns to align left 'l'.
+            midrule_before (list, optional): First-column values before which a \\midrule is emitted
+                (e.g. to separate a coefficient block from the N / R^2 summary block).
+            note (str, optional): Table note emitted inside the tabular as a last
+                full-width row (\\multicolumn{k}{l}{\\footnotesize ...}).
         """
         tbl = self.clean_dataframe_for_export(df)
 
         # Rendered by hand instead of DataFrame.to_latex: pandas routes to_latex
         # through Styler, which drags in jinja2. Keeps booktabs rules
         # (toprule/midrule/bottomrule) — compile with \usepackage{booktabs}.
-        body = [
-            " & ".join("" if pd.isna(v) else str(v) for v in row) + r" \\"
-            for row in tbl.itertuples(index=False, name=None)
-        ]
+        body = []
+        for row in tbl.itertuples(index=False, name=None):
+            if midrule_before and str(row[0]) in midrule_before:
+                body.append(r'\midrule')
+            body.append(" & ".join("" if pd.isna(v) else str(v) for v in row) + r" \\")
 
         # Generate the exact Header format
         if not col_format:
@@ -73,7 +78,10 @@ class TableGenerator:
 
         lines = [r'\begin{tabular}{' + col_format + '}', r'\toprule', header_line, r'\midrule']
         lines.extend(body)
-        lines.extend([r'\bottomrule', r'\end{tabular}'])
+        lines.append(r'\bottomrule')
+        if note:
+            lines.append(r'\multicolumn{' + str(len(tbl.columns)) + r'}{l}{\footnotesize ' + note + '}')
+        lines.append(r'\end{tabular}')
 
         latex = '\n'.join(lines)
         
