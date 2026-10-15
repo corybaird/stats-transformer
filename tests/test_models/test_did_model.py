@@ -74,6 +74,12 @@ def test_did_not_yet_treated_control_group():
     metrics = model.fit(df)
     assert metrics["simple_att"] == pytest.approx(2.0, abs=0.15)
 
+def test_did_raises_on_control_variables():
+    df = _simulate_staggered_panel(cohorts=(2005,), cohort_effect=1.5)
+    model = DiDModel(entity_column="unit", time_column="year", cohort_column="cohort", outcome_column="y", control_variables=["treated"])
+    with pytest.raises(ValueError, match="control_variables"):
+        model.fit(df)
+
 def test_did_run_returns_metadata():
     df = _simulate_staggered_panel(cohorts=(2005,), cohort_effect=1.5)
     model = DiDModel(entity_column="unit", time_column="year", cohort_column="cohort", outcome_column="y")
