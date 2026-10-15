@@ -10,10 +10,10 @@ class ProxySVARModel(ModelBase):
     def __init__(self, target_variables=None, instrument_variable=None, date_column=None, maxlags=1, **kwargs):
         super().__init__(**kwargs)
         self.target_variables = target_variables or getattr(self, "target_variables", [])
-        self.instrument_variable = instrument_variable
-        self.date_column = date_column
-        self.time_column = date_column
-        self.maxlags = maxlags
+        self.instrument_variable = self._param("instrument_variable", instrument_variable, None)
+        self.date_column = self._param("date_column", date_column, None)
+        self.time_column = self.date_column
+        self.maxlags = self._param("maxlags", maxlags, 1)
         self.var_result = None
         self.impact_column = None
 

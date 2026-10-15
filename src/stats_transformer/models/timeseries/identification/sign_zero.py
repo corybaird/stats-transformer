@@ -73,13 +73,13 @@ class SignZeroSVARModel(ModelBase):
     def __init__(self, target_variables=None, config_path=None, date_column=None, maxlags=1, max_draws=10000, required_accepts=100, seed=42, **kwargs):
         super().__init__(**kwargs)
         self.target_variables = target_variables or getattr(self, "target_variables", [])
-        self.config_path = config_path
-        self.date_column = date_column
-        self.time_column = date_column
-        self.maxlags = maxlags
-        self.max_draws = max_draws
-        self.required_accepts = required_accepts
-        self.seed = seed
+        self.config_path = self._param("config_path", config_path, None)
+        self.date_column = self._param("date_column", date_column, None)
+        self.time_column = self.date_column
+        self.maxlags = self._param("maxlags", maxlags, 1)
+        self.max_draws = self._param("max_draws", max_draws, 10000)
+        self.required_accepts = self._param("required_accepts", required_accepts, 100)
+        self.seed = self._param("seed", seed, 42)
         
         self.var_result = None
         self.accepted_rotations = []

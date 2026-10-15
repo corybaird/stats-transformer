@@ -6,4 +6,5 @@ model:
   target_variables:
     - realgdp
     - realinv
+  regime_column: regime
   maxlags: 1
