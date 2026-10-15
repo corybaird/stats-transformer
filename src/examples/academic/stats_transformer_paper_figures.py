@@ -96,7 +96,11 @@ class PaperFigureBuilder:
         p_values = model.model.pvalues.loc[variables].tolist()
         chart = CoefficientForestPlot()
         footer = f"Firm and year fixed effects; {int(model.model.nobs)} observations; unadjusted standard errors"
-        fig, _ = chart.plot(variables, coefficients, standard_errors, p_values, ylabel="Coefficient", title="Grunfeld investment equation", footer=footer)
+        fig, ax = chart.plot(variables, coefficients, standard_errors, p_values, ylabel="Coefficient", title="Grunfeld investment equation")
+        # Footer below the axes: ForestPlot's in-axes footer collides with the
+        # bottom (Capital) whisker.
+        fig.tight_layout()
+        fig.text(0.99, 0.005, footer, ha="right", va="bottom", fontsize=9, color="grey")
         self._save_figure(fig, "grunfeld_coefficients.pdf")
 
     def _make_macro_var_irf(self):
@@ -124,8 +128,8 @@ class PaperFigureBuilder:
             ax.set_xticks(range(0, 13, 3))
         # IRFPlot's suptitle sits at y=1.02 and gets clipped by _save_figure;
         # draw it inside the canvas instead.
-        fig.suptitle("Responses to a GDP growth shock", size=18, y=0.98)
-        fig.tight_layout(rect=(0, 0, 1, 0.9))
+        fig.suptitle("Responses to a GDP growth shock", size=18, y=1.0)
+        fig.tight_layout(rect=(0, 0, 1, 0.955))
         self._save_figure(fig, "macro_var_irf.pdf")
 
     def _make_bq_irf(self):
@@ -163,10 +167,13 @@ class PaperFigureBuilder:
         # One colour per shock: group order alternates variables within a shock
         # column (output, unemployment, output, unemployment).
         colors = [PALETTE_CATEGORICAL[0], PALETTE_CATEGORICAL[1], PALETTE_CATEGORICAL[0], PALETTE_CATEGORICAL[1]]
-        fig, axes = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "facet", labels=labels, title="Blanchard--Quah structural impulse responses", ylabel="Response", colors=colors)
+        fig, axes = chart.plot(plot_data, "horizon", "coef", "lower", "upper", "facet", labels=labels, ylabel="Response", colors=colors)
         for ax in axes:
             ax.set_xticks(range(0, irf.irfs.shape[0] + 1, 8))  # 41 horizons: thin the ticks
-        fig.suptitle("Blanchard--Quah structural impulse responses", y=1.02)
+        # IRFPlot's suptitle sits at y=1.02 and gets clipped by _save_figure;
+        # draw it inside the canvas instead.
+        fig.suptitle("Blanchard--Quah structural impulse responses", size=18, y=1.0)
+        fig.tight_layout(rect=(0, 0, 1, 0.955))
         self._save_figure(fig, "bq_irf.pdf")
 
     def run(self):
