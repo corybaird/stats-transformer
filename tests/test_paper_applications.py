@@ -5,7 +5,9 @@ per-application TikZ flow strips, and per-application verbatim config files.
 These tests pin the contract the paper relies on: one row per application,
 exact integer counts, exact integer counts with a thousands separator, flow
 strips limited to four boxes (config, data, pipeline, outputs) with short node
-labels, and per-application config files in table order.
+labels, per-application config files in table order, and a five-cell table
+body (Application, Data, Config, Estimator / SE, Checked-against - outputs
+live in the flow strips only).
 """
 
 import re
@@ -61,14 +63,10 @@ def test_generator_writes_one_row_per_application(tmp_path, monkeypatch):
     assert "references/configs" not in tex
     assert tex.count("VAR(2), constant") == 1
     assert "VAR(8), constant" in tex
-    # Output cells show bare file names of the key outputs only (file names
-    # appear inside \texttt cells, dots unescaped).
-    assert "02\\_features" not in tex and "03\\_model" not in tex
-    assert tex.count("model.joblib") == len(gen.APPLICATIONS)
-    assert tex.count("model\\_summary.json") == len(gen.APPLICATIONS)
-    assert tex.count("descriptive\\_stats.tex") == len(gen.APPLICATIONS)
-    assert tex.count("regression\\_table.tex") == 2  # mincer and grunfeld only
-    assert "coefficient\\_plot.png" not in tex and "features.parquet" not in tex
+    # Outputs live in the flow strips: no output-file names in the table body.
+    assert "model.joblib" not in tex and "model\\_summary.json" not in tex
+    assert "descriptive\\_stats.tex" not in tex and "regression\\_table.tex" not in tex
+    assert "---" not in tex  # the fallback empty-outputs cell is gone too
     # One flow strip and one verbatim config per application; 
     # application_configs.tex is no longer emitted.
     for name in (app["name"] for app in gen.APPLICATIONS):

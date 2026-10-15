@@ -12,9 +12,9 @@ redirected to the repo's data files) and renders, into --out-dir:
 
 Everything in the .tex is generated from the runs (estimates from
 03_model/model_summary.json); counts (Observations) are exact integers with a
-thousands separator by fmt_count. The table's Outputs column and the flow
-strips' outputs box show only the key outputs (_key_outputs), not every file
-the manifest lists.
+thousands separator by fmt_count. applications table has five cells: Application, Data, Config, Estimator / SE,
+Checked-against. The flow strips' outputs box shows only the key outputs
+(_key_outputs), not every file the manifest lists.
 """
 
 import argparse
@@ -173,8 +173,7 @@ def render_rows(records: list[tuple[dict, dict]]) -> str:
     rows = []
     for app, record in records:
         config_cell = _code(Path(app["config"]).name)
-        outputs = ", ".join(_code(Path(f).name) for f in record["key_outputs"]) or "---"
-        cells = [app["label"], _data_cell(app, record), config_cell, _estimator_se(app, record), outputs, app["checked"]]
+        cells = [app["label"], _data_cell(app, record), config_cell, _estimator_se(app, record), app["checked"]]
         rows.append(" & ".join(cells) + " \\\\")
     return "\n".join(rows) + "\n"
 
