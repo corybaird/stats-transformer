@@ -1,4 +1,5 @@
 import pytest
+import json
 import pandas as pd
 import os
 import shutil
@@ -175,3 +176,37 @@ def test_pipeline_configs_dispatch_to_declared_model_type(config_path):
     pipeline._initialize_from_params()
 
     assert isinstance(pipeline.model, expected_cls), f"{config_path}: model_type '{model_type}' dispatched to {type(pipeline.model).__name__}, expected {expected_cls.__name__}"
+
+
+def test_pipeline_multivariate_var_config_writes_model_summary(tmp_path):
+    """Full run on the packaged VAR config: the model stage must fit and write 03_model/model_summary.json (roadmap item 37)."""
+    params = yaml.safe_load((Path("references/configs/timeseries/reduced_form/macro_var.yaml")).read_text())
+    params["output"] = {"root": str(tmp_path)}
+    params["data"]["raw_data_file"] = str(Path("data/examples/timeseries/macrodata.csv").resolve())
+    config_path = tmp_path / "macro_var.yaml"
+    config_path.write_text(yaml.dump(params))
+
+    Pipeline(params_path=str(config_path)).run()
+
+    summaries = list(tmp_path.glob("**/03_model/model_summary.json"))
+    assert summaries, "model_summary.json was not written for the VAR config"
+    summary = json.loads(summaries[0].read_text())
+    assert summary.get("metrics"), f"model_summary.json is empty: {summaries[0]}"
+
+
+def test_pipeline_arima_config_with_target_variables_writes_model_summary(tmp_path):
+    """ARIMA declared via target_variables (no target_variable): the model stage must fit instead of raising KeyError: None (roadmap item 39)."""
+    params = {
+        "data": {"raw_data_file": str(Path("data/examples/timeseries/ghysels_ch5/arma_inven.csv").resolve())},
+        "output": {"root": str(tmp_path)},
+        "model": {"model_type": "arima", "target_variables": ["rcpi"], "order": [1, 0, 1]},
+    }
+    config_path = tmp_path / "arima.yaml"
+    config_path.write_text(yaml.dump(params))
+
+    Pipeline(params_path=str(config_path)).run()
+
+    summaries = list(tmp_path.glob("**/03_model/model_summary.json"))
+    assert summaries, "model_summary.json was not written for the ARIMA config"
+    summary = json.loads(summaries[0].read_text())
+    assert summary.get("metrics"), f"model_summary.json is empty: {summaries[0]}"

@@ -211,7 +211,7 @@ class ModelBase(ABC):
         metadata = {
             "model_version": self.model_version,
             "creation_timestamp": datetime.now().isoformat(),
-            "params": self.params.get("model", {}) if self.params else {},
+            "params": self.params.get("model", {}) if isinstance(self.params, dict) else {},
             "metrics": metrics,
             "coefficients": coefficients,
             "summary": summary_stats
