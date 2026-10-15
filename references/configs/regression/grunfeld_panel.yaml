@@ -13,3 +13,6 @@ model:
   independent_variables:
     - value
     - capital
+  panel_ols:
+    entity_effects: true
+    time_effects: true
