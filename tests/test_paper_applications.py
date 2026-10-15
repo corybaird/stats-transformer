@@ -88,7 +88,7 @@ def test_flow_files_come_from_the_manifest(tmp_path, monkeypatch):
         assert stage in flow
     # Every file the strip references exists in the run (manifest) or is an input.
     unescaped = flow.replace("\\_", "_")
-    referenced = set(re.findall(r"[\w.-]+\.(?:parquet|json|csv|yaml)", unescaped))
+    referenced = set(re.findall(r"[\w.-]+\.(?:parquet|json|joblib|csv|yaml)", unescaped))
     assert Path(record["data_rel"]).name in referenced
     assert {Path(f).name for f in record["run_files"]} <= referenced
 
