@@ -246,7 +246,7 @@ class ModelBase(ABC):
             json.dump(metadata, f, indent=4)
         return metadata_path
 
-    def _raise_if_nan_or_inf(self) -> None:
+    def _raise_if_nan_or_inf(self, original: Exception) -> None:
         """Raise ValueError naming the offending columns if X/y hold NaN or +/-inf."""
         parts = []
         if self.X is not None:
@@ -263,20 +263,19 @@ class ModelBase(ABC):
             return
         cols = sorted(set(bad.columns[bad.any()]))
         rows = int(bad.any(axis=1).sum())
-        raise ValueError(f"{rows} rows contain NaN/inf in {cols}; clean or drop them in the data/features stage")
+        raise ValueError(f"{rows} rows contain NaN/inf in {cols}; clean or drop them in the data/features stage; original error: {type(original).__name__}: {original}") from original
 
     def fit(self, data: Union[str, pd.DataFrame]) -> Dict[str, Any]:
         self.load_data(data)
         if hasattr(self, 'df_clean') and self.df_clean is not None:
             self.df_clean = self.df_clean.dropna()
 
-        self._raise_if_nan_or_inf()
         try:
             self.build_model()
-        except Exception:
+        except Exception as e:
             # X/y are usually built inside build_model, so a NaN/inf problem only
             # becomes visible on failure; re-raise with column detail instead of
             # silently dropping rows and refitting.
-            self._raise_if_nan_or_inf()
+            self._raise_if_nan_or_inf(e)
             raise
         return self.get_model_metrics()

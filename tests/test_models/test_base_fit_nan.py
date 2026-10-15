@@ -42,8 +42,9 @@ def test_fit_inf_regressor_raises_valueerror():
     df = _make_df()
     df.loc[2, "x1"] = np.inf
     model = _MinimalOLS(target="target", independent_variables=["x1", "x2"])
-    with pytest.raises(ValueError, match=r"1 rows contain NaN/inf in \['x1'\]"):
+    with pytest.raises(ValueError, match=r"1 rows contain NaN/inf in \['x1'\].*original error: MissingDataError: exog contains inf or nans") as excinfo:
         model.fit(df)
+    assert isinstance(excinfo.value.__cause__, Exception)  # chained to the original error
 
 
 class _LagOLS(_MinimalOLS):
@@ -64,3 +65,28 @@ def test_fit_nan_from_features_raises_valueerror():
     model = _LagOLS(target="target", independent_variables=["x1", "x2"])
     with pytest.raises(ValueError, match=r"1 rows contain NaN/inf in \['x1_lag1'\]"):
         model.fit(_make_df())
+
+
+class _DropNaOLS(_MinimalOLS):
+    """Like statsmodels missing='drop': fits after dropping NaN rows itself,
+    but leaves the NaN row in self.X."""
+
+    def build_model(self) -> sm.OLS:
+        assert self.df_clean is not None
+        lagged = self.df_clean.assign(x1_lag1=self.df_clean["x1"].shift(1))
+        self.X = sm.add_constant(lagged[["x1", "x1_lag1"]])
+        self.y = lagged["target"]
+        mask = self.X["x1_lag1"].notna()
+        self.model = sm.OLS(self.y[mask], self.X[mask]).fit()
+        return self.model
+
+
+def test_refit_succeeds_when_stale_x_holds_nan():
+    # A first fit may legitimately leave NaN in self.X; the second fit must
+    # not trip over the stale X/y and must succeed unchanged
+    model = _DropNaOLS(target="target", independent_variables=["x1"])
+    first = model.fit(_make_df())
+    assert first["num_observations"] == 4
+    assert model.X["x1_lag1"].isna().sum() == 1
+    second = model.fit(_make_df())
+    assert second["num_observations"] == 4
