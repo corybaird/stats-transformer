@@ -44,7 +44,7 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | `KMeansModel` `n_clusters` not configurable from YAML; seed hardcoded to 42 | `st/models/unsupervised/unsupervised.py:127` | P1 | S | open |
 | `local_projections.yaml` declares `date_column: date` absent from `sofr_surprises` | `references/configs/timeseries/reduced_form/local_projections.yaml`, `tests/test_cross_sectional_configs.py:153` (xfail) | P1 | S | open |
 | `structural_restrictions.yaml` is a restriction-matrix input, not a standalone pipeline config | `references/configs/timeseries/identification/structural_restrictions.yaml`, `tests/test_cross_sectional_configs.py:152` (xfail) | P2 | S | open |
-| SVAR-family models ignore YAML model params (only `target_variables` read; `maxlags`, `regime_column`, `instrument_variable`, ... dropped) | `st/models/base.py`, `st/models/timeseries/identification/` | P1 | S | in progress (#PR) |
+| SVAR-family models ignore YAML model params (only `target_variables` read; `maxlags`, `regime_column`, `instrument_variable`, ... dropped) | `st/models/base.py`, `st/models/timeseries/identification/` | P1 | S | in progress (#112) |
 
 ### Validation / parity
 
