@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-10-15
+
 ### Fixed
 
 - **API fixes (`stats_transformer` top level and applied-macro models):**
@@ -17,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `RegressionModel.predict()` now accepts a `pd.Series` (single row); with entity fixed effects it raises `ValueError` when the entity column is missing or contains an entity not seen in training, instead of silently predicting zero effects.
   - `PCAModel(with_mean=False)` now performs a true non-centered SVD (sklearn `PCA` always centers), with PCA-consistent explained-variance ratios.
 - **Packaging:** added `academic/vanderwel_2026` and `academic/nakamura_steinsson_2018_b` to both hatch force-include tables so `load_example()` works from built sdist/wheel distributions.
+- **Docs:** `scripts/generate_paper_applications.py` generates the paper's empirical-application table, per-example TikZ flow strips and YAML config appendix; `grunfeld_panel.yaml` adds time effects (two-way FE).
 - **Docs:** benchmarks.md local-projections cross-check rows and `docs/applied_macro_enhancements.md` updated to reflect current capabilities and accurate replication tolerances.
+- **Docs:** roadmap gains a verified "Open Work at 1.10.0" section; vendoring, DVC and benchmark-severity policies moved into tracked docs.
 
 ## [1.10.0] - 2026-10-14
 
