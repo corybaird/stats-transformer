@@ -211,7 +211,7 @@ Replication scripts for the papers in the references run with `python -m` from t
 uv run python -m examples.academic.bauer_swanson_2023
 ```
 
-Each script prints the key estimates and compares them against the published values.
+Each script prints its key estimates. Scripts that check against published or reference values say so in their output.
 
 ---
 
