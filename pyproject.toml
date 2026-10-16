@@ -71,8 +71,11 @@ ignore_missing_imports = true
 # docs/extensions/roadmap.md for the annotation plan.
 files = [
     "src/stats_transformer/utils/config.py",
+    "src/stats_transformer/utils/run_context.py",
     "src/stats_transformer/models/base.py",
+    "src/stats_transformer/models/builder.py",
     "src/stats_transformer/pipeline.py",
+    "src/stats_transformer/reporting/tables/pipeline_tables.py",
     "src/stats_transformer/models/regression/regression.py",
     "src/stats_transformer/models/unsupervised/unsupervised.py",
     "src/stats_transformer/featurization/feature_engineering.py",
