@@ -1,25 +1,22 @@
-import hashlib
 import json
 import logging
 import os
 import re
 import shutil
-import subprocess
 import warnings
-from datetime import datetime, timezone
-import pandas as pd
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
+import pandas as pd
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 from stats_transformer.featurization.data_merger import DataMerger
+from stats_transformer.models.base import ModelBase
+from stats_transformer.models.builder import ModelBuilder
 from stats_transformer.reporting.models.regression_viz import RegressionVisualizer
 from stats_transformer.reporting.eda.data_viz import DataVisualizer
 from stats_transformer.reporting.eda.eda import EDAVisualizer
-from stats_transformer.reporting.tables.regression_table import RegressionTable
-from stats_transformer.reporting.tables.descriptive_stats import DescriptiveStatsTable
-from stats_transformer.reporting.tables.table_generator import TableGenerator
-from stats_transformer.models.base import ModelBase
-from stats_transformer.models.registry import MODEL_REGISTRY, MODEL_TYPE_ALIASES
+from stats_transformer.reporting.tables.pipeline_tables import PipelineTables
 from stats_transformer.utils.config import Config, resolve_reporting_config
+from stats_transformer.utils.run_context import RunContext
 
 # Canonical research stages: data (ingest, resample, merge) -> features (transform)
 # -> model (estimate, diagnostics, JSON summary) -> reporting (charts, tables).
@@ -29,6 +26,7 @@ STAGES = ("data", "features", "model", "reporting")
 _STAGE_ALIASES = {"resample": "data", "regression": "model", "visualization": "reporting"}
 
 class Pipeline:
+    """End-to-end research pipeline: data -> features -> model -> reporting stages."""
 
     def __init__(self, params_path: Optional[str] = None, transformations: Optional[List[Dict[str, Any]]] = None, entity_column: Optional[str] = None, date_column: str = "date", target: Optional[str] = None, features: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, **kwargs: Any) -> None:
         self.logger = logging.getLogger(__name__)
@@ -45,212 +43,238 @@ class Pipeline:
         self.transformed_data: Optional[pd.DataFrame] = None
         self.model_results: Optional[Dict[str, Any]] = None
         self._config: Optional[Config] = None
-        self._run_dir: Optional[str] = None
-        self._run_files: List[str] = []
-        self._run_shapes: Dict[str, Any] = {}
-        self._stages_run: List[str] = []
-        self._run_start: Optional[str] = None
-        self._full_run_active: bool = False
+        self._run_ctx = RunContext(lambda: self._get_config(), params_path)
+        self._builder = ModelBuilder(self)
+        self._tables = PipelineTables(self)
 
-    def _get_output_root(self) -> str:
-        return self._get_config().to_dict().get("output", {}).get("root") or "data/pipeline"
+    # -- Full run ---------------------------------------------------------
 
-    def _begin_run(self) -> str:
-        """Create (or reuse) this run's per-run output folder."""
-        if self._run_dir is None:
-            stem = os.path.splitext(os.path.basename(self.params_path or "pipeline"))[0]
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            candidate = os.path.join(self._get_output_root(), stem, ts)
-            suffix = 1
-            while os.path.isdir(candidate) and os.listdir(candidate):
-                candidate = os.path.join(self._get_output_root(), stem, f"{ts}_{suffix}")
-                suffix += 1
-            os.makedirs(candidate, exist_ok=True)
-            self._run_dir = candidate
-            self._run_files = []
-            self._run_shapes = {}
-            self._stages_run = []
-            self._run_start = datetime.now(timezone.utc).isoformat()
-        return self._run_dir
-
-    def _end_stage(self, stage: str) -> None:
-        """Record a finished stage; close the run folder and write the manifest for single-stage runs."""
-        if self._run_dir is None:
-            return
-        self._stages_run.append(stage)
-        if not self._full_run_active:
-            self._write_manifest()
-            self._run_dir = None
-
-    def _write_manifest(self) -> None:
-        """Write manifest.json into the current run folder (no-op if no run is open)."""
-        if self._run_dir is None:
-            return
-
-        def _sha256(path: str) -> str:
-            digest = hashlib.sha256()
-            with open(path, "rb") as f:
-                for chunk in iter(lambda: f.read(65536), b""):
-                    digest.update(chunk)
-            return digest.hexdigest()
-
-        params = self._get_config().to_dict()
-        inputs: Dict[str, str] = {}
-        data_config = params.get("data", {})
-        input_paths = [ds.get("path") for ds in data_config.get("datasets", [])] + [data_config.get("raw_data_file")]
-        for path in input_paths:
-            if path and os.path.isfile(path) and path not in inputs:
-                try:
-                    inputs[path] = _sha256(path)
-                except OSError:
-                    pass
-        try:
-            git_sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
-        except Exception:
-            git_sha = None
-        config_sha256: Optional[str] = None
-        if self.params_path and os.path.isfile(self.params_path):
-            try:
-                config_sha256 = _sha256(self.params_path)
-            except OSError:
-                config_sha256 = None
-        try:
-            from stats_transformer import __version__ as package_version
-        except Exception:
-            package_version = "unknown"
-        manifest = {
-            "stages_run": list(self._stages_run),
-            "started_at_utc": self._run_start,
-            "finished_at_utc": datetime.now(timezone.utc).isoformat(),
-            "config": params,
-            "config_sha256": config_sha256,
-            "inputs_sha256": inputs,
-            "git_sha": git_sha,
-            "package_version": package_version,
-            "files": list(self._run_files),
-            "shapes": dict(self._run_shapes),
-        }
-        with open(os.path.join(self._run_dir, "manifest.json"), "w") as f:
-            json.dump(manifest, f, indent=2)
-
-    def _get_config(self) -> Config:
-        if self._config is None:
-            self._config = Config(config_path=self.params_path)
-            self._config.validate()
-        return self._config
-
-    def _initialize_from_params(self) -> None:
-        params = self._get_config().to_dict()
-
-        if not self.target:
-            self.target = params.get("model", {}).get("target_variable")
-        
-        if not self.features:
-            self.features = params.get("model", {}).get("independent_variables", [])
-        
-        if not self.entity_column:
-            self.entity_column = params.get("data", {}).get("featurization", {}).get("entity_column")
-        
-        self.feature_engineer = FeatureEngineer(params_path=self.params_path)
-
-        model_type = params.get("model", {}).get("model_type", "ols").lower()
-        model_type = MODEL_TYPE_ALIASES.get(model_type, model_type)
-        entry = self._resolve_registry_entry(model_type)
-        self.model = self._build_from_params(entry)
-
-    def _initialize_from_args(self) -> None:
-        if not self.entity_column:
-            raise ValueError("entity_column must be specified when not using params_path")
-
-        self.feature_engineer = FeatureEngineer(params_path=None, transformations=self.transformations, entity_column=self.entity_column, date_column=self.date_column)
-
-        if self.target or self.features:
-            model_type = self.kwargs.get("model_type", "ols").lower()
-            model_type = MODEL_TYPE_ALIASES.get(model_type, model_type)
-            entry = self._resolve_registry_entry(model_type)
-            self.model = self._build_from_args(entry)
-
-    def _resolve_registry_entry(self, model_type: str) -> Dict[str, Any]:
-        entry = MODEL_REGISTRY.get(model_type)
-        if entry is None:
-            valid = ", ".join(sorted(MODEL_REGISTRY))
-            raise ValueError(f"Unknown model_type '{model_type}'. Valid values: {valid}")
-        return entry
-
-    def _build_from_params(self, entry: Dict[str, Any]) -> ModelBase:
-        cls, kind = entry["cls"], entry["kind"]
-        if kind == "single_equation":
-            return cls(params_path=self.params_path, add_entity_fixed_effects=self.add_entity_fixed_effects)
-        if kind == "panel":
-            return cls(params_path=self.params_path, entity_column=self.entity_column)
-        if kind == "iv":
-            return cls(params_path=self.params_path)
-        if kind == "panel_iv":
-            return cls(params_path=self.params_path, entity_column=self.entity_column)
-        if kind == "unsupervised":
-            return cls(params_path=self.params_path, features=self.features)
-        if kind == "svar_family":
-            return cls(params_path=self.params_path)
-        if kind == "lp_iv":
-            return cls(params_path=self.params_path)
-        if kind == "lp":
-            model_params = self._get_config().to_dict().get("model", {})
-            shock_var = model_params.get("shock_variable") or (self.features[0] if self.features else None)
-            controls = [f for f in (self.features or []) if f != shock_var]
-            return cls(params_path=self.params_path, target=self.target, shock_var=shock_var, controls=controls, horizon=model_params.get("horizon", 8), date_column=model_params.get("date_column"))
-        if kind == "did":
-            model_params = self._get_config().to_dict().get("model", {})
-            return cls(entity_column=self.entity_column, time_column=model_params.get("time_column", self.date_column), cohort_column=model_params.get("cohort_column"), outcome_column=model_params.get("target_variable", self.target), control_variables=model_params.get("independent_variables", self.features), control_group=model_params.get("control_group", "never_treated"))
-        raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
-
-    def _build_from_args(self, entry: Dict[str, Any]) -> ModelBase:
-        cls, kind = entry["cls"], entry["kind"]
-        if kind == "single_equation":
-            return cls(params_path=None, target=self.target, independent_variables=self.features, add_entity_fixed_effects=self.add_entity_fixed_effects, entity_column=self.entity_column)
-        if kind == "panel":
-            return cls(params_path=None, target=self.target, independent_variables=self.features, entity_column=self.entity_column)
-        if kind == "iv":
-            return cls(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"))
-        if kind == "panel_iv":
-            return cls(params_path=None, target=self.target, independent_variables=self.features, endogenous=self.kwargs.get("endogenous"), instruments=self.kwargs.get("instruments"), entity_column=self.entity_column)
-        if kind == "unsupervised":
-            return cls(params_path=None, features=self.features)
-        if kind == "svar_family":
-            return cls(params_path=None, target_variables=[self.target] + (self.features or []))
-        if kind == "lp_iv":
-            return cls(params_path=None, target_variable=self.target, shock_variable=self.features[0] if self.features else None)
-        if kind == "lp":
-            shock_var = self.kwargs.get("shock_variable") or (self.features[0] if self.features else None)
-            controls = [f for f in (self.features or []) if f != shock_var]
-            return cls(params_path=None, target=self.target, shock_var=shock_var, controls=controls, horizon=self.kwargs.get("horizon", 8), date_column=self.kwargs.get("date_column"))
-        if kind == "did":
-            return cls(entity_column=self.entity_column, time_column=self.kwargs.get("time_column", self.date_column), cohort_column=self.kwargs.get("cohort_column"), outcome_column=self.target, control_variables=self.features, control_group=self.kwargs.get("control_group", "never_treated"))
-        raise ValueError(f"Unhandled registry kind '{kind}' for {cls.__name__}")
-
-    def _has_model_target(self) -> bool:
-        """True when the configured model defines its outcome(s) — via a single
-        target (univariate) or target_variables on the model (multivariate:
-        VAR/VECM/SVAR set target_variables instead of target)."""
-        if self.target:
-            return True
-        return bool(getattr(self.model, "target_variables", None) or getattr(self.model, "target_variable", None))
-
-    def _read_raw(self, data: Union[str, pd.DataFrame]) -> pd.DataFrame:
-        """Read a raw data file; restore configured date/entity columns stored as index."""
-        if isinstance(data, str):
-            df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
+    def run(self, stage: Optional[str] = None) -> Any:
+        """Run the four canonical stages in order, or a single named stage."""
+        if self.params_path:
+            self._initialize_from_params()
+            assert self.feature_engineer is not None  # set unconditionally by _initialize_from_params
         else:
-            df = data.copy()
-        # Parquet files written from pandas often carry the date/entity columns
-        # as (named) index levels, so columns the config declares (date_column,
-        # entity_column) are invisible downstream until the index is reset.
-        wanted = {getattr(self.feature_engineer, "date_column", None), getattr(self.feature_engineer, "entity_column", None)} - {None}
-        named = df.index.names if isinstance(df.index, pd.MultiIndex) else [df.index.name]
-        if any(n in wanted for n in named):
-            df = df.reset_index()
-        return df
+            raise ValueError("Pipeline.run() requires a params_path")
+
+        if stage is not None and stage in _STAGE_ALIASES:
+            canonical = _STAGE_ALIASES[stage]
+            warnings.warn(f'Pipeline stage "{stage}" is deprecated and will be removed in a future release; use "{canonical}".', DeprecationWarning, stacklevel=2)
+            stage = canonical
+        if stage is not None and stage != "eda" and stage not in STAGES:
+            raise ValueError(f"Unknown stage '{stage}'. Valid values: {', '.join(STAGES)} (or 'eda'), or None for a full run")
+
+        if stage is not None:
+            return self._run_stage(stage)
+
+        # Full run (stage is None): data -> features -> model -> reporting.
+        # Configs without data.datasets feed raw_data_file straight into features.
+        has_datasets = bool(self._get_config().to_dict().get("data", {}).get("datasets"))
+        ctx = self._run_ctx
+        ctx.run_dir = None
+        ctx.full_run_active = True
+        try:
+            if has_datasets:
+                self.run_data()
+            transformed_data = self.run_features()
+            self.run_model(transformed_data=transformed_data)
+            self.run_reporting()
+        finally:
+            ctx.full_run_active = False
+            ctx.write_manifest()
+            ctx.run_dir = None
+        return transformed_data
+
+    def _run_stage(self, stage: str) -> Any:
+        """Dispatch a validated single-stage run."""
+        if stage == "data":
+            return self.run_data()
+        if stage == "features":
+            return self.run_features()
+        if stage == "eda":
+            return self.run_eda()
+        if stage == "model":
+            return self.run_model()
+        return self.run_reporting()
+
+    # -- Stage 1: data ------------------------------------------------------
+
+    def run_data(self) -> pd.DataFrame:
+        """Data stage: ingest, resample to a common frequency, and merge."""
+        paths = self._resolve_paths()
+        assert self.feature_engineer is not None  # set by _resolve_paths via _initialize_from_params
+        data_config = paths["params"].get("data", {})
+        # Validate before begin_run(): a data stage without datasets must not
+        # leave an empty run folder behind.
+        datasets = data_config.get("datasets") or []
+        if not datasets:
+            raise ValueError("Data stage requires data.datasets in the config; this config only sets data.raw_data_file, which the features stage consumes directly (a full run skips the data stage automatically).")
+        ctx = self._run_ctx
+        run_dir = ctx.begin_run()
+        # The canonical chaining location stays exactly as on main: the explicit
+        # merge output_path when set, or the data/pipeline default. The run folder
+        # also always receives a copy so each run is self-contained.
+        output_path = paths["merged_output_path"]
+
+        raw_dir = os.path.join(run_dir, "01_data", "raw")
+        os.makedirs(raw_dir, exist_ok=True)
+        resampled = []
+        for ds_cfg in datasets:
+            self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
+            df = self.feature_engineer.load_data(ds_cfg.get("path"))
+            # Raw (pre-resample) source copy, named after the config's dataset key.
+            raw_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(ds_cfg.get("name") or os.path.splitext(os.path.basename(str(ds_cfg.get("path"))))[0]))
+            raw_path = os.path.join(raw_dir, f"{raw_name}.parquet")
+            df.to_parquet(raw_path)
+            ctx.files.append(raw_path)
+            ctx.shapes.setdefault("raw", {})[raw_name] = list(df.shape)
+            resampled_df = self.feature_engineer.resample_dataset(df, ds_cfg)
+            resampled.append(resampled_df)
+        dm = DataMerger(params_path=self.params_path)
+        merge_config = data_config.get("merge", {})
+        merge_on = merge_config.get("on", ["country", "date"])
+        merge_how = merge_config.get("how", "outer")
+        merged_df = resampled[0]
+        for i, next_df in enumerate(resampled[1:], start=1):
+            self.logger.info(f"Merging dataset {i + 1} of {len(resampled)}")
+            merged_df = dm.merge(merged_df, next_df, on=merge_on, how=merge_how)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        merged_df.to_parquet(output_path)
+        self.logger.info(f"Merged data saved to {output_path} with shape {merged_df.shape}")
+        ctx.files.append(output_path)
+        ctx.shapes["merged"] = list(merged_df.shape)
+        run_copy = os.path.join(run_dir, "01_data", "merged.parquet")
+        os.makedirs(os.path.dirname(run_copy), exist_ok=True)
+        shutil.copyfile(output_path, run_copy)
+        ctx.files.append(run_copy)
+        ctx.end_stage("data")
+        return merged_df
+
+    # -- Stage 2: features --------------------------------------------------
+
+    def run_features(self, data_path: Optional[str] = None) -> pd.DataFrame:
+        """Features stage: apply transformations to the merged data."""
+        paths = self._resolve_paths()
+        data_path = data_path or paths["effective_data_path"]
+        processed_path = paths["processed_path"]
+        if not data_path:
+            raise ValueError("No data path found for features stage")
+        transformed_data = self.fit_transform(data_path, fit_model=False)
+        if processed_path:
+            transformed_data.to_csv(processed_path, index=False)
+        ctx = self._run_ctx
+        run_dir = ctx.begin_run()
+        features_path = os.path.join(run_dir, "02_features", "features.parquet")
+        os.makedirs(os.path.dirname(features_path), exist_ok=True)
+        # Parquet (not the CSV above) keeps dtypes such as dates.
+        transformed_data.to_parquet(features_path)
+        if processed_path:
+            ctx.files.append(processed_path)
+        ctx.files.append(features_path)
+        ctx.shapes["features"] = list(transformed_data.shape)
+        ctx.end_stage("features")
+        return transformed_data
+
+    # -- Stage 3: model -----------------------------------------------------
+
+    def run_model(self, data_path: Optional[str] = None, transformed_data: Optional[pd.DataFrame] = None) -> Optional[Dict[str, Any]]:
+        """Model stage: fit the configured estimator and save its JSON summary."""
+        paths = self._resolve_paths()
+        processed_path = paths["processed_path"]
+        summary_path = paths["summary_path"]
+
+        if transformed_data is not None:
+            # Full run: fit on the in-memory features, not the CSV round-trip (keeps dtypes such as dates)
+            if self.model and self._builder.has_model_target():
+                self.model.fit(transformed_data)
+                self.model_results = self.model.get_model_metadata()
+        elif processed_path and os.path.exists(processed_path):
+            assert self.model is not None  # set unconditionally by _initialize_from_params
+            transformed_data = pd.read_csv(processed_path)
+            self.transformed_data = transformed_data
+            self.model.fit(transformed_data)
+            self.model_results = self.model.get_model_metadata()
+        else:
+            data_path = data_path or paths["effective_data_path"]
+            self.fit_transform(data_path)
+
+        # Model artefacts go to the run folder; the hardcoded reports/ default is gone.
+        ctx = self._run_ctx
+        run_dir = ctx.begin_run()
+        model_dir = os.path.join(run_dir, "03_model")
+        if self.model_results is not None:
+            summary_run_path = os.path.join(model_dir, "model_summary.json")
+            self.save_model_summary(summary_run_path)
+            ctx.files.append(summary_run_path)
+        if summary_path:
+            self.save_model_summary(summary_path)
+            ctx.files.append(summary_path)
+        if self.model is not None:  # args-mode pipelines without target/features have no model
+            model_df = self._tables.model_data()
+            if model_df is not None:
+                # The exact data the model was fitted on (df_clean restricted to the
+                # columns the model uses); the descriptive-stats table reads the same.
+                model_data_path = os.path.join(model_dir, "model_data.parquet")
+                model_df.to_parquet(model_data_path)
+                ctx.files.append(model_data_path)
+                ctx.shapes["model_data"] = list(model_df.shape)
+            try:
+                model_path = os.path.join(model_dir, "model.joblib")
+                self.model.save(model_path)
+                ctx.files.append(model_path)
+            except Exception as e:
+                # An unpicklable attribute must not fail the run.
+                self.logger.warning(f"Could not save fitted model {type(self.model).__name__}: {e}")
+        ctx.end_stage("model")
+        return self.model_results
+
+    # -- Stage 4: reporting -------------------------------------------------
+
+    def run_reporting(self) -> Dict[str, Any]:
+        """Reporting stage: draw charts and tables from transformed data and model results."""
+        paths = self._resolve_paths()
+        processed_path = paths["processed_path"]
+        summary_path = paths["summary_path"]
+
+        if (self.transformed_data is None) and processed_path and os.path.exists(processed_path):
+            self.transformed_data = pd.read_csv(processed_path)
+        if (self.model_results is None) and summary_path and os.path.exists(summary_path):
+            with open(summary_path, "r") as f:
+                self.model_results = json.load(f)
+
+        report_config = resolve_reporting_config(paths["params"])
+        ctx = self._run_ctx
+        run_dir = ctx.begin_run()
+        # Charts live under the run folder's 04_reporting; an explicit
+        # reporting.output_dir still receives a copy when one is configured.
+        results = self.create_visualizations(output_dir=os.path.join(run_dir, "04_reporting"))
+        explicit_output_dir = report_config.get("output_dir")
+        chart_values: List[Any] = []
+        for value in results.values():
+            chart_values.extend(value if isinstance(value, list) else [value])
+        for path in chart_values:
+            if isinstance(path, str) and os.path.isfile(path):
+                ctx.files.append(path)
+                if explicit_output_dir:
+                    os.makedirs(explicit_output_dir, exist_ok=True)
+                    ctx.files.append(shutil.copyfile(path, os.path.join(explicit_output_dir, os.path.basename(path))))
+        self._tables.generate_tables(report_config.get("tables"), run_dir)
+        ctx.end_stage("reporting")
+        return results
+
+    def run_eda(self, data_path: Optional[str] = None) -> Any:
+        """EDA: exploratory charts of the merged (or raw) data."""
+        paths = self._resolve_paths()
+        data_path = data_path or paths["effective_data_path"]
+        if not data_path:
+            raise ValueError("No data path found for eda stage")
+        eda_viz = EDAVisualizer(params_path=self.params_path, output_dir=paths["report_output_dir"])
+        return eda_viz.run(data_path=data_path)
+
+    # -- Feature/model API --------------------------------------------------
 
     def fit_transform(self, data: Union[str, pd.DataFrame], fit_model: bool = True) -> pd.DataFrame:
+        """Fit the feature engineer on raw data (and the model when requested) and return the transformed data."""
         self.logger.info("Starting pipeline fit_transform")
         if self.params_path:
             self._initialize_from_params()
@@ -264,13 +288,14 @@ class Pipeline:
         else:
             raise ValueError("No feature engineering component initialized")
 
-        if fit_model and self.model and self._has_model_target():
+        if fit_model and self.model and self._builder.has_model_target():
             self.model.fit(self.transformed_data)
             self.model_results = self.model.get_model_metadata()
 
         return self.transformed_data
 
     def transform(self, data: Union[str, pd.DataFrame]) -> Optional[pd.DataFrame]:
+        """Apply the fitted feature engineering to raw data without refitting."""
         if self.params_path:
             self._initialize_from_params()
         else:
@@ -283,6 +308,7 @@ class Pipeline:
         return self.transformed_data
 
     def predict(self, data: Optional[Union[str, pd.DataFrame]] = None) -> Any:
+        """Predict with the fitted model on (default: the transformed training) data."""
         if not self.model or not hasattr(self.model, 'model') or self.model.model is None:
             raise ValueError("Model must be fitted before making predictions")
 
@@ -302,6 +328,7 @@ class Pipeline:
         return self.model.predict(data_to_predict)
 
     def save_results(self, output_dir: str = "reports") -> Dict[str, str]:
+        """Save transformed data and the model summary JSON to output_dir."""
         os.makedirs(output_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         results: Dict[str, str] = {}
@@ -320,7 +347,7 @@ class Pipeline:
         return results
 
     def save_model_summary(self, output_path: str) -> None:
-        import json
+        """Write the model summary JSON to output_path (no-op without results)."""
         if self.model_results is None:
             return
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -328,13 +355,14 @@ class Pipeline:
             json.dump(self.model_results, f, indent=4)
 
     def create_visualizations(self, output_dir: str = "reports/visualizations", visualization_types: Optional[List[str]] = None, display_only: bool = False) -> Dict[str, Any]:
+        """Create regression and time-series charts from the pipeline's results."""
         if not self.model_results and self.transformed_data is None:
             return {}
-        
+
         report_config = {}
         if self.params_path and os.path.exists(self.params_path):
             report_config = self._get_config().get_reporting_config()
-        
+
         results = {}
         if self.model_results:
             reg_viz = RegressionVisualizer(params_path=self.params_path, output_dir=output_dir, file_format=report_config.get("file_format", "png"), dpi=report_config.get("dpi", 300), style=report_config.get("style", "default"))
@@ -347,7 +375,7 @@ class Pipeline:
                         results["model_summary"] = reg_viz.create_model_summary_plot(self.model_results, subdir="regression", display_only=display_only)
                 except Exception as e:
                     self.logger.error(f"Error creating {viz_type} visualization: {e}")
-        
+
         if self.transformed_data is not None:
             data_viz = DataVisualizer(params_path=self.params_path, output_dir=output_dir, file_format=report_config.get("file_format", "png"), dpi=report_config.get("dpi", 300), style=report_config.get("style", "default"))
             try:
@@ -357,7 +385,48 @@ class Pipeline:
                 self.logger.error(f"Error creating data visualization: {e}")
         return results
 
+    # -- Plumbing -----------------------------------------------------------
+
+    def _get_config(self) -> Config:
+        """Load and validate the config once, then cache it."""
+        if self._config is None:
+            self._config = Config(config_path=self.params_path)
+            self._config.validate()
+        return self._config
+
+    def _initialize_from_params(self) -> None:
+        """Initialize the feature engineer and model from the params file."""
+        params = self._get_config().to_dict()
+
+        if not self.target:
+            self.target = params.get("model", {}).get("target_variable")
+
+        if not self.features:
+            self.features = params.get("model", {}).get("independent_variables", [])
+
+        if not self.entity_column:
+            self.entity_column = params.get("data", {}).get("featurization", {}).get("entity_column")
+
+        self.feature_engineer = FeatureEngineer(params_path=self.params_path)
+
+        model_type = params.get("model", {}).get("model_type", "ols").lower()
+        entry = self._builder.resolve_registry_entry(model_type)
+        self.model = self._builder.build_from_params(entry)
+
+    def _initialize_from_args(self) -> None:
+        """Initialize the feature engineer and model from constructor arguments."""
+        if not self.entity_column:
+            raise ValueError("entity_column must be specified when not using params_path")
+
+        self.feature_engineer = FeatureEngineer(params_path=None, transformations=self.transformations, entity_column=self.entity_column, date_column=self.date_column)
+
+        if self.target or self.features:
+            model_type = self.kwargs.get("model_type", "ols").lower()
+            entry = self._builder.resolve_registry_entry(model_type)
+            self.model = self._builder.build_from_args(entry)
+
     def _resolve_paths(self) -> Dict[str, Any]:
+        """Resolve config-derived paths used by the stage methods."""
         if not self.params_path:
             raise ValueError("Pipeline stages require a params_path")
         # Stage methods can be called directly, without going through run()
@@ -382,287 +451,20 @@ class Pipeline:
             "summary_path": params.get("model", {}).get("summary_output_path"),
         }
 
-    def run_data(self) -> pd.DataFrame:
-        """Data stage: ingest, resample to a common frequency, and merge."""
-        paths = self._resolve_paths()
-        assert self.feature_engineer is not None  # set by _resolve_paths via _initialize_from_params
-        data_config = paths["params"].get("data", {})
-        # Validate before _begin_run(): a data stage without datasets must not
-        # leave an empty run folder behind.
-        datasets = data_config.get("datasets") or []
-        if not datasets:
-            raise ValueError("Data stage requires data.datasets in the config; this config only sets data.raw_data_file, which the features stage consumes directly (a full run skips the data stage automatically).")
-        run_dir = self._begin_run()
-        # The canonical chaining location stays exactly as on main: the explicit
-        # merge output_path when set, or the data/pipeline default. The run folder
-        # also always receives a copy so each run is self-contained.
-        output_path = paths["merged_output_path"]
-
-        raw_dir = os.path.join(run_dir, "01_data", "raw")
-        os.makedirs(raw_dir, exist_ok=True)
-        resampled = []
-        for ds_cfg in datasets:
-            self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
-            df = self.feature_engineer.load_data(ds_cfg.get("path"))
-            # Raw (pre-resample) source copy, named after the config's dataset key.
-            raw_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(ds_cfg.get("name") or os.path.splitext(os.path.basename(str(ds_cfg.get("path"))))[0]))
-            raw_path = os.path.join(raw_dir, f"{raw_name}.parquet")
-            df.to_parquet(raw_path)
-            self._run_files.append(raw_path)
-            self._run_shapes.setdefault("raw", {})[raw_name] = list(df.shape)
-            resampled_df = self.feature_engineer.resample_dataset(df, ds_cfg)
-            resampled.append(resampled_df)
-        dm = DataMerger(params_path=self.params_path)
-        merge_config = data_config.get("merge", {})
-        merge_on = merge_config.get("on", ["country", "date"])
-        merge_how = merge_config.get("how", "outer")
-        merged_df = resampled[0]
-        for i, next_df in enumerate(resampled[1:], start=1):
-            self.logger.info(f"Merging dataset {i + 1} of {len(resampled)}")
-            merged_df = dm.merge(merged_df, next_df, on=merge_on, how=merge_how)
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        merged_df.to_parquet(output_path)
-        self.logger.info(f"Merged data saved to {output_path} with shape {merged_df.shape}")
-        self._run_files.append(output_path)
-        self._run_shapes["merged"] = list(merged_df.shape)
-        run_copy = os.path.join(run_dir, "01_data", "merged.parquet")
-        os.makedirs(os.path.dirname(run_copy), exist_ok=True)
-        shutil.copyfile(output_path, run_copy)
-        self._run_files.append(run_copy)
-        self._end_stage("data")
-        return merged_df
-
-    def run_features(self, data_path: Optional[str] = None) -> pd.DataFrame:
-        """Features stage: apply transformations to the merged data."""
-        paths = self._resolve_paths()
-        data_path = data_path or paths["effective_data_path"]
-        processed_path = paths["processed_path"]
-        if not data_path:
-            raise ValueError("No data path found for features stage")
-        transformed_data = self.fit_transform(data_path, fit_model=False)
-        if processed_path:
-            transformed_data.to_csv(processed_path, index=False)
-        run_dir = self._begin_run()
-        features_path = os.path.join(run_dir, "02_features", "features.parquet")
-        os.makedirs(os.path.dirname(features_path), exist_ok=True)
-        # Parquet (not the CSV above) keeps dtypes such as dates.
-        transformed_data.to_parquet(features_path)
-        if processed_path:
-            self._run_files.append(processed_path)
-        self._run_files.append(features_path)
-        self._run_shapes["features"] = list(transformed_data.shape)
-        self._end_stage("features")
-        return transformed_data
-
-    def run_model(self, data_path: Optional[str] = None, transformed_data: Optional[pd.DataFrame] = None) -> Optional[Dict[str, Any]]:
-        """Model stage: fit the configured estimator and save its JSON summary."""
-        paths = self._resolve_paths()
-        processed_path = paths["processed_path"]
-        summary_path = paths["summary_path"]
-
-        if transformed_data is not None:
-            # Full run: fit on the in-memory features, not the CSV round-trip (keeps dtypes such as dates)
-            if self.model and self._has_model_target():
-                self.model.fit(transformed_data)
-                self.model_results = self.model.get_model_metadata()
-        elif processed_path and os.path.exists(processed_path):
-            assert self.model is not None  # set unconditionally by _initialize_from_params
-            transformed_data = pd.read_csv(processed_path)
-            self.transformed_data = transformed_data
-            self.model.fit(transformed_data)
-            self.model_results = self.model.get_model_metadata()
+    def _read_raw(self, data: Union[str, pd.DataFrame]) -> pd.DataFrame:
+        """Read a raw data file; restore configured date/entity columns stored as index."""
+        if isinstance(data, str):
+            df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
         else:
-            data_path = data_path or paths["effective_data_path"]
-            self.fit_transform(data_path)
-
-        # Model artefacts go to the run folder; the hardcoded reports/ default is gone.
-        run_dir = self._begin_run()
-        model_dir = os.path.join(run_dir, "03_model")
-        if self.model_results is not None:
-            summary_run_path = os.path.join(model_dir, "model_summary.json")
-            self.save_model_summary(summary_run_path)
-            self._run_files.append(summary_run_path)
-        if summary_path:
-            self.save_model_summary(summary_path)
-            self._run_files.append(summary_path)
-        if self.model is not None:  # args-mode pipelines without target/features have no model
-            model_df = self._model_data()
-            if model_df is not None:
-                # The exact data the model was fitted on (df_clean restricted to the
-                # columns the model uses); the descriptive-stats table reads the same.
-                model_data_path = os.path.join(model_dir, "model_data.parquet")
-                model_df.to_parquet(model_data_path)
-                self._run_files.append(model_data_path)
-                self._run_shapes["model_data"] = list(model_df.shape)
-            try:
-                model_path = os.path.join(model_dir, "model.joblib")
-                self.model.save(model_path)
-                self._run_files.append(model_path)
-            except Exception as e:
-                # An unpicklable attribute must not fail the run.
-                self.logger.warning(f"Could not save fitted model {type(self.model).__name__}: {e}")
-        self._end_stage("model")
-        return self.model_results
-
-    def run_reporting(self) -> Dict[str, Any]:
-        """Reporting stage: draw charts and tables from transformed data and model results."""
-        paths = self._resolve_paths()
-        processed_path = paths["processed_path"]
-        summary_path = paths["summary_path"]
-
-        if (self.transformed_data is None) and processed_path and os.path.exists(processed_path):
-            self.transformed_data = pd.read_csv(processed_path)
-        if (self.model_results is None) and summary_path and os.path.exists(summary_path):
-            import json
-            with open(summary_path, "r") as f:
-                self.model_results = json.load(f)
-
-        report_config = resolve_reporting_config(paths["params"])
-        run_dir = self._begin_run()
-        # Charts live under the run folder's 04_reporting; an explicit
-        # reporting.output_dir still receives a copy when one is configured.
-        results = self.create_visualizations(output_dir=os.path.join(run_dir, "04_reporting"))
-        explicit_output_dir = report_config.get("output_dir")
-        chart_values: List[Any] = []
-        for value in results.values():
-            chart_values.extend(value if isinstance(value, list) else [value])
-        for path in chart_values:
-            if isinstance(path, str) and os.path.isfile(path):
-                self._run_files.append(path)
-                if explicit_output_dir:
-                    os.makedirs(explicit_output_dir, exist_ok=True)
-                    self._run_files.append(shutil.copyfile(path, os.path.join(explicit_output_dir, os.path.basename(path))))
-        self._generate_tables(report_config.get("tables"), run_dir)
-        self._end_stage("reporting")
-        return results
-
-    def _generate_tables(self, table_names: Optional[List[str]], run_dir: str) -> None:
-        """Write the selected LaTeX tables into <run_dir>/04_reporting/tables and register them."""
-        if table_names is None:
-            # Key absent -> generate both (cheap, broadly useful).
-            table_names = ["descriptive_stats", "regression_table"]
-        tables_dir = os.path.join(run_dir, "04_reporting", "tables")
-        for name in table_names:
-            if name == "descriptive_stats":
-                table_path = self._descriptive_stats_table(tables_dir)
-            elif name == "regression_table":
-                table_path = self._regression_table(tables_dir)
-            else:
-                self.logger.warning(f"Unknown reporting table '{name}'; expected 'descriptive_stats' or 'regression_table'.")
-                continue
-            if table_path:
-                self._run_files.append(str(table_path))
-
-    def _model_data(self) -> Optional[pd.DataFrame]:
-        """The exact data the model was fitted on: df_clean restricted to the
-        columns the model uses (entity/time stay in the index where the model
-        indexed them there), rows with NaNs dropped. Shared by the
-        model_data.parquet artefact (run_model) and the descriptive-stats table"""
-        if self.model is None:
-            return None
-        df_clean = getattr(self.model, "df_clean", None)
-        if df_clean is None:
-            return None
-        try:
-            cols = [c for c in self.model._get_required_columns() if c in df_clean.columns]
-        except Exception:
-            cols = []
-        return (df_clean[cols].dropna() if cols else df_clean.dropna())
-
-    def _descriptive_stats_table(self, tables_dir: str) -> Optional[str]:
-        """Descriptive stats of the data the model was fitted on (numeric columns only,
-        dependent variable first, then regressors in model order)."""
-        df = self._model_data()
-        if df is None and self.model is not None and self.transformed_data is not None:
-            # Reporting-only run (model never fitted): use the transformed data,
-            # still restricted to the model's used columns.
-            try:
-                cols = [c for c in self.model._get_required_columns() if c in self.transformed_data.columns]
-            except Exception:
-                cols = []
-            if cols:
-                df = self.transformed_data[cols]
-        if df is None:
-            df = self.transformed_data
-        if df is None:
-            self.logger.info("No fitted data available; skipping descriptive_stats table.")
-            return None
-        if self.target and self.target in df.columns:
-            # Most tables list the dependent variable first; _get_required_columns
-            # puts it last (independent_variables first).
-            df = df[[self.target] + [c for c in df.columns if c != self.target]]
-        df = df.select_dtypes(include="number")
-        table = DescriptiveStatsTable(table_generator=TableGenerator(output_dir=tables_dir))
-        path = table.export_dataframe(df, "descriptive_stats")
-        if path is None:
-            self.logger.info("No numeric columns available; skipping descriptive_stats table.")
-        return path
-
-    def _regression_table(self, tables_dir: str) -> Optional[str]:
-        """Coefficient table from the fitted model's metadata (regression-family models only)."""
-        if self.model_results is None:
-            self.logger.info("No model results available; skipping regression_table table.")
-            return None
-        table = RegressionTable(table_generator=TableGenerator(output_dir=tables_dir))
-        path = table.export(self.model_results, "regression_table")
-        if path is None:
-            self.logger.info("Model is not regression-family; skipping regression_table table.")
-        return path
-
-    def run_eda(self, data_path: Optional[str] = None) -> Any:
-        """EDA: exploratory charts of the merged (or raw) data."""
-        paths = self._resolve_paths()
-        data_path = data_path or paths["effective_data_path"]
-        if not data_path:
-            raise ValueError("No data path found for eda stage")
-        eda_viz = EDAVisualizer(params_path=self.params_path, output_dir=paths["report_output_dir"])
-        return eda_viz.run(data_path=data_path)
-
-    def _run_stage(self, stage: str) -> Any:
-        """Dispatch a validated single-stage run."""
-        if stage == "data":
-            return self.run_data()
-        if stage == "features":
-            return self.run_features()
-        if stage == "eda":
-            return self.run_eda()
-        if stage == "model":
-            return self.run_model()
-        return self.run_reporting()
-
-    def run(self, stage: Optional[str] = None) -> Any:
-        if self.params_path:
-            self._initialize_from_params()
-            assert self.feature_engineer is not None  # set unconditionally by _initialize_from_params
-        else:
-            raise ValueError("Pipeline.run() requires a params_path")
-
-        if stage is not None and stage in _STAGE_ALIASES:
-            canonical = _STAGE_ALIASES[stage]
-            warnings.warn(f'Pipeline stage "{stage}" is deprecated and will be removed in a future release; use "{canonical}".', DeprecationWarning, stacklevel=2)
-            stage = canonical
-        if stage is not None and stage != "eda" and stage not in STAGES:
-            raise ValueError(f"Unknown stage '{stage}'. Valid values: {', '.join(STAGES)} (or 'eda'), or None for a full run")
-
-        if stage is not None:
-            return self._run_stage(stage)
-
-        # Full run (stage is None): data -> features -> model -> reporting.
-        # Configs without data.datasets feed raw_data_file straight into features.
-        has_datasets = bool(self._get_config().to_dict().get("data", {}).get("datasets"))
-        self._run_dir = None
-        self._full_run_active = True
-        try:
-            if has_datasets:
-                self.run_data()
-            transformed_data = self.run_features()
-            self.run_model(transformed_data=transformed_data)
-            self.run_reporting()
-        finally:
-            self._full_run_active = False
-            self._write_manifest()
-            self._run_dir = None
-        return transformed_data
+            df = data.copy()
+        # Parquet files written from pandas often carry the date/entity columns
+        # as (named) index levels, so columns the config declares (date_column,
+        # entity_column) are invisible downstream until the index is reset.
+        wanted = {getattr(self.feature_engineer, "date_column", None), getattr(self.feature_engineer, "entity_column", None)} - {None}
+        named = df.index.names if isinstance(df.index, pd.MultiIndex) else [df.index.name]
+        if any(n in wanted for n in named):
+            df = df.reset_index()
+        return df
 
 if __name__ == "__main__":
     import argparse
