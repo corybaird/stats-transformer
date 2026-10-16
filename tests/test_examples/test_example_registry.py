@@ -30,7 +30,6 @@ EXPECTED_EXAMPLES = {
     "gertler_karadi_2015",
     "gk_2015",
     "global_factor",
-    "greenbook_forecast_errors",
     "grunfeld",
     "jarocinski_2024",
     "jt_2025",
