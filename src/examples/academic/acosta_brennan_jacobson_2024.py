@@ -9,7 +9,7 @@ class AcostaBrennanJacobson2024Replication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/academic/acosta_brennan_jacobson_2024/sofr_surprises.parquet.gzip")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/academic/acosta_brennan_jacobson_2024/sofr_surprises.parquet.gzip"
         self.var_model = None
         self.ols_model = None
 

@@ -19,3 +19,18 @@ jobs:
       - run: uv run pytest --cov=stats_transformer --cov-report=term-missing --cov-fail-under=72
       - run: uv run mypy
         continue-on-error: true
+  build-smoke:
+    # Build the wheel/sdist and smoke-test the wheel from outside the repo, so
+    # packaging regressions surface in CI instead of only at publish.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install 3.12
+      - run: uv build
+      - run: |
+          uv venv /tmp/wheel-venv
+          uv pip install --python /tmp/wheel-venv/bin/python dist/*.whl
+      - run: |
+          cd /tmp
+          /tmp/wheel-venv/bin/python -c "import stats_transformer; from stats_transformer import Pipeline; from stats_transformer.data import load_example; print(load_example().shape)"

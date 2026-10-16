@@ -10,7 +10,8 @@ class KingPlosserStockWatson1991Replication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/timeseries/macrodata.csv")
+            # data/examples lives under the repo root (src/examples/academic/x.py)
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/timeseries/macrodata.csv"
         self.model = None
 
     def _load_data(self):
@@ -22,15 +23,21 @@ class KingPlosserStockWatson1991Replication:
 
     def run(self):
         df = self._load_data()
+        # King, Plosser, Stock & Watson (1991): one permanent (balanced-growth)
+        # shock, identified by the two transitory shocks having zero long-run
+        # effects (LR columns 1 and 2 of the long-run impact matrix Xi B; King
+        # et al. 1991 eq. (7)), plus one contemporaneous zero restriction
+        # B[1,2] to disentangle the two transitory shocks (Bruggemann 2006,
+        # SFB 649 DP 2006-021 sec. 4). With K = 3, r = 2 this is just-identified.
         SR = np.array([
-            [np.nan, 0.0, 0.0],
+            [np.nan, np.nan, np.nan],
             [np.nan, np.nan, 0.0],
             [np.nan, np.nan, np.nan]
         ])
         LR = np.array([
             [np.nan, 0.0, 0.0],
-            [np.nan, np.nan, 0.0],
-            [np.nan, np.nan, np.nan]
+            [np.nan, 0.0, 0.0],
+            [np.nan, 0.0, 0.0]
         ])
 
         self.model = SVECModel(

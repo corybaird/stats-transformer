@@ -235,6 +235,21 @@ class Pipeline:
             return True
         return bool(getattr(self.model, "target_variables", None) or getattr(self.model, "target_variable", None))
 
+    def _read_raw(self, data: Union[str, pd.DataFrame]) -> pd.DataFrame:
+        """Read a raw data file; restore configured date/entity columns stored as index."""
+        if isinstance(data, str):
+            df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
+        else:
+            df = data.copy()
+        # Parquet files written from pandas often carry the date/entity columns
+        # as (named) index levels, so columns the config declares (date_column,
+        # entity_column) are invisible downstream until the index is reset.
+        wanted = {getattr(self.feature_engineer, "date_column", None), getattr(self.feature_engineer, "entity_column", None)} - {None}
+        named = df.index.names if isinstance(df.index, pd.MultiIndex) else [df.index.name]
+        if any(n in wanted for n in named):
+            df = df.reset_index()
+        return df
+
     def fit_transform(self, data: Union[str, pd.DataFrame], fit_model: bool = True) -> pd.DataFrame:
         self.logger.info("Starting pipeline fit_transform")
         if self.params_path:
@@ -242,10 +257,7 @@ class Pipeline:
         else:
             self._initialize_from_args()
 
-        if isinstance(data, str):
-            df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
-        else:
-            df = data.copy()
+        df = self._read_raw(data)
 
         if self.feature_engineer:
             self.transformed_data = self.feature_engineer.fit_transform(df)
@@ -264,10 +276,7 @@ class Pipeline:
         else:
             self._initialize_from_args()
 
-        if isinstance(data, str):
-            df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
-        else:
-            df = data.copy()
+        df = self._read_raw(data)
 
         if self.feature_engineer:
             self.transformed_data = self.feature_engineer.transform(df)

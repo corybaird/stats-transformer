@@ -8,7 +8,7 @@ class JarocinskiKaradi2020Replication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip"
         self.bvar_model = None
 
     def _load_data(self):

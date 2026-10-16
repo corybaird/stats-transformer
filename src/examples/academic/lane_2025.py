@@ -9,11 +9,11 @@ class Lane2025Replication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/academic/lane_2025/policy_loans.parquet.gzip")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/academic/lane_2025/policy_loans.parquet.gzip"
         if tariffs_path:
             self.tariffs_path = Path(tariffs_path)
         else:
-            self.tariffs_path = Path("data/examples/academic/lane_2025/tariffs.parquet.gzip")
+            self.tariffs_path = Path(__file__).resolve().parents[3] / "data/examples/academic/lane_2025/tariffs.parquet.gzip"
         self.model = None
         self.did_model = None
 

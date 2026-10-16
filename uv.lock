@@ -2661,6 +2661,7 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "requests" },
     { name = "ruff" },
 ]
 
@@ -2689,6 +2690,7 @@ dev = [
     { name = "mypy", specifier = ">=1.14" },
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "pytest-cov", specifier = ">=6.0" },
+    { name = "requests", specifier = ">=2.32" },
     { name = "ruff", specifier = ">=0.9" },
 ]
 

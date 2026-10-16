@@ -142,13 +142,14 @@ The recorded `bq1989_long` case in Section 2 is the evidence for this comparison
 
 ## 4. Academic Paper Replications & Example Scripts
 
-This section catalogs 30 runnable example modules in `src/examples/`, detailing their academic source papers, module paths, data source files, and empirical verification role.
+This section catalogs 31 runnable example modules in `src/examples/`, detailing their academic source papers, module paths, data source files, and empirical verification role.
 
 | Domain / Method | Script Module Path | Academic Paper / Benchmark Target | Data Source File | Verification Status | Target Verification / Compared Object |
 | --- | --- | --- | --- | --- | --- |
 | **Structural VAR** | `src.examples.academic.var.blanchard_quah_1989` | Blanchard & Quah (1989) / MATLAB VAR-Toolbox 4.0 (recorded output `tests/external_benchmarks/matlab/bq1989_long.json`, see Section 3) | `data/examples/matlab_examples/BQ1989_Data.xlsx` | **Cross-Language Verified (MATLAB, R)** | Long-run structural supply & demand shock identification (impact matrix $C(1)$, $2.22 \times 10^{-16}$ max diff) |
 | **Proxy SVAR / SVAR-IV** | `src.examples.academic.var.gertler_karadi_2015` | Gertler & Karadi (2015) | `data/examples/matlab_examples/GK2015_Data.xlsx` | **Paper Replication Example** | External-instrument monetary policy shock identification |
 | **LP-IV Local Projections** | `src.examples.academic.var.jorda_taylor_2025` | Jordà & Taylor (2025) / Stock & Watson (2018) | `data/examples/matlab_examples/JT2025_Data.xlsx` | **Paper Replication Example** | Instrumental-variable impulse response functions |
+| **Local Projections (Jordà)** | `src.examples.academic.nakamura_steinsson_2018b_jorda` | Nakamura & Steinsson (2018b, Appendix) | `data/examples/academic/nakamura_steinsson_2018_b/` (MonetaryData.txt, RomerShock.txt, RomerJordaIRF.dta) | **Paper Replication Example** | Jordà local projections with Romer-Romer shocks; multiplier and IRF paths vs published values (test regression) |
 | **Reduced-Form VAR** | `src.examples.academic.var.stock_watson_2001` | Stock & Watson (2001) | `data/examples/matlab_examples/SW2001_Data.xlsx` | **Paper Replication Example** | 3-variable macro VAR (Inflation, Unemployment, Fed Funds) |
 | **Reduced-Form VAR** | `src.examples.timeseries.macro_var` | `statsmodels.tsa.vector_ar.var_model` | `data/examples/timeseries/macrodata.csv` | **Cross-Language Verified (R, Stata)** | VAR(2) coefficient matrices & standard error parity |
 | **SVAR Identification** | `src.examples.timeseries.kilian_svar` | Kilian & Lütkepohl (2017) | `data/examples/timeseries/macrodata.csv` | **Paper Replication Example** | Short-run Cholesky & A-model structural identification |

@@ -4,7 +4,7 @@ from stats_transformer.models.timeseries.reduced_form.vecm import VECMModel
 
 class GhyselsChap7VECMExample:
     def __init__(self):
-        self.data_path = Path("data/examples/timeseries/ghysels_ch7/simulated_cointegration.csv")
+        self.data_path = Path(__file__).resolve().parents[3] / "data/examples/timeseries/ghysels_ch7/simulated_cointegration.csv"
 
     def run(self):
         sim_data = pd.read_csv(self.data_path)

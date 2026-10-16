@@ -9,7 +9,7 @@ class CieslakHansenMcMahonXiao2024Replication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/academic/cieslak_hansen_mcmahon_xiao_2024/pmu_data.parquet.gzip")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/academic/cieslak_hansen_mcmahon_xiao_2024/pmu_data.parquet.gzip"
         self.ols_model = None
         self.var_model = None
 

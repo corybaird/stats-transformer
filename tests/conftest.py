@@ -22,4 +22,4 @@ def panel_df() -> pd.DataFrame:
 
 @pytest.fixture
 def macro_ts_df() -> pd.DataFrame:
-    return pd.read_parquet(PROJECT_ROOT / "tests" / "data" / "macrodb_gdp_inflation.parquet")
+    return pd.read_parquet(PROJECT_ROOT / "src" / "stats_transformer" / "data" / "macrodb_gdp_inflation.parquet")
