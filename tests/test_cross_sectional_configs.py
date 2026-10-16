@@ -215,7 +215,6 @@ def test_resample_no_duplicate_columns_for_numeric_entity_id():
 
 XFAIL_CONFIGS = {
     "timeseries/identification/structural_restrictions.yaml": "Restrictions-only SVAR input file, not a standalone params.yaml (no data:/model: sections)",
-    "timeseries/reduced_form/local_projections.yaml": "Config declares date_column: date but sofr_surprises.parquet.gzip has no date column",
 }
 
 
