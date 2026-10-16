@@ -16,7 +16,8 @@ class ARIMAModel(ModelBase):
         if not self.target and model_params.get("target_variables"):
             self.target = model_params.get("target_variables")[0]
         self.target_variables = [self.target] if self.target else []
-        self.independent_variables = list(self.independent_variables or [])
+        # The target is never its own regressor (older configs list it under independent_variables).
+        self.independent_variables = [c for c in (self.independent_variables or []) if c != self.target]
         self.order = tuple(model_params.get("order", order))
         self.date_column = date_column or model_params.get("date_column")
         self.time_column = self.date_column
