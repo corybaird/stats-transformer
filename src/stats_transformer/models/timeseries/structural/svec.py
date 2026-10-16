@@ -243,7 +243,7 @@ class SVEC:
                 best_viol = min(best_viol, viol)
             if viol > self.restr_tol:
                 failed_violation += 1
-            elif not np.isfinite(obj) or obj >= 1e10 or obj < obj_floor:
+            elif not np.isfinite(obj) or obj >= 1e10 or obj < obj_floor - 1e-8 * abs(obj_floor):
                 failed_objective += 1
             else:
                 candidates.append((obj, b_flat))

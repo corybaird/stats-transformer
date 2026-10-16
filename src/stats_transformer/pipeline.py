@@ -244,7 +244,7 @@ class Pipeline:
         # Parquet files written from pandas often carry the date/entity columns
         # as (named) index levels, so columns the config declares (date_column,
         # entity_column) are invisible downstream until the index is reset.
-        wanted = {getattr(self.feature_engineer, "date_column", None), getattr(self.feature_engineer, "entity_column", None)}
+        wanted = {getattr(self.feature_engineer, "date_column", None), getattr(self.feature_engineer, "entity_column", None)} - {None}
         named = df.index.names if isinstance(df.index, pd.MultiIndex) else [df.index.name]
         if any(n in wanted for n in named):
             df = df.reset_index()
