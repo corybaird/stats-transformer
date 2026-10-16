@@ -414,8 +414,11 @@ class FeatureEngineer:
         self.logger.info(f"Adding suffix '_{suffix}' to {len(rename_map)} data columns")
         return df.rename(columns=rename_map)
 
-    def _upsample_entity(self, group, entity_col, date_col, freq, fill_method):
-        entity_value = group[entity_col].iloc[0] if entity_col else None
+    def _upsample_entity(self, group, entity_col, date_col, freq, fill_method, entity_value=None):
+        # entity_value is passed explicitly because pandas 3 groupby().apply no
+        # longer hands the grouping column to the applied function.
+        if entity_value is None and entity_col:
+            entity_value = group[entity_col].iloc[0]
         group = group.drop(columns=[entity_col]) if entity_col else group
         group = group.set_index(date_col).sort_index()
         upsampled = group.resample(freq).asfreq()
@@ -458,7 +461,15 @@ class FeatureEngineer:
         if is_upsampling:
             self.logger.info(f"Upsampling from {source_period} to {target_period} using {agg_method}")
             if entity_col:
-                resampled_df = df.groupby(entity_col, group_keys=False).apply(self._upsample_entity, entity_col=entity_col, date_col=date_col, freq=freq, fill_method=agg_method).reset_index(drop=True)
+                # Explicit loop instead of groupby().apply(): pandas 2.2 and 3.x
+                # disagree on whether the grouping column is passed through.
+                resampled_df = pd.concat(
+                    [
+                        self._upsample_entity(group, entity_col=entity_col, date_col=date_col, freq=freq, fill_method=agg_method, entity_value=entity_value)
+                        for entity_value, group in df.groupby(entity_col, sort=True)
+                    ],
+                    ignore_index=True,
+                )
             else:
                 # Single series without an entity: resample the whole frame.
                 resampled_df = self._upsample_entity(df, entity_col=None, date_col=date_col, freq=freq, fill_method=agg_method)
