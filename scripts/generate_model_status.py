@@ -36,6 +36,10 @@ STATUS_WORDS = {
 }
 
 
+# A model may be a plain class-name string or a {name, tex} dict; `tex` carries
+# the paper's discretionary hyphen breaks (\-) inside long \texttt{} names,
+# used only where Table 1 would otherwise produce overfull boxes (so the break
+# set is width-driven, not derivable from the name itself).
 def load_entries() -> list[dict[str, Any]]:
     return yaml.safe_load(YAML_PATH.read_text())
 
@@ -72,7 +76,7 @@ def render_markdown(entries: list[dict[str, Any]]) -> str:
     for entry in entries:
         if entry["status"] != "verified":
             continue
-        models = ", ".join(f"`{model}`" for model in entry["models"])
+        models = ", ".join(f"`{_model_name(model)}`" for model in entry["models"])
         targets = ", ".join(_target_md(target) for target in entry["targets"])
         lines.append(f"| **{entry['family']}** | {models} | {targets} | {_benchmark_md(entry)} | {_status_md(entry)} |")
     return "\n".join(lines)
@@ -105,10 +109,15 @@ def _target_tex(target: dict[str, str]) -> str:
     return cell
 
 
+def _model_name(model) -> str:
+    return model["name"] if isinstance(model, dict) else model
+
+
 def _model_tex(entry: dict[str, Any]) -> str:
     if entry.get("label"):
         return _tex_escape(entry["label"])
-    return ", ".join(f"\\texttt{{{model}}}" for model in entry["models"])
+    names = (m["tex"] if isinstance(m, dict) else m for m in entry["models"])
+    return ", ".join(f"\\texttt{{{name}}}" for name in names)
 
 
 def _status_tex(entry: dict[str, Any]) -> str:

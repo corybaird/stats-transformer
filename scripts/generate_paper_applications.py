@@ -4,7 +4,7 @@ For each YAML application under references/configs/ this script runs the full
 pipeline in a temporary directory (CWD = tmp, config copy with input paths
 redirected to the repo's data files) and renders, into --out-dir:
 
-- applications.tex           booktabs table BODY rows (the paper owns \\begin{table})
+- applications.tex           booktabs table body rows ending in \\bottomrule (the paper owns \\begin{table})
 - app_<name>_flow.tex        one 4-box flow strip per YAML application
                              (config -> data -> pipeline -> outputs)
 - app_<name>_config.tex      the committed YAML of each application, so the
@@ -155,13 +155,13 @@ def _data_cell(app: dict, record: dict) -> str:
 
 
 def render_rows(records: list[tuple[dict, dict]]) -> str:
-    """Booktabs body rows of the applications table (the paper owns the table environment)."""
+    """Booktabs body rows of the applications table, ending in \\bottomrule."""
     rows = []
     for app, record in records:
         config_cell = _code(Path(app["config"]).name)
         cells = [app["label"], _data_cell(app, record), config_cell, _estimator_se(app, record), app["checked"]]
         rows.append(" & ".join(cells) + " \\\\")
-    return "\n".join(rows) + "\n"
+    return "\n".join(rows) + "\n\\bottomrule\n"
 
 
 def render_flow(app: dict, record: dict) -> str:

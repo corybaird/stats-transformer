@@ -138,6 +138,71 @@ def test_resample_upsample_without_entity():
     assert out["x_Yffill"].tolist() == [10.0] * 12 + [20.0]
 
 
+def _entity_frame():
+    # Two countries, two annual observations each; rows shuffled on purpose.
+    return pd.DataFrame(
+        {"country": ["B", "B", "A", "A"], "date": ["2020", "2021"] * 2, "x": [30.0, 40.0, 10.0, 20.0]}
+    )
+
+
+def test_resample_upsample_annual_to_monthly_with_entity_ffill():
+    # Regression: pandas 3 groupby().apply stopped passing the grouping column
+    # to the applied function, crashing entity upsampling with KeyError 'country'.
+    fe = FeatureEngineer(entity_column="country", date_column="date")
+    out = fe.resample_dataset(
+        _entity_frame(),
+        {"entity_column": "country", "date_column": "date", "source_period": "annual", "resample": {"target_period": "monthly", "agg": "ffill"}},
+    )
+    assert len(out) == 26  # asfreq spans 2020-01 .. 2021-01 = 13 months per entity
+    # Entities sorted, dates sorted within each entity, values forward-filled.
+    assert out["country"].tolist() == ["A"] * 13 + ["B"] * 13
+    assert out["date"].tolist() == list(pd.date_range("2020-01-01", periods=13, freq="MS")) * 2
+    assert out["x_Yffill"].tolist() == [10.0] * 12 + [20.0] + [30.0] * 12 + [40.0]
+
+
+def test_resample_upsample_quarterly_to_monthly_with_entity_interpolate():
+    fe = FeatureEngineer(entity_column="country", date_column="date")
+    df = pd.DataFrame({"country": ["A", "A"], "date": ["2020-01", "2020-04"], "x": [0.0, 3.0]})
+    out = fe.resample_dataset(
+        df,
+        {"entity_column": "country", "date_column": "date", "source_period": "quarterly", "resample": {"target_period": "monthly", "agg": "interpolate"}},
+    )
+    assert len(out) == 4
+    assert out["country"].tolist() == ["A"] * 4
+    assert out["x_Qinterpolate"].tolist() == pytest.approx([0.0, 1.0, 2.0, 3.0])
+    assert out["date"].tolist() == list(pd.date_range("2020-01-01", periods=4, freq="MS"))
+
+
+def test_pipeline_data_stage_upsamples_with_entity(tmp_path, monkeypatch):
+    """End-to-end: a data.datasets config that upsamples annual -> monthly."""
+    (tmp_path / "raw.csv").write_text(_entity_frame().to_csv(index=False))
+    config = {
+        "data": {
+            "datasets": [
+                {
+                    "name": "test",
+                    "path": str(tmp_path / "raw.csv"),
+                    "entity_column": "country",
+                    "date_column": "date",
+                    "frequency": "annual",
+                    "source_period": "annual",
+                    "resample": {"target_period": "monthly", "agg": "ffill"},
+                }
+            ],
+            "merge": {"on": ["country", "date"], "how": "outer", "output_path": "data/merged.parquet"},
+        },
+        # The Pipeline validates a model block on load; the data stage never runs it.
+        "model": {"model_type": "ols", "target_variable": "x_Yffill", "independent_variables": ["date"]},
+    }
+    config_path = tmp_path / "params.yaml"
+    config_path.write_text(yaml.dump(config))
+    monkeypatch.chdir(tmp_path)
+    merged = Pipeline(params_path=str(config_path)).run(stage="data")
+    assert len(merged) == 26
+    assert sorted(set(merged["country"])) == ["A", "B"]
+    assert (tmp_path / "data" / "merged.parquet").is_file()
+
+
 def test_resample_no_duplicate_columns_for_numeric_entity_id():
     # A numeric entity column is also in numeric_cols; make sure it is not selected twice.
     import pandas as pd

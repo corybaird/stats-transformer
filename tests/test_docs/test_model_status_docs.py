@@ -36,8 +36,16 @@ def test_every_table1_row_is_rendered_in_latex():
     tex = generator.render_tex(ENTRIES)
     for entry in ENTRIES:
         for model in entry["models"]:
-            assert f"\\texttt{{{model}}}" in tex, model
+            # {name, tex} entries render the paper's discretionary hyphen breaks.
+            name = generator._model_name(model)
+            cell = model.get("tex", name) if isinstance(model, dict) else model
+            assert f"\\texttt{{{cell}}}" in tex, name
         assert entry["family"] in tex
+    # Long class names carry the breaks the paper's Table 1 needs to avoid
+    # overfull boxes; short or acronym-led names stay whole.
+    assert "\\texttt{Regression\\-Model}" in tex
+    assert "\\texttt{Panel\\-Regression\\-Model}" in tex
+    assert "\\texttt{RobustOLSModel}" in tex
 
 
 def test_verified_and_known_issue_entries_name_existing_tests():
@@ -56,7 +64,7 @@ def test_verified_and_known_issue_entries_name_existing_tests():
 def test_yaml_statuses_are_known():
     for entry in ENTRIES:
         assert entry["status"] in generator.STATUS_WORDS, entry["models"]
-    models = {model for entry in ENTRIES for model in entry["models"]}
+    models = {generator._model_name(model) for entry in ENTRIES for model in entry["models"]}
     assert "PandemicBVARModel" in models  # missing from the paper's Table 1 before
 
 
