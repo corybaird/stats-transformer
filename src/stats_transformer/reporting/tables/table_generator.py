@@ -1,19 +1,21 @@
+import logging
 import os
 from pathlib import Path
+from typing import Any, Dict, Optional, Union
+
 import pandas as pd
-import logging
 
 class TableGenerator:
     """
     A utility class for generating, formatting, and exporting tables 
     (Excel and LaTeX) for academic and econometric reporting.
     """
-    def __init__(self, output_dir="reports/tables"):
+    def __init__(self, output_dir: Union[str, Path] = "reports/tables") -> None:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    def clean_dataframe_for_export(self, df):
+    def clean_dataframe_for_export(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean dataframe types and escape characters for LaTeX."""
         tbl = df.copy()
         
@@ -32,7 +34,15 @@ class TableGenerator:
             
         return tbl
 
-    def export_latex(self, df, filename, col_format=None, align_first_n_left=1, midrule_before=None, note=None):
+    def export_latex(
+        self,
+        df: pd.DataFrame,
+        filename: Union[str, Path],
+        col_format: Optional[str] = None,
+        align_first_n_left: int = 1,
+        midrule_before: Optional[list[str]] = None,
+        note: Optional[str] = None,
+    ) -> Path:
         """
         Export a DataFrame to a styled LaTeX table with multi-line headers.
         
@@ -95,7 +105,7 @@ class TableGenerator:
         self.logger.info(f"LaTeX table saved to {out_path}")
         return out_path
 
-    def export_excel(self, df, filename):
+    def export_excel(self, df: pd.DataFrame, filename: str) -> Path:
         """Export a DataFrame to Excel."""
         if not str(filename).endswith('.xlsx'):
             filename = f"{filename}.xlsx"
@@ -105,7 +115,7 @@ class TableGenerator:
         self.logger.info(f"Excel table saved to {out_path}")
         return out_path
 
-    def export_all(self, df, filename, **kwargs):
+    def export_all(self, df: pd.DataFrame, filename: str, **kwargs: Any) -> Dict[str, Path]:
         """Export a DataFrame to both LaTeX and Excel."""
         tex_path = self.export_latex(df, filename, **kwargs)
         xlsx_path = self.export_excel(df, filename)

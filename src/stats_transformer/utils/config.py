@@ -152,6 +152,7 @@ class Config:
     
     # Deprecated alias for get_reporting_config; kept while YAML still allows `visualization:`
     def get_visualization_config(self) -> Dict[str, Any]:
+        """Return the visualization settings from the config."""
         return self.get_reporting_config()
     
     def to_dict(self) -> Dict[str, Any]:

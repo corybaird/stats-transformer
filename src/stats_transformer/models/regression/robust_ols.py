@@ -6,6 +6,7 @@ from .regression import RegressionModel
 class RobustOLSModel(RegressionModel):
     # Robust OLS forcing explicit covariance type definitions (HC1, HC3, HAC)
 
+    """Regression model with robust standard errors."""
     def __init__(self, params_path=None, target=None, independent_variables=None, cov_type=None, add_entity_fixed_effects=False, entity_column=None, **kwargs):
         super().__init__(params_path=params_path, target=target, independent_variables=independent_variables, add_entity_fixed_effects=add_entity_fixed_effects, entity_column=entity_column, **kwargs)
         if cov_type is None:
@@ -13,6 +14,7 @@ class RobustOLSModel(RegressionModel):
         self.cov_type = cov_type
 
     def build_model(self, drop_na=True):
+        """Build the underlying model object from the loaded data."""
         if self.X is None or self.y is None:
             self.split_xy(drop_na=drop_na)
 

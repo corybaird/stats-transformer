@@ -14,15 +14,18 @@ from stats_transformer.models.base import ModelBase
 
 class RegressionResults:
 
+    """Accessors around a fitted statsmodels results object."""
     def __init__(self, model: Any) -> None:
         self.model = model
 
     @property
     def summary(self) -> str:
+        """Return the statsmodels summary text."""
         return str(self.model.summary())
 
     @property
     def metrics(self) -> Dict[str, Any]:
+        """Return R-squared, adjusted R-squared, AIC and BIC as a dictionary."""
         return {
             "r_squared": self.model.rsquared,
             "adj_r_squared": self.model.rsquared_adj,
@@ -36,18 +39,22 @@ class RegressionResults:
 
     @property
     def params(self) -> pd.Series:
+        """Return the estimated coefficients."""
         return self.model.params
 
     @property
     def pvalues(self) -> pd.Series:
+        """Return the coefficient p-values."""
         return self.model.pvalues
 
     @property
     def conf_int(self) -> pd.DataFrame:
+        """Return the coefficient confidence intervals."""
         return self.model.conf_int()
 
 class RegressionModel(ModelBase):
 
+    """Regression with a single-equation target and metric reporting."""
     def __init__(self, params_path: Optional[str] = None, target: Optional[str] = None, independent_variables: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, entity_column: Optional[str] = None, **kwargs: Any) -> None:
         super().__init__(params_path=params_path, target=target, independent_variables=independent_variables, add_entity_fixed_effects=add_entity_fixed_effects, entity_column=entity_column, **kwargs)
         if self.add_entity_fixed_effects and not self.entity_column:
@@ -55,6 +62,7 @@ class RegressionModel(ModelBase):
 
 
     def split_xy(self, drop_na: bool = True) -> Tuple[pd.DataFrame, pd.Series]:
+        """Split the cleaned data into X and y for the target variable."""
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
 
@@ -78,6 +86,7 @@ class RegressionModel(ModelBase):
         return self.X, self.y
 
     def build_model(self, drop_na: bool = True) -> Any:
+        """Build the underlying model object from the loaded data."""
         if self.X is None or self.y is None:
             self.split_xy(drop_na=drop_na)
         assert self.X is not None and self.y is not None  # set by split_xy above
@@ -95,6 +104,7 @@ class RegressionModel(ModelBase):
         return self.model
 
     def fit(self, df: pd.DataFrame, drop_na: bool = True, compute_metrics: bool = True) -> Dict[str, Any]:
+        """Fit the model on the data and store the results."""
         required_cols = self._get_required_columns()
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -166,11 +176,13 @@ class RegressionModel(ModelBase):
             raise TypeError(f"Unsupported data type for predict: {type(new_data)}")
 
     def get_summary(self) -> str:
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         return str(self.model.summary())
 
     def get_model_metrics(self) -> Dict[str, Any]:
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         return {
@@ -186,15 +198,19 @@ class RegressionModel(ModelBase):
 
     @property
     def results(self) -> Optional[RegressionResults]:
+        """Return the RegressionResults or None before fitting."""
         return RegressionResults(self.model) if self.model else None
 
     def summary(self) -> str:
+        """Return the summary text or None before fitting."""
         return self.get_summary()
 
     def get_results(self) -> Optional[RegressionResults]:
+        """Return the RegressionResults wrapper."""
         return self.results
 
     def save_summary_to_json(self, output_path: str = "regression_summary.json") -> None:
+        """Save the model summary to a JSON file."""
         if self.model is None:
             raise ValueError("Model not trained")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -209,6 +225,7 @@ class RegressionModel(ModelBase):
             json.dump(summary_dict, f, indent=4)
 
     def save_latex_table(self, output_path: str = "regression_table.tex", float_format: str = "%.3f", caption: Optional[str] = None, label: Optional[str] = None) -> pd.DataFrame:
+        """Save a LaTeX table of the regression results."""
         if self.model is None:
             raise ValueError("Model not trained")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -226,6 +243,7 @@ class RegressionModel(ModelBase):
         return results_df
 
     def run(self, data_path: Optional[str] = None, output_path: Optional[str] = None) -> Dict[str, Any]:
+        """Run the full workflow end to end."""
         if not data_path and self.params:
             data_path = self.params.get("data", {}).get("featurization", {}).get("output_path")
         if not output_path and self.params:

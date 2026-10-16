@@ -5,6 +5,7 @@ from stats_transformer.models.base import ModelBase
 
 class BlanchardQuahModel(ModelBase):
 
+    """SVAR identified with Blanchard-Quah long-run restrictions."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, date_column=None, maxlags=1, **kwargs):
@@ -23,6 +24,7 @@ class BlanchardQuahModel(ModelBase):
         return cols
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -55,17 +57,20 @@ class BlanchardQuahModel(ModelBase):
         self.B_0 = np.linalg.inv(inv_phi) @ lower_chol
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.var_result is None:
             raise ValueError("Model not trained")
         return f"Blanchard-Quah SVAR Model\nB_0 Matrix:\n{self.B_0}\n\nVAR Summary:\n{self.var_result.summary()}"
 
     def get_model_metadata(self, metrics=None):
+        """Assemble the metadata dictionary saved with the model."""
         metadata = super().get_model_metadata(metrics)
         if self.B_0 is not None:
             metadata["impact_matrix"] = np.asarray(self.B_0).tolist()
         return metadata
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.var_result is None:
             raise ValueError("Model not trained")
         return {
@@ -75,5 +80,6 @@ class BlanchardQuahModel(ModelBase):
         }
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metadata()

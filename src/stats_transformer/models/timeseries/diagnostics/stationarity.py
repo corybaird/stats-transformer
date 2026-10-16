@@ -17,6 +17,7 @@ class StationarityDiagnostics:
         self.results_ = None
 
     def fit(self, df, columns):
+        """Run ADF and KPSS tests per column and store the results."""
         if isinstance(columns, str):
             columns = [columns]
         missing = [col for col in columns if col not in df.columns]
@@ -36,6 +37,7 @@ class StationarityDiagnostics:
         return self.results_
 
     def get_model_metadata(self):
+        """Assemble the metadata dictionary saved with the model."""
         if self.results_ is None:
             raise ValueError("Diagnostics must be fitted before metadata is available")
         return {
@@ -45,6 +47,7 @@ class StationarityDiagnostics:
         }
 
     def summary_df(self):
+        """Return the stored test results as a DataFrame."""
         if self.results_ is None:
             raise ValueError("Diagnostics must be fitted before results are available")
         return self.results_.copy()

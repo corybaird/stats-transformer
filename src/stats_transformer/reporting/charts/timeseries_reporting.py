@@ -24,10 +24,12 @@ def _label(value, labels):
 
 class ImpulseResponseChart:
 
+    """Grid of impulse response function panels."""
     def __init__(self, style_path="timeseries"):
         self.style_path = style_path
 
     def plot(self, data, shock, labels=None, title=None, ylabel="Response", ncols=2, color=None):
+        """Draw the chart and return the figure and axes."""
         apply_style(self.style_path)
         selected = data[data["shock"] == shock].copy()
         responses = selected["response"].drop_duplicates().tolist()
@@ -53,10 +55,12 @@ class ImpulseResponseChart:
 
 class VarianceDecompositionChart:
 
+    """Grid of variance decomposition panels."""
     def __init__(self, style_path="timeseries"):
         self.style_path = style_path
 
     def plot(self, data, labels=None, title="Forecast-error variance decomposition", ncols=2, colors=None):
+        """Draw the chart and return the figure and axes."""
         apply_style(self.style_path)
         responses = data["response"].drop_duplicates().tolist()
         shocks = data["shock"].drop_duplicates().tolist()
@@ -82,10 +86,12 @@ class VarianceDecompositionChart:
 
 class HistoricalDecompositionChart:
 
+    """Grid of historical decomposition panels."""
     def __init__(self, style_path="timeseries"):
         self.style_path = style_path
 
     def plot(self, data, labels=None, title="Historical decomposition", ncols=2, colors=None):
+        """Draw the chart and return the figure and axes."""
         apply_style(self.style_path)
         responses = data["response"].drop_duplicates().tolist()
         shocks = data["shock"].drop_duplicates().tolist()

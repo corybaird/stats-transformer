@@ -117,6 +117,7 @@ class TVARModel(ModelBase):
         return best_gamma
 
     def build_model(self, drop_na=True):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, "df_clean", None) is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -186,6 +187,7 @@ class TVARModel(ModelBase):
         return self
 
     def fit(self, df, drop_na=True):
+        """Fit the model on the data and store the results."""
         required_cols = self._get_required_columns()
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -199,6 +201,7 @@ class TVARModel(ModelBase):
         return self.get_model_metrics()
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.regime_1_params is None:
             raise ValueError("Model not trained")
         summary_text = (
@@ -215,6 +218,7 @@ class TVARModel(ModelBase):
         return summary_text
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.regime_1_params is None:
             raise ValueError("Model not trained")
         return {

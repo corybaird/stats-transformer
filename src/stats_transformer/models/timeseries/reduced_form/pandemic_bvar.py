@@ -5,6 +5,7 @@ from stats_transformer.models.base import ModelBase
 from stats_transformer.models.timeseries.reduced_form.bvar import minnesota_prior_moments
 
 class PandemicBVARModel(ModelBase):
+    """Bayesian VAR for pandemic-era periods."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, date_column=None, lags=1, pandemic_periods=None, volatility_scale=10.0, lambda1=0.2, lambda2=0.5, lambda3=1.0, lambda4=100.0, n_draws=1000, seed=42, **kwargs):
@@ -70,6 +71,7 @@ class PandemicBVARModel(ModelBase):
         return W @ y, W @ X
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -119,6 +121,7 @@ class PandemicBVARModel(ModelBase):
             self.B_draws[d] = self.posterior_B_mean + chol_V @ Z @ chol_Sigma.T
 
     def fit(self, df, drop_na=True):
+        """Fit the model on the data and store the results."""
         required_cols = self._get_required_columns()
         missing = [c for c in required_cols if c not in df.columns]
         if missing:
@@ -128,6 +131,7 @@ class PandemicBVARModel(ModelBase):
         return self.build_model()
 
     def predict(self, df):
+        """Predict with the fitted model and return the predictions as a DataFrame."""
         if self.posterior_B_mean is None:
             raise ValueError("Model not fitted")
         Y = df[self.target_variables].to_numpy(dtype=float)
@@ -136,11 +140,13 @@ class PandemicBVARModel(ModelBase):
         return pd.DataFrame(pred, columns=self.target_variables)
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.posterior_B_mean is None:
             raise ValueError("Model not fitted")
         return f"Pandemic BVAR Model (Cascaldi-Garcia 2022)\nVariables: {self.target_variables}\nPandemic Periods: {self.pandemic_periods}\nVolatility Scale: {self.volatility_scale}"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.posterior_B_mean is None:
             raise ValueError("Model not fitted")
         metrics = {}
@@ -150,5 +156,6 @@ class PandemicBVARModel(ModelBase):
         return metrics
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metrics()

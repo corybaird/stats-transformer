@@ -11,6 +11,7 @@ class TimeSeriesPlot:
         self.style_path = style_path
 
     def plot(self, df, x_col, y_cols, ci_lower_cols=None, ci_upper_cols=None, labels=None, title=None, ylabel=None, ax=None, colors=None):
+        """Draw one or more time series with optional confidence bands."""
         if ax is None:
             apply_style(self.style_path)
             fig, ax = plt.subplots(figsize=(14, 7))
@@ -53,6 +54,7 @@ class IRFPlot:
         self.style_path = style_path
 
     def plot(self, df, horizon_col, coef_col, ci_lower_col, ci_upper_col, group_col, labels=None, title=None, ylabel=None, colors=None, ncols=2):
+        """Draw impulse response functions in a faceted grid."""
         apply_style(self.style_path)
         
         groups = df[group_col].unique().tolist()
@@ -112,6 +114,7 @@ class FacetedTimeSeries:
         self.style_path = style_path
 
     def plot(self, df, date_col, value_cols, facet_col, labels=None, ncols=3, title=None, ylabel=None, colors=None):
+        """Draw faceted time series in a grid."""
         apply_style(self.style_path)
         
         facets = df[facet_col].unique().tolist()

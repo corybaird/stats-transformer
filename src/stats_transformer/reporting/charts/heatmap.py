@@ -13,6 +13,7 @@ class CorrelationHeatmap:
         self.style_path = style_path
 
     def plot(self, df, columns=None, method="pearson", labels=None, title=None, mask_upper=True, ax=None):
+        """Draw a heatmap of column correlations."""
         if ax is None:
             apply_style(self.style_path)
             size = max(8, len(columns) if columns else len(df.columns))

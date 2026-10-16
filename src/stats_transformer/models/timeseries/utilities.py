@@ -76,6 +76,7 @@ class ForecastEvaluator:
         self.forecast_column = forecast_column
 
     def evaluate(self, df):
+        """Compute forecast error metrics on actual and forecast columns."""
         missing = [col for col in [self.actual_column, self.forecast_column] if col not in df.columns]
         if missing:
             raise ValueError(f"Missing columns: {missing}")

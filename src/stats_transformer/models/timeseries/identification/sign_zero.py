@@ -112,6 +112,7 @@ class SignZeroSVARModel(ModelBase):
         return cols
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -290,12 +291,14 @@ class SignZeroSVARModel(ModelBase):
         return forecaster._compute_ma_rep(steps)
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.var_result is None:
             raise ValueError("Model not trained")
         acc = len(self.accepted_rotations)
         return f"Sign/Zero SVAR Model\nAccepted Draws: {acc} / {self.total_draws}\n\nVAR Summary:\n{self.var_result.summary()}"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.var_result is None:
             raise ValueError("Model not trained")
         return {
@@ -333,5 +336,6 @@ class SignZeroSVARModel(ModelBase):
         }
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metrics()

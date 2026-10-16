@@ -45,6 +45,7 @@ class GIRFEngine:
         return np.array(simulated)
 
     def compute_girf(self, shock_variable=None, shock_magnitude=None):
+        """Compute generalized impulse responses by simulating shock paths."""
         rng = np.random.default_rng(self.seed)
         var_names = self.model.target_variables
         K = len(var_names)
