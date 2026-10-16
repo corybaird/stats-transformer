@@ -92,3 +92,19 @@ def test_lane_2025_replication():
     assert "metrics" in result
     assert "did_metrics" in result
     assert result["did_metrics"]["n_att_gt"] > 0
+
+def test_lane_2025_hci_did_single_cohort_outcomes():
+    """Verify the HCI design: one 1973 cohort (first observed post-drive year
+    1974), never-treated controls, separate ATTs for tariff and QR outcomes.
+    """
+    rep = Lane2025Replication()
+    result = rep.run()
+    for outcome in ("tariff", "qr"):
+        metrics = rep.did_models[outcome].get_model_metrics()
+        assert metrics["n_cohorts"] == 1
+        assert np.isfinite(metrics["simple_att"])
+        assert np.isfinite(metrics["simple_att_se"])
+        assert metrics["simple_att_se"] > 0
+    assert result["qr_did_metrics"]["n_att_gt"] > 0
+    # Pre-trend test is unavailable with a single pre-drive period.
+    assert result["did_metrics"]["pretrend_stat"] is None
