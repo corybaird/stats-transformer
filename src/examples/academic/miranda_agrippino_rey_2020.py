@@ -51,3 +51,7 @@ class MirandaAgrippinoRey2020Replication:
         print(reference_df.tail())
 
         return {"metrics": metrics, "extracted_factor": extracted, "true_factor_correlation": correlation, "reference_series": reference_df}
+
+
+if __name__ == "__main__":
+    MirandaAgrippinoRey2020Replication().run()

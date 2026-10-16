@@ -26,3 +26,7 @@ class AcostaBrennanJacobson2024Replication:
         print("Acosta, Brennan, & Jacobson (2024) VAR Metrics:", var_metrics)
         print("Acosta, Brennan, & Jacobson (2024) OLS Metrics:", ols_metrics)
         return {"var_metrics": var_metrics, "ols_metrics": ols_metrics}
+
+
+if __name__ == "__main__":
+    AcostaBrennanJacobson2024Replication().run()

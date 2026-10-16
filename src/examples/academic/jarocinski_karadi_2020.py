@@ -37,3 +37,7 @@ class JarocinskiKaradi2020Replication:
         print("Poor man's sign classification of the identified mp1 shock:", classification)
 
         return {"metrics": metrics, "irf_sp500_to_mp1": irf_mp, "classification": classification}
+
+
+if __name__ == "__main__":
+    JarocinskiKaradi2020Replication().run()

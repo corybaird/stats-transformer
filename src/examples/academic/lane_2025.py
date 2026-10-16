@@ -63,3 +63,7 @@ class Lane2025Replication:
         # for the estimator's actual correctness guarantees.
 
         return {"metrics": metrics, "did_metrics": did_metrics}
+
+
+if __name__ == "__main__":
+    Lane2025Replication().run()

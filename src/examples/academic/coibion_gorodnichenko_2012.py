@@ -32,3 +32,7 @@ class CoibionGorodnichenko2012Replication:
         metrics = self.gmm_model.fit(df)
         print("Coibion & Gorodnichenko (2012) GMM Metrics:", metrics)
         return {"metrics": metrics}
+
+
+if __name__ == "__main__":
+    CoibionGorodnichenko2012Replication().run()

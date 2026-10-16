@@ -24,3 +24,9 @@ class StockWatson2001Replication:
         self.model = VARModel(target_variables=vars_to_use, maxlags=4)
         metrics = self.model.fit(df)
         return {"metrics": metrics, "summary": self.model.get_summary()}
+
+
+if __name__ == "__main__":
+    rep = StockWatson2001Replication()
+    res = rep.run()
+    print("Stock & Watson (2001) VAR Metrics:", res["metrics"])

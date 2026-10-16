@@ -24,3 +24,10 @@ class BlanchardQuah1989Replication:
         self.model = BlanchardQuahModel(target_variables=vars_to_use, maxlags=8)
         metrics = self.model.fit(df)
         return {"metrics": metrics, "summary": self.model.get_summary(), "B_0": self.model.B_0}
+
+
+if __name__ == "__main__":
+    rep = BlanchardQuah1989Replication()
+    res = rep.run()
+    print("Blanchard & Quah (1989) SVAR Metrics:", res["metrics"])
+    print("Long-run impact matrix B_0:", res["B_0"])

@@ -24,3 +24,7 @@ class ShapiroSudhofWilson2022Replication:
         metrics = self.model.fit(df_transformed)
         print("Shapiro, Sudhof, & Wilson (2022) News Sentiment Metrics:", metrics)
         return {"metrics": metrics}
+
+
+if __name__ == "__main__":
+    ShapiroSudhofWilson2022Replication().run()

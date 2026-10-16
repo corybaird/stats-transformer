@@ -26,3 +26,7 @@ class CieslakHansenMcMahonXiao2024Replication:
         print("Cieslak et al. (2024) OLS Metrics:", ols_metrics)
         print("Cieslak et al. (2024) VAR Metrics:", var_metrics)
         return {"ols_metrics": ols_metrics, "var_metrics": var_metrics}
+
+
+if __name__ == "__main__":
+    CieslakHansenMcMahonXiao2024Replication().run()
