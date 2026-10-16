@@ -9,7 +9,7 @@ class Ghysels2018Chap5ARIMAExample:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/timeseries/ghysels_ch5/arma_inven.csv")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/timeseries/ghysels_ch5/arma_inven.csv"
         self.model = None
 
     def _load_data(self):

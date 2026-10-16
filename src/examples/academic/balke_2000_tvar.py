@@ -10,7 +10,7 @@ class Balke2000TVARReplication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/timeseries/macrodata.csv")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/timeseries/macrodata.csv"
         self.model = None
 
     def _load_data(self):

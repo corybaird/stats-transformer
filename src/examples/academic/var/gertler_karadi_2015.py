@@ -8,7 +8,7 @@ class GertlerKaradi2015Replication:
         if data_path:
             self.data_path = pathlib.Path(data_path)
         else:
-            self.data_path = pathlib.Path("data/examples/matlab_examples/GK2015_Data.xlsx")
+            self.data_path = pathlib.Path(__file__).resolve().parents[4] / "data/examples/matlab_examples/GK2015_Data.xlsx"
         self.model = None
 
     def load_data(self):

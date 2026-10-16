@@ -10,12 +10,12 @@ class KilianLutkepohl2017Chap13SignZeroReplication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/timeseries/macrodata.csv")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/timeseries/macrodata.csv"
 
         if config_path:
             self.config_path = Path(config_path)
         else:
-            self.config_path = Path("references/configs/timeseries/identification/structural_restrictions.yaml")
+            self.config_path = Path(__file__).resolve().parents[3] / "references/configs/timeseries/identification/structural_restrictions.yaml"
         self.model = None
 
     def _load_data(self):

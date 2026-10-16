@@ -9,7 +9,7 @@ class MirandaAgrippinoRey2020Replication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/academic/miranda_agrippino_rey_2020/global_factor.parquet.gzip")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/academic/miranda_agrippino_rey_2020/global_factor.parquet.gzip"
         self.dfm_model = None
 
     def _load_reference_factor(self):

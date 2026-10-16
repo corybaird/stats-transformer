@@ -5,7 +5,7 @@ from stats_transformer.pipeline import Pipeline
 
 class RunExamplesFromYaml:
     def __init__(self):
-        self.config_dir = Path("references/configs")
+        self.config_dir = Path(__file__).resolve().parents[2] / "references/configs"
         self.configs = [
             "regression/mincer_wage.yaml",
             "regression/grunfeld_panel.yaml",

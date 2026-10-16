@@ -8,7 +8,7 @@ class CoibionGorodnichenko2012Replication:
         if data_path:
             self.data_path = Path(data_path)
         else:
-            self.data_path = Path("data/examples/academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip")
+            self.data_path = Path(__file__).resolve().parents[3] / "data/examples/academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip"
         self.gmm_model = None
 
     def _load_data(self):
