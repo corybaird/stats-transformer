@@ -1,6 +1,7 @@
 import pathlib
 import pandas as pd
 from stats_transformer.models.timeseries.identification.proxy_svar import ProxySVARModel
+from examples._print import format_metrics
 
 class GertlerKaradi2015Replication:
 
@@ -31,5 +32,7 @@ class GertlerKaradi2015Replication:
 if __name__ == "__main__":
     rep = GertlerKaradi2015Replication()
     res = rep.run()
-    print("Gertler & Karadi (2015) Proxy-SVAR Metrics:", res["metrics"])
-    print("External instrument column:", res["impact"])
+    print("Gertler & Karadi (2015) Proxy-SVAR Metrics:")
+    format_metrics(res["metrics"])
+    print("External instrument column:")
+    format_metrics({"impact": res["impact"]})

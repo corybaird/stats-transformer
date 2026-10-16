@@ -1,6 +1,7 @@
 import pathlib
 import pandas as pd
 from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
+from examples._print import format_metrics
 
 class BlanchardQuah1989Replication:
 
@@ -29,5 +30,7 @@ class BlanchardQuah1989Replication:
 if __name__ == "__main__":
     rep = BlanchardQuah1989Replication()
     res = rep.run()
-    print("Blanchard & Quah (1989) SVAR Metrics:", res["metrics"])
-    print("Long-run impact matrix B_0:", res["B_0"])
+    print("Blanchard & Quah (1989) SVAR Metrics:")
+    format_metrics(res["metrics"])
+    print("Long-run impact matrix B_0:")
+    format_metrics({"B_0": res["B_0"]})

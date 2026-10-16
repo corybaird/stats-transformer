@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from examples._print import format_metrics
 
 class ShapiroSudhofWilson2022Replication:
 
@@ -22,7 +23,8 @@ class ShapiroSudhofWilson2022Replication:
         df_transformed = engineer.fit_transform(df)
         self.model = RobustOLSModel(target="news_sentiment", independent_variables=["news_sentiment_lag1", "news_sentiment_lag2"], cov_type="HC1")
         metrics = self.model.fit(df_transformed)
-        print("Shapiro, Sudhof, & Wilson (2022) News Sentiment Metrics:", metrics)
+        print("Shapiro, Sudhof, & Wilson (2022) News Sentiment:")
+        format_metrics(metrics)
         return {"metrics": metrics}
 
 

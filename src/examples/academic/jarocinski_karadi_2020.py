@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 from stats_transformer.models.timeseries.reduced_form.bvar import BVARModel
+from examples._print import format_metrics
 
 class JarocinskiKaradi2020Replication:
 
@@ -33,7 +34,8 @@ class JarocinskiKaradi2020Replication:
         mp_shock_sign = irf_mp.loc[irf_mp["horizon"] == 0, "estimate"].iloc[0]
         classification = "information shock (mp1 and sp500 co-move)" if mp_shock_sign > 0 else "monetary policy shock (mp1 and sp500 move oppositely)"
 
-        print("Jarocinski & Karadi (2020) BVAR Metrics:", metrics)
+        print("Jarocinski & Karadi (2020) BVAR:")
+        format_metrics(metrics)
         print("Poor man's sign classification of the identified mp1 shock:", classification)
 
         return {"metrics": metrics, "irf_sp500_to_mp1": irf_mp, "classification": classification}

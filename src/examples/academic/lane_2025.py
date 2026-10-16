@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.regression.did import DiDModel
+from examples._print import format_metrics
 
 class Lane2025Replication:
 
@@ -48,12 +49,14 @@ class Lane2025Replication:
         df = self._load_data()
         self.model = RobustOLSModel(target="tot_change", independent_variables=["eq_change", "hci"], cov_type="HC1")
         metrics = self.model.fit(df)
-        print("Lane (2025) Policy Loans Robust OLS Metrics:", metrics)
+        print("Lane (2025) Policy Loans Robust OLS:")
+        format_metrics(metrics)
 
         tariff_df = self._load_tariff_panel_with_derived_cohort()
         self.did_model = DiDModel(entity_column="id", time_column="year", cohort_column="cohort", outcome_column="tariff", control_group="never_treated")
         did_metrics = self.did_model.fit(tariff_df)
-        print("Lane (2025) Tariff Liberalization DiD Metrics (illustrative, derived cohort):", did_metrics)
+        print("Lane (2025) Tariff Liberalization DiD (illustrative, derived cohort):")
+        format_metrics(did_metrics)
         # The pre-trend test rejects by construction here: "treated" is
         # defined directly from the tariff drop, so treated units mechanically
         # trend differently before their own event by definition, not because

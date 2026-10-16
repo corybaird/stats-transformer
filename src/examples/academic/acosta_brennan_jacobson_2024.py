@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 from stats_transformer.models.timeseries.reduced_form.var import VARModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
+from examples._print import format_metrics
 
 class AcostaBrennanJacobson2024Replication:
 
@@ -23,8 +24,10 @@ class AcostaBrennanJacobson2024Replication:
         var_metrics = self.var_model.fit(df)
         self.ols_model = RobustOLSModel(target="ns", independent_variables=["gss_target", "gss_path"], cov_type="HC1")
         ols_metrics = self.ols_model.fit(df)
-        print("Acosta, Brennan, & Jacobson (2024) VAR Metrics:", var_metrics)
-        print("Acosta, Brennan, & Jacobson (2024) OLS Metrics:", ols_metrics)
+        print("Acosta, Brennan, & Jacobson (2024) VAR:")
+        format_metrics(var_metrics)
+        print("Acosta, Brennan, & Jacobson (2024) OLS:")
+        format_metrics(ols_metrics)
         return {"var_metrics": var_metrics, "ols_metrics": ols_metrics}
 
 

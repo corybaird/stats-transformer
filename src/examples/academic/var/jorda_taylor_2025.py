@@ -1,6 +1,7 @@
 import pathlib
 import pandas as pd
 from stats_transformer.models.timeseries.reduced_form.local_projections_iv import LocalProjectionsIVModel
+from examples._print import format_metrics
 
 class JordaTaylor2025Replication:
 
@@ -32,5 +33,7 @@ class JordaTaylor2025Replication:
 if __name__ == "__main__":
     rep = JordaTaylor2025Replication()
     res = rep.run()
-    print("Jorda & Taylor (2025) LP-IV Metrics:", res["metrics"])
-    print("IRF coefficients:", res["irf_coefficients"])
+    print("Jorda & Taylor (2025) LP-IV Metrics:")
+    format_metrics(res["metrics"])
+    print("IRF coefficients:")
+    format_metrics({"irf": res["irf_coefficients"]})
