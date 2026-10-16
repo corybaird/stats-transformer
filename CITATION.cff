@@ -15,7 +15,7 @@ message: "Please cite the preferred-citation (the paper below) if you use stats-
 type: software
 preferred-citation:
   type: article
-  title: "stats-transformer: Reproducible Infrastructure for Econometrics"
+  title: "stats-transformer: Reproducible Econometric Workflows"
   authors:
     - given-names: Cory
       family-names: Baird
