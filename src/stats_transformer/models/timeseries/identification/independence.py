@@ -26,6 +26,7 @@ class IndependenceSVARModel(ModelBase):
         self.optimization_status = None
         
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
             
@@ -144,6 +145,7 @@ class IndependenceSVARModel(ModelBase):
         self.optimization_status = best_res
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.structural_impact is None:
             raise ValueError("Model not trained")
             
@@ -156,6 +158,7 @@ class IndependenceSVARModel(ModelBase):
         )
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.structural_impact is None:
             raise ValueError("Model not trained")
         return {
@@ -164,5 +167,6 @@ class IndependenceSVARModel(ModelBase):
         }
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metrics()

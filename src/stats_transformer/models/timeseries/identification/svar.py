@@ -4,6 +4,7 @@ from statsmodels.tsa.vector_ar.svar_model import SVAR
 from stats_transformer.models.base import ModelBase
 
 class SVARModel(ModelBase):
+    """Structural VAR with A/B restriction matrices."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, date_column=None, svar_type='A', A=None, B=None, maxlags=None, **kwargs):
@@ -24,6 +25,7 @@ class SVARModel(ModelBase):
         return cols
 
     def build_model(self, drop_na=True):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
         
@@ -57,6 +59,7 @@ class SVARModel(ModelBase):
         return self.model
 
     def fit(self, df, drop_na=True):
+        """Fit the model on the data and store the results."""
         required_cols = self._get_required_columns()
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -70,6 +73,7 @@ class SVARModel(ModelBase):
         return self.get_model_metrics()
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         try:
@@ -78,6 +82,7 @@ class SVARModel(ModelBase):
             return f"SVAR Model Results:\nEstimated A Matrix:\n{self.model.A}\n\nEstimated B Matrix:\n{self.model.B}"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         return {

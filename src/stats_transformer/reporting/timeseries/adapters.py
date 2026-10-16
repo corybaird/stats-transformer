@@ -104,18 +104,22 @@ def _normal_95_interval(estimate, standard_error):
 
 class TimeSeriesResultAdapter(ABC):
 
+    """Adapter turning model results into report data."""
     def __init__(self, model, horizons=20):
         self.model = model
         self.horizons = horizons
 
     @abstractmethod
     def build(self):
+        """Build the report data from model results."""
         pass
 
 
 class VARResultAdapter(TimeSeriesResultAdapter):
 
+    """Report-data adapter for a VAR model."""
     def build(self):
+        """Assemble report data for a VAR model."""
         result = self.model.model
         if result is None:
             raise ValueError("VARModel must be fitted before reporting")
@@ -135,7 +139,9 @@ class VARResultAdapter(TimeSeriesResultAdapter):
 
 class BlanchardQuahResultAdapter(TimeSeriesResultAdapter):
 
+    """Report-data adapter for a Blanchard-Quah model."""
     def build(self):
+        """Assemble report data for a Blanchard-Quah model."""
         result = self.model.var_result
         if result is None or self.model.B_0 is None:
             raise ValueError("BlanchardQuahModel must be fitted before reporting")
@@ -154,7 +160,9 @@ class BlanchardQuahResultAdapter(TimeSeriesResultAdapter):
 
 class LocalProjectionsResultAdapter(TimeSeriesResultAdapter):
 
+    """Report-data adapter for a local projections model."""
     def build(self):
+        """Assemble report data for a local projections model."""
         source = self.model.compute_irf()
         rows = []
         for row in source.itertuples(index=False):
@@ -175,7 +183,9 @@ class LocalProjectionsResultAdapter(TimeSeriesResultAdapter):
 
 class LocalProjectionsIVResultAdapter(TimeSeriesResultAdapter):
 
+    """Report-data adapter for a local projections IV model."""
     def build(self):
+        """Assemble report data for a local projections IV model."""
         if not self.model.irf_coefficients:
             raise ValueError("LocalProjectionsIVModel must be fitted before reporting")
         rows = []

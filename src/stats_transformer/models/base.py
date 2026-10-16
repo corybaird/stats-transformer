@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Union
 
 class ModelBase(ABC):
 
+    """Abstract base class for all models: data loading, fitting and metadata."""
     time_column: Optional[str] = None
     # Multivariate (system) models have no dependent/independent split: every
     # variable is endogenous. They set this True to opt out of the
@@ -103,6 +104,7 @@ class ModelBase(ABC):
         return default if value is None else value
 
     def load_data(self, data: Union[str, pd.DataFrame]) -> pd.DataFrame:
+        """Load a CSV, parquet file or DataFrame and keep the required columns."""
         self.logger.info("Loading data")
         if isinstance(data, str):
             self.df = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
@@ -149,14 +151,17 @@ class ModelBase(ABC):
 
     @abstractmethod
     def build_model(self) -> Any:
+        """Build the underlying model object from the loaded data."""
         pass
 
     @abstractmethod
     def get_summary(self) -> Any:
+        """Return a text summary of the fitted model."""
         pass
 
     @abstractmethod
     def get_model_metrics(self) -> Dict[str, Any]:
+        """Return key fit metrics as a dictionary."""
         pass
 
     def _extract_single_equation_coefficients(self) -> Dict[str, Any]:
@@ -198,6 +203,7 @@ class ModelBase(ABC):
         return coefficients
 
     def get_model_metadata(self, metrics: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Assemble the metadata dictionary saved with the model."""
         if metrics is None:
             metrics = self.get_model_metrics()
 
@@ -240,6 +246,7 @@ class ModelBase(ABC):
         return metadata
 
     def save_model_metadata(self, metrics: Dict[str, Any], output_dir: str = "models") -> str:
+        """Save model metadata as JSON and return the metadata file path."""
         os.makedirs(output_dir, exist_ok=True)
         metadata = self.get_model_metadata(metrics)
         metadata_path = os.path.join(output_dir, f"model_{self.model_version}_metadata.json")
@@ -284,6 +291,7 @@ class ModelBase(ABC):
             raise ValueError(f"{detail}; original error: {type(original).__name__}: {original}") from original
 
     def fit(self, data: Union[str, pd.DataFrame]) -> Dict[str, Any]:
+        """Load data, build the model and return its metrics."""
         self.load_data(data)
         if hasattr(self, 'df_clean') and self.df_clean is not None:
             self.df_clean = self.df_clean.dropna()

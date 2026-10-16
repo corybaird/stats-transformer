@@ -139,6 +139,7 @@ class BayesianSignZeroSVARModel(ModelBase):
         return True
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -264,6 +265,7 @@ class BayesianSignZeroSVARModel(ModelBase):
         self.total_draws = draws
 
     def fit(self, df, drop_na=True):
+        """Fit the model on the data and store the results."""
         required_cols = self._get_required_columns()
         missing = [c for c in required_cols if c not in df.columns]
         if missing:
@@ -273,6 +275,7 @@ class BayesianSignZeroSVARModel(ModelBase):
         return self.build_model()
 
     def predict(self, df):
+        """Predict with the posterior mean coefficients and return a DataFrame."""
         if self.posterior_B_mean is None:
             raise ValueError("Model not fitted")
         Y = df[self.target_variables].to_numpy(dtype=float)
@@ -282,6 +285,7 @@ class BayesianSignZeroSVARModel(ModelBase):
         return pd.DataFrame(pred, columns=self.target_variables)
 
     def compute_fevd(self, steps=20):
+        """Compute the median FEVD over the accepted posterior draws."""
         if not self.accepted_rotations:
             raise ValueError("No accepted draws available")
         n_vars = len(self.target_variables)
@@ -308,6 +312,7 @@ class BayesianSignZeroSVARModel(ModelBase):
         return np.median(all_fevd, axis=0)
 
     def compute_hd(self):
+        """Compute the historical decomposition and structural shocks."""
         if not self.accepted_rotations:
             raise ValueError("No accepted draws available")
         rep = self.get_representative_draw()
@@ -333,6 +338,7 @@ class BayesianSignZeroSVARModel(ModelBase):
         return hd, structural_shocks
 
     def get_representative_draw(self):
+        """Return the accepted draw closest to the median impulse response."""
         if not self.accepted_irfs:
             raise ValueError("No accepted draws available")
         all_irfs = np.array(self.accepted_irfs)
@@ -348,12 +354,14 @@ class BayesianSignZeroSVARModel(ModelBase):
         return result
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.posterior_B_mean is None:
             raise ValueError("Model not fitted")
         n_acc = len(self.accepted_rotations)
         return f"Bayesian Sign/Zero SVAR Model\nAccepted Draws: {n_acc} / {self.total_draws}\nVariables: {self.target_variables}"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.posterior_B_mean is None:
             raise ValueError("Model not fitted")
         metrics = {}
@@ -363,5 +371,6 @@ class BayesianSignZeroSVARModel(ModelBase):
         return metrics
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metrics()

@@ -30,6 +30,7 @@ class VolatilitySVARModel(ModelBase):
         return cols
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
         if not self.regime_column or self.regime_column not in self.df_clean.columns:
@@ -105,6 +106,7 @@ class VolatilitySVARModel(ModelBase):
         self.lambda_diag = np.var(e2, axis=1)
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.structural_impact is None:
             raise ValueError("Model not trained")
             
@@ -115,6 +117,7 @@ class VolatilitySVARModel(ModelBase):
         )
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.structural_impact is None:
             raise ValueError("Model not trained")
         return {
@@ -123,5 +126,6 @@ class VolatilitySVARModel(ModelBase):
         }
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metrics()

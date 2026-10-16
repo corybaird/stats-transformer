@@ -10,10 +10,12 @@ from stats_transformer.reporting.defaults.labels import get_readable_label
 
 class RegressionVisualizer(ModelVisualizer):
 
+    """Diagnostic and coefficient visualizations for a regression."""
     def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
         super().__init__(params_path=params_path, output_dir=output_dir, file_format=file_format, dpi=dpi, style=style)
     
     def visualize_from_json(self, json_path=None, model_summary=None, subdir="regression", **kwargs):
+        """Draw a coefficient plot from a saved summary or JSON file."""
         if json_path is None and model_summary is None:
             return {}
         if model_summary is None:
@@ -30,6 +32,7 @@ class RegressionVisualizer(ModelVisualizer):
         return visualizations
     
     def create_model_summary_plot(self, model_summary, subdir="regression", display_only=False):
+        """Draw a coefficient plot from a model summary."""
         self.logger.info("Creating model summary plot")
         summary = model_summary.get('summary', {})
         coefficients = model_summary.get('coefficients', {})
@@ -172,6 +175,7 @@ class RegressionVisualizer(ModelVisualizer):
         return self.save_figure(fig, "model_summary_table", subdir, display_only=display_only)
     
     def create_variance_decomposition(self, model, X, subdir="regression", display_only=False):
+        """Plot each regressor contribution to the model predictions."""
         self.logger.info("Creating variance decomposition plot")
         if type(X) != pd.DataFrame:
             X = pd.DataFrame(X, columns=[f"X{i+1}" for i in range(X.shape[1])])
@@ -202,6 +206,7 @@ class RegressionVisualizer(ModelVisualizer):
         return None
     
     def create_partial_regression_plots(self, model, X, y, subdir="regression", display_only=False):
+        """Save partial regression plots for each regressor."""
         self.logger.info("Creating partial regression plots")
         saved_files = []
         if type(X) != pd.DataFrame:
@@ -218,6 +223,7 @@ class RegressionVisualizer(ModelVisualizer):
         return saved_files
     
     def create_component_plus_residual_plots(self, model, X, subdir="regression", display_only=False):
+        """Save component-plus-residual plots for each regressor."""
         self.logger.info("Creating component-plus-residual plots")
         saved_files = []
         if type(X) != pd.DataFrame:
@@ -237,6 +243,7 @@ class RegressionVisualizer(ModelVisualizer):
         return saved_files
     
     def create_prediction_intervals(self, model, X, y, alpha=0.05, subdir="regression", display_only=False):
+        """Save predictions with confidence intervals."""
         if not hasattr(model, 'get_prediction'):
             return None
         try:
@@ -272,6 +279,7 @@ class RegressionVisualizer(ModelVisualizer):
             return None
 
     def create_residuals_vs_fitted(self, model, subdir="regression", display_only=False):
+        """Save a residuals versus fitted plot."""
         self.logger.info("Creating residuals vs fitted scatter plot")
         if not hasattr(model, 'fittedvalues') or not hasattr(model, 'resid'):
             self.logger.warning("Model does not have fittedvalues/resid attributes")
@@ -309,6 +317,7 @@ class RegressionVisualizer(ModelVisualizer):
         return self.save_figure(fig, "residuals_vs_fitted", subdir, display_only=display_only)
 
     def create_actual_vs_predicted(self, model, entity_labels=None, subdir="regression", display_only=False):
+        """Save an actual versus predicted plot."""
         self.logger.info("Creating actual vs predicted scatter plot")
         if not hasattr(model, 'fittedvalues') or not hasattr(model, 'model'):
             self.logger.warning("Model does not have fittedvalues/model attributes")
@@ -343,5 +352,6 @@ class RegressionVisualizer(ModelVisualizer):
         return self.save_figure(fig, "actual_vs_predicted", subdir, display_only=display_only)
 
     def run(self):
+        """Run the full workflow end to end."""
         pass
 

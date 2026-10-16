@@ -14,6 +14,7 @@ class BinnedScatterPlot:
         self.style_path = style_path
 
     def plot(self, df, x_col, y_col, hue_col=None, n_bins=15, title=None, xlabel=None, ylabel=None, ax=None, colors=None):
+        """Draw a binned scatter plot."""
         if ax is None:
             apply_style(self.style_path)
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -71,6 +72,7 @@ class ScatterWithRegression:
         self.style_path = style_path
 
     def plot(self, df, x_col, y_col, hue_col=None, title=None, xlabel=None, ylabel=None, ax=None, colors=None):
+        """Draw a scatter plot with a fitted regression line."""
         if ax is None:
             apply_style(self.style_path)
             fig, ax = plt.subplots(figsize=(8, 6))

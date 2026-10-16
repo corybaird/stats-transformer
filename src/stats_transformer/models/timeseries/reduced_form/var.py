@@ -4,6 +4,7 @@ from statsmodels.tsa.api import VAR
 from stats_transformer.models.base import ModelBase
 
 class VARModel(ModelBase):
+    """Vector autoregression model."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, date_column=None, maxlags=None, ic=None, mask=None, **kwargs):
@@ -22,6 +23,7 @@ class VARModel(ModelBase):
         return cols
 
     def build_model(self, drop_na=True):
+        """Build the underlying model object from the loaded data."""
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
         
@@ -43,6 +45,7 @@ class VARModel(ModelBase):
         return self.model
 
     def fit(self, df, drop_na=True):
+        """Fit the model on the data and store the results."""
         required_cols = self._get_required_columns()
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -56,11 +59,13 @@ class VARModel(ModelBase):
         return self.get_model_metrics()
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         return str(self.model.summary())
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         return {

@@ -4,6 +4,7 @@ from stats_transformer.models.base import ModelBase
 
 class LocalProjectionsIVModel(ModelBase):
 
+    """Local projections model with an instrumental variable."""
     def __init__(self, target_variable=None, shock_variable=None, instrument_variable=None, control_variables=None, horizons=10, date_column=None, cumulative=False, multiplier=False, lags=0, cov_type="nonrobust", **kwargs):
         if bool(cumulative) and bool(multiplier):
             raise ValueError("cumulative and multiplier are mutually exclusive")
@@ -30,6 +31,7 @@ class LocalProjectionsIVModel(ModelBase):
         return list(dict.fromkeys(cols))
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -87,9 +89,11 @@ class LocalProjectionsIVModel(ModelBase):
             self.irf_std_errors.append(float(res.std_errors[self.shock_variable]))
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         return f"Local Projections IV Model\nHorizons: {self.horizons}\nIRF Coefficients: {self.irf_coefficients}"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         return {
             "horizons": self.horizons,
             "irf_h0": self.irf_coefficients[0] if self.irf_coefficients else None,
@@ -97,5 +101,6 @@ class LocalProjectionsIVModel(ModelBase):
         }
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metadata()

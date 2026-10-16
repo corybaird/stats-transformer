@@ -6,6 +6,7 @@ from stats_transformer.models.base import ModelBase
 
 class GMMModel(ModelBase):
 
+    """Generalized method of moments regression model."""
     def __init__(self, target=None, independent_variables=None, endogenous=None, instruments=None, method="two_step", weighting="hac", bandwidth=None, iter_tol=1e-6, max_iter=100, **kwargs):
         independent_variables = independent_variables or []
         super().__init__(target=target, independent_variables=independent_variables, **kwargs)
@@ -33,6 +34,7 @@ class GMMModel(ModelBase):
         return columns
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
 
@@ -145,6 +147,7 @@ class GMMModel(ModelBase):
         return beta_final, W_final
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         lines = [f"GMM Estimation (method={self.method}, weighting={self.weighting})"]
@@ -154,6 +157,7 @@ class GMMModel(ModelBase):
         return "\n".join(lines)
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         return {
@@ -169,5 +173,6 @@ class GMMModel(ModelBase):
         }
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metadata()

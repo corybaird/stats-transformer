@@ -13,6 +13,7 @@ class CoefficientBarChart:
         self.style_path = style_path
 
     def plot(self, labels, coefficients, std_errors, p_values, ylabel=None, footer=None, title=None, ax=None, color='#2196F3', width=0.5):
+        """Draw a bar chart of coefficients colored by significance."""
         if ax is None:
             apply_style(self.style_path)
             fig, ax = plt.subplots(figsize=(12, 6))
@@ -58,6 +59,7 @@ class CoefficientForestPlot:
         self.style_path = style_path
 
     def plot(self, labels, coefficients, std_errors, p_values, ylabel=None, footer=None, title=None, ax=None, color='#2196F3'):
+        """Draw a forest plot of coefficients with confidence intervals."""
         if ax is None:
             apply_style(self.style_path)
             # Height scales with the number of coefficients.
@@ -117,6 +119,7 @@ class GroupedBarChart:
         self.style_path = style_path
 
     def plot(self, df, x_col, y_col, group_col, error_col=None, pval_col=None, labels=None, ylabel=None, title=None, footer=None, ax=None, colors=None):
+        """Draw grouped bar charts from a DataFrame."""
         if ax is None:
             apply_style(self.style_path)
             fig, ax = plt.subplots(figsize=(14, 6))
@@ -197,6 +200,7 @@ class StackedBarChart:
         self.style_path = style_path
 
     def plot(self, df, x_col, y_cols, labels=None, ylabel=None, title=None, ax=None, colors=None):
+        """Draw a stacked bar chart from a DataFrame."""
         if ax is None:
             apply_style(self.style_path)
             fig, ax = plt.subplots(figsize=(14, 7))

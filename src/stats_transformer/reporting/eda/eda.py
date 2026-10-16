@@ -8,6 +8,7 @@ from stats_transformer.reporting.base import BaseVisualizer
 class EDAVisualizer(BaseVisualizer):
     # Automates initial data inspection sequence (missingness, distributions)
 
+    """Missingness and distribution overview plots for a DataFrame."""
     def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
         super().__init__(params_path=params_path, output_dir=output_dir, file_format=file_format, dpi=dpi, style=style)
 
@@ -15,6 +16,7 @@ class EDAVisualizer(BaseVisualizer):
         return df.select_dtypes(include=[np.number]).columns.tolist()
 
     def plot_missingness(self, df, subdir="eda", display_only=False):
+        """Plot the share of missing values per column."""
         # Plots a missing value bar chart and heatmap
         fig, axes = plt.subplots(1, 2, figsize=(15, 6))
         
@@ -36,6 +38,7 @@ class EDAVisualizer(BaseVisualizer):
         return self.save_figure(fig, "missingness_profile", subdir=subdir, display_only=display_only)
 
     def plot_distributions(self, df, subdir="eda", display_only=False):
+        """Plot distributions of the DataFrame columns."""
         # Plots histograms and KDE estimates for numeric variables
         numeric_cols = self._get_numeric_cols(df)
         if not numeric_cols:
@@ -60,6 +63,7 @@ class EDAVisualizer(BaseVisualizer):
         return self.save_figure(fig, "numeric_distributions", subdir=subdir, display_only=display_only)
 
     def create_visualization(self, data, viz_type="all", subdir="eda", display_only=False):
+        """Create the EDA plots selected by viz_type."""
         # Dispatcher for EDA charts
         if isinstance(data, str):
             data = pd.read_csv(data) if data.endswith(".csv") else pd.read_parquet(data)
@@ -73,6 +77,7 @@ class EDAVisualizer(BaseVisualizer):
         return results
 
     def run(self, data_path=None, output_path=None):
+        """Run the full workflow end to end."""
         # Orchestrates the EDA pipeline phase
         if not data_path and self.params:
             data_config = self.params.get("data", {})

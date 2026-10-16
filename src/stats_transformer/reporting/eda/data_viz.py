@@ -10,10 +10,12 @@ from stats_transformer.reporting.formatters.style import apply_style
 
 class DataVisualizer(BaseVisualizer):
     
+    """Exploratory data visualizations for a DataFrame."""
     def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
         super().__init__(params_path, output_dir, file_format, dpi, style)
         
     def create_visualization(self, data, feature_list=None, viz_type="histogram", display_only=False, **kwargs):
+        """Create the visualization selected by viz_type."""
         kwargs['display_only'] = display_only
         if feature_list is None:
             feature_list = data.select_dtypes(include=[np.number]).columns.tolist()
@@ -38,6 +40,7 @@ class DataVisualizer(BaseVisualizer):
             raise ValueError(f"Visualization type '{viz_type}' not supported")
     
     def create_time_series_plot(self, data, entity_column=None, date_column="date", display_only=False, subdir="time_series"):
+        """Plot the data columns over time."""
         if date_column not in data.columns:
             return None
             
@@ -84,6 +87,7 @@ class DataVisualizer(BaseVisualizer):
             return self.save_figure(fig, "time_series", subdir, display_only=display_only)
     
     def create_histograms(self, data, feature_list, bins=30, kde=True, subdir="histograms", display_only=False):
+        """Save a histogram for each feature."""
         saved_files = []
         apply_style(self.viz_params.get("style", "default"))
         for feature in feature_list:
@@ -100,6 +104,7 @@ class DataVisualizer(BaseVisualizer):
         return None if display_only else saved_files
     
     def create_scatter_plots(self, data, feature_list, target=None, hue=None, subdir="scatter_plots", display_only=False):
+        """Save a scatter plot for each feature against the target."""
         saved_files = []
         if target is not None:
             from stats_transformer.reporting.charts.scatter import ScatterWithRegression
@@ -121,6 +126,7 @@ class DataVisualizer(BaseVisualizer):
         return None if display_only else saved_files
     
     def create_distribution_plots(self, data, feature_list, by_group=None, subdir="distributions", display_only=False):
+        """Save distribution plots for each feature."""
         saved_files = []
         apply_style(self.viz_params.get("style", "default"))
         for feature in feature_list:
@@ -147,12 +153,14 @@ class DataVisualizer(BaseVisualizer):
         return None if display_only else saved_files
     
     def create_correlation_matrix(self, data, feature_list, method="pearson", subdir="correlations", display_only=False):
+        """Save the correlation matrix heatmap."""
         from stats_transformer.reporting.charts.heatmap import CorrelationHeatmap
         chart = CorrelationHeatmap(style_path=self.viz_params.get("style", "default"))
         fig, ax = chart.plot(df=data, columns=feature_list, method=method)
         return self.save_figure(fig, f"correlation_matrix_{method}", subdir, display_only=display_only)
     
     def create_box_plots(self, data, feature_list, by_group=None, subdir="boxplots", display_only=False):
+        """Save box plots for each feature."""
         saved_files = []
         apply_style(self.viz_params.get("style", "default"))
         for feature in feature_list:
@@ -170,6 +178,7 @@ class DataVisualizer(BaseVisualizer):
         return None if display_only else saved_files
     
     def test_normality(self, data, feature_list, test_type="shapiro", subdir="normality_tests", display_only=False):
+        """Run normality tests per feature and save the results."""
         apply_style(self.viz_params.get("style", "default"))
         results = {}
         for feature in feature_list:
@@ -192,4 +201,5 @@ class DataVisualizer(BaseVisualizer):
         return results
 
     def run(self):
+        """Run the full workflow end to end."""
         pass

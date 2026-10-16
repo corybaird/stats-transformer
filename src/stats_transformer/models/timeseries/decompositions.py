@@ -3,6 +3,7 @@ import pandas as pd
 
 class TimeSeriesDecompositions:
 
+    """FEVD and historical decomposition for a fitted VAR."""
     def __init__(self, var_result, B_0=None):
         self.var_result = var_result
         self.k = var_result.neqs
@@ -14,6 +15,7 @@ class TimeSeriesDecompositions:
         self.B_0 = B_0 if B_0 is not None else np.linalg.cholesky(self.sigma_u)
 
     def compute_fevd(self, steps=20):
+        """Compute the FEVD matrix per horizon and variable."""
         ma_coefs = self.var_result.ma_rep(maxn=steps)
         k = self.k
         fevd = np.zeros((steps, k, k))
@@ -32,6 +34,7 @@ class TimeSeriesDecompositions:
         return fevd
 
     def compute_hd(self):
+        """Compute the historical decomposition and structural shocks."""
         residuals = self.var_result.resid
         if type(residuals) == pd.DataFrame:
             residuals = residuals.values
@@ -49,6 +52,7 @@ class TimeSeriesDecompositions:
         return hd, structural_shocks
 
     def run(self, steps=20):
+        """Compute FEVD, historical decomposition and shocks in one call."""
         fevd = self.compute_fevd(steps=steps)
         hd, shocks = self.compute_hd()
         return {"fevd": fevd, "hd": hd, "shocks": shocks}

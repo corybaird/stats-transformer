@@ -13,6 +13,7 @@ FREQ_ORDER = {"daily": 0, "monthly": 1, "quarterly": 2, "annual": 3}
 
 class FeatureEngineer:
 
+    """Apply configured transformations, filters and resampling to data."""
     def __init__(self, params_path=None, transformations=None, entity_column=None, date_column="date", period="annual", country_list=None, start_date=None, data_columns=None, verbose=True):
         self.verbose = verbose
         self._setup_logging()
@@ -85,6 +86,7 @@ class FeatureEngineer:
             raise
 
     def load_data(self, data_path):
+        """Load the raw data file into a DataFrame."""
         self.logger.info(f"Loading data from {data_path}")
         if not data_path.endswith(".csv") and not data_path.endswith(".parquet"):
             error_msg = f"File {data_path} is not supported. Use CSV or Parquet."
@@ -144,6 +146,7 @@ class FeatureEngineer:
             raise ValueError(error_msg)
 
     def truncate_data(self, df):
+        """Restrict the data to the configured entity list."""
         if self.country_list and not self.entity_column:
             error_msg = "country_list requires an entity_column; none is configured."
             self.logger.error(error_msg)
@@ -171,6 +174,7 @@ class FeatureEngineer:
         return filtered_df
 
     def filter_by_date(self, df):
+        """Keep rows on or after the configured start date."""
         if not self.start_date:
             self.logger.info("No start date specified, skipping date filtering")
             return df
@@ -323,6 +327,7 @@ class FeatureEngineer:
         return transformed_group
 
     def transform(self, df):
+        """Apply the configured feature transformations."""
         self.logger.info("Starting feature transformations.")
         df = self._apply_column_mapping(df)
         missing_columns = [f for f in self.data_columns if f not in df.columns]
@@ -373,6 +378,7 @@ class FeatureEngineer:
             raise
 
     def fit_transform(self, df):
+        """Validate, truncate, filter and transform the data."""
         try:
             self.logger.info("Starting feature engineering pipeline.")
             df = self._apply_column_mapping(df)
@@ -434,6 +440,7 @@ class FeatureEngineer:
         return upsampled
 
     def resample_dataset(self, df, dataset_config):
+        """Resample one dataset to the configured target period."""
         entity_col = dataset_config.get("entity_column", self.entity_column)
         date_col = dataset_config.get("date_column", self.date_column)
         source_period = dataset_config.get("source_period", "annual")
@@ -496,6 +503,7 @@ class FeatureEngineer:
         return resampled_df
 
     def save_features(self, df, output_path):
+        """Write the transformed features to disk."""
         try:
             self._log_data_quality_metrics(df)
         except Exception as e:
@@ -504,6 +512,7 @@ class FeatureEngineer:
             raise
 
     def run(self, data_path=None, output_path=None):
+        """Run the featurization workflow and return the transformed data."""
         if not data_path and self.params:
             data_path = self.params.get("data", {}).get("raw_data_file")
         if not output_path and self.params:

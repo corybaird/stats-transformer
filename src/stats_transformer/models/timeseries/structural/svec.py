@@ -293,6 +293,7 @@ class SVEC:
         self.lr_stat = max(0.0, 2.0 * (self.llf_unrestricted - self.llf))
 
     def get_structural_matrices(self):
+        """Return the estimated structural matrices."""
         return {
             "SR": self.SR_est,
             "LR": self.LR_est
@@ -300,6 +301,7 @@ class SVEC:
 
 
 class SVECModel(ModelBase):
+    """Structural vector error correction model."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, date_column=None, k_ar_diff=1, coint_rank=1, deterministic="n", SR=None, LR=None, max_iter=1000, **kwargs):
@@ -330,6 +332,7 @@ class SVECModel(ModelBase):
         return cols
 
     def build_model(self, drop_na=True):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, "df_clean", None) is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -345,6 +348,7 @@ class SVECModel(ModelBase):
         return self.svec_fit
 
     def fit(self, df, drop_na=True):
+        """Fit the model on the data and store the results."""
         required_cols = self._get_required_columns()
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -358,6 +362,7 @@ class SVECModel(ModelBase):
         return self.get_model_metrics()
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.svec_fit is None:
             raise ValueError("Model not trained")
         summary_text = (
@@ -371,6 +376,7 @@ class SVECModel(ModelBase):
         return summary_text
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.svec_fit is None:
             raise ValueError("Model not trained")
         return {

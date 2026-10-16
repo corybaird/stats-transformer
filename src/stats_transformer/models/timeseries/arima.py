@@ -26,6 +26,7 @@ class ARIMAModel(ModelBase):
         self.model = None
 
     def build_model(self):
+        """Build the underlying ARIMA model object from the loaded data."""
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
         work = self.df_clean.copy()

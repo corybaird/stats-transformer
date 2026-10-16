@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from stats_transformer.models.base import ModelBase
 
 class DynamicFactorModel(ModelBase):
+    """Dynamic factor model estimated on a panel of series."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, date_column=None, n_factors=1, factor_lags=1, max_iter=100, tol=1e-6, **kwargs):
@@ -29,6 +30,7 @@ class DynamicFactorModel(ModelBase):
         return cols
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -201,11 +203,13 @@ class DynamicFactorModel(ModelBase):
         return Lambda_new, A_new, Q_new, R_new
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         return f"Dynamic Factor Model: n_factors={self.n_factors}, factor_lags={self.factor_lags}, n_iter={self.n_iter_}, converged={self.converged_}, loglikelihood={self.final_loglikelihood:.4f}"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         return {
@@ -218,6 +222,7 @@ class DynamicFactorModel(ModelBase):
         }
 
     def compute_factors(self):
+        """Return the estimated common factors."""
         if self.model is None:
             raise ValueError("Model not trained")
         columns = [f"factor_{i + 1}" for i in range(self.n_factors)]
@@ -227,5 +232,6 @@ class DynamicFactorModel(ModelBase):
         return result
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metadata()

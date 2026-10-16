@@ -4,6 +4,7 @@ from scipy import stats
 from stats_transformer.models.base import ModelBase
 
 class DiDModel(ModelBase):
+    """Difference-in-differences model with group-time ATT estimation."""
     _is_multivariate = True
 
     def __init__(self, entity_column=None, time_column=None, cohort_column=None, outcome_column=None, control_variables=None, control_group="never_treated", base_period="varying", **kwargs):
@@ -25,6 +26,7 @@ class DiDModel(ModelBase):
         return list(dict.fromkeys(c for c in cols if c))
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         # ATT(g,t) below is an unconditional difference in means; conditioning
         # on covariates is not implemented, so refuse silently-ignored controls.
         if self.control_variables:
@@ -128,6 +130,7 @@ class DiDModel(ModelBase):
         return grouped.reset_index()
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         lines = [f"Callaway-Sant'Anna DiD: {len(self.att_gt_)} group-time ATT(g,t) estimates"]
@@ -137,6 +140,7 @@ class DiDModel(ModelBase):
         return "\n".join(lines)
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         return {
@@ -150,15 +154,18 @@ class DiDModel(ModelBase):
         }
 
     def compute_att_gt(self):
+        """Return the estimated group-time ATT effects."""
         if self.att_gt_ is None:
             raise ValueError("Model not trained")
         return self.att_gt_
 
     def compute_event_study(self):
+        """Return the aggregated event-study estimates."""
         if self.event_study_ is None:
             raise ValueError("Model not trained")
         return self.event_study_
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metadata()

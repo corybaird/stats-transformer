@@ -15,6 +15,7 @@ class VARLagSelector:
         self.criteria_history = None
 
     def fit(self, df):
+        """Run lag order selection criteria and store the results."""
         required_cols = list(self.target_variables)
         if self.date_column and self.date_column in df.columns:
             df = df.sort_values(self.date_column)

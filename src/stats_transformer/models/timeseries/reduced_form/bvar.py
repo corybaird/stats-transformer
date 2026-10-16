@@ -34,6 +34,7 @@ def minnesota_prior_moments(n_vars, p, sigma_hat, lambda1, lambda2, lambda3, lam
 
 
 class BVARModel(ModelBase):
+    """Bayesian VAR with Minnesota-style priors."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, date_column=None, lags=1, lambda1=0.2, lambda2=0.5, lambda3=1.0, lambda4=100.0, n_draws=1000, seed=42, **kwargs):
@@ -63,6 +64,7 @@ class BVARModel(ModelBase):
         return cols
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if self.df_clean is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -138,11 +140,13 @@ class BVARModel(ModelBase):
             self.B_draws[d] = self.posterior_B_mean + chol_V @ Z @ chol_Sigma.T
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         return f"Conjugate BVAR (Minnesota prior): n_vars={self.n_vars}, lags={self.lags}, n_obs={self.n_obs}, n_draws={self.n_draws}, lambda1={self.lambda1}"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         return {
@@ -158,6 +162,7 @@ class BVARModel(ModelBase):
         }
 
     def compute_irf(self, horizon=10, response=None, shock=None):
+        """Compute impulse responses from the BVAR estimate."""
         if self.B_draws is None:
             raise ValueError("Model not trained")
         n_vars, p = self.n_vars, self.lags
@@ -191,5 +196,6 @@ class BVARModel(ModelBase):
         return companion, shock_vec
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metadata()
