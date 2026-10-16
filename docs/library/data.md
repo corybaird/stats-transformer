@@ -68,6 +68,9 @@ The table below catalogs every registered `load_example()` key, grouped into log
 | `macrodata` | `timeseries/macrodata.csv` | Quarterly | VAR(2) coefficient & covariance benchmark | `statsmodels` macrodata |
 | `ghysels_ch6` | `timeseries/ghysels_ch6/` | Quarterly | Multi-step forecasting & VAR simulations | Ghysels & Marcellino (2018) |
 | `ghysels_ch7` | `timeseries/ghysels_ch7/` | Monthly | Cointegration & Vector Error Correction | Ghysels & Marcellino (2018) |
+| `ghysels_ch5` | `timeseries/ghysels_ch5/` | Quarterly | ARIMA & univariate forecasting | Ghysels & Marcellino (2018), Chapter 5 |
+| `ghysels_ch8` | `timeseries/ghysels_ch8/` | Simulated / Quarterly | Bayesian VAR & Minnesota prior | Ghysels & Marcellino (2018), Chapter 8 |
+| `ghysels_ch10` | `timeseries/ghysels_ch10/` | Simulated / Monthly | Threshold & nonlinear VAR | Ghysels & Marcellino (2018), Chapter 10 |
 | `adrr_2018` | `matlab_examples/ADRR2018_Data.xlsx` | Workbook-defined | Narrative sign restrictions | Antolín-Díaz & Rubio-Ramírez (2018) |
 | `bq_1989` | `matlab_examples/BQ1989_Data.xlsx` | Quarterly | Blanchard-Quah SVAR identification | Blanchard & Quah (1989) |
 | `gk_2015` | `matlab_examples/GK2015_Data.xlsx` | Monthly | Proxy SVAR / SVAR-IV monetary policy | Gertler & Karadi (2015) |
@@ -108,21 +111,23 @@ cpi = load_example("bauer_swanson_2023", member="cpi")
 
 ```yaml
 data:
+  raw_data_file: src/stats_transformer/data/macrodb_gdp_inflation.parquet
   featurization:
     entity_column: country
     date_column: date
-    period: quarterly
-  datasets:
-    - name: macro_data
-      path: data/examples/timeseries/macrodata.csv
-      frequency: Q
-  merge:
-    on:
-      - country
-      - date
-    how: inner
+    period: annual
+
+model:
+  model_type: panel_ols
+  target_variable: gdp
+  independent_variables:
+    - inflation
+
+reporting:
+  output_dir: reports/visualizations
 ```
 
+Run the pipeline from the repository root (`Pipeline` reads the packaged panel directly; a full run feeds `raw_data_file` straight into the features stage):
 ---
 
 ## 4. Detailed Dataset Catalog
