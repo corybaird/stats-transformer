@@ -1,11 +1,14 @@
-def _file(path, **kwargs):
-    spec = {"path": path}
+from typing import Any
+
+
+def _file(path: str, **kwargs: Any) -> dict[str, Any]:
+    spec: dict[str, Any] = {"path": path}
     if kwargs:
         spec["read_kwargs"] = kwargs
     return spec
 
 
-def _single(path, description, time_period, source, **kwargs):
+def _single(path: str, description: str, time_period: str, source: str, **kwargs: Any) -> dict[str, Any]:
     return {
         "description": description,
         "time_period": time_period,
@@ -14,7 +17,7 @@ def _single(path, description, time_period, source, **kwargs):
     }
 
 
-EXAMPLE_DATASETS = {
+EXAMPLE_DATASETS: dict[str, dict[str, Any]] = {
     "macrodb_gdp_inflation": {
         "description": "Macroeconomic dataset with GDP and inflation data for multiple countries",
         "columns": {
@@ -323,4 +326,4 @@ EXAMPLE_DATASETS = {
 }
 
 
-__all__ = ["EXAMPLE_DATASETS"]
+__all__: list[str] = ["EXAMPLE_DATASETS"]

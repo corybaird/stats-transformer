@@ -69,11 +69,11 @@ class _UncenteredPCA(TruncatedSVD):
     # TruncatedSVD.explained_variance_ratio_ divides by the per-feature variance of the
     # input, which is only meaningful for centered data. Rescale to the PCA convention
     # sigma_i^2 / sum_j sigma_j^2 for uncentered matrices.
-    def fit(self, X, y=None):
+    def fit(self, X: np.ndarray, y: Any = None) -> np.ndarray:
         """Fit the decomposition and store the rescaled variance measures."""
         return self.fit_transform(X, y)
 
-    def fit_transform(self, X, y=None):
+    def fit_transform(self, X: np.ndarray, y: Any = None) -> np.ndarray:
         """Fit, transform and store the rescaled variance measures."""
         Xtr = super().fit_transform(X, y)
         X = np.asarray(X, dtype=float)
@@ -89,6 +89,7 @@ def rotate_target_path(
     target_index: int = 0,
     path_index: Optional[int] = None
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Rotate a two-factor PCA solution to target and path factors."""
     # Gürkaynak-Sack-Swanson (2005) Target/Path rotation of a 2-factor PCA solution.
     # Zero-loading condition on the rotated loading of the target surprise:
     #   (L U)[target_index, 1] = L[i,0]*sin(th) + L[i,1]*cos(th) = 0
@@ -97,7 +98,6 @@ def rotate_target_path(
     # preserved) because F @ U keeps rotated columns uncorrelated only for equal-variance
     # columns. GSS unit-effect normalisation then rescales scores by the pivot loadings
     # and divides loadings by them, again preserving the fit F L'.
-    """Rotate a two-factor PCA solution to target and path factors."""
     F = np.asarray(factors, dtype=float)
     L = np.asarray(loadings, dtype=float)
     if F.ndim != 2 or F.shape[1] != 2 or L.shape[1] != 2:
@@ -132,7 +132,7 @@ def rotate_target_path(
 class PCAModel(UnsupervisedModel):
     # Principal Component Analysis
 
-    """set()"""
+    """Principal component analysis."""
     def __init__(
         self,
         params_path: Optional[str] = None,
@@ -153,10 +153,10 @@ class PCAModel(UnsupervisedModel):
         )
 
     def rotate_target_path(self, target_index: int = 0, path_index: Optional[int] = None) -> pd.DataFrame:
+        """Rotate the first two factors and return the target and path scores."""
         # Rotates the first two PCA factors GSS-style so the second ("path") factor has zero
         # loading on the surprise at target_index, then normalises (see module-level function).
-        """Rotate the first two factors and return the target and path scores."""
-        if self.model is None or self.transformed_X is None:
+        if self.model is None or self.transformed_X is None or self.df_clean is None:
             raise ValueError("PCAModel must be fit (build_model) before rotate_target_path")
         if self.n_components < 2:
             raise ValueError("rotate_target_path requires n_components >= 2")
@@ -170,7 +170,7 @@ class PCAModel(UnsupervisedModel):
         self.rotated_loadings_ = L_df
         return F_df
 
-    def build_model(self):
+    def build_model(self) -> Any:
         """Fit PCA on the scaled features and store the component scores."""
         assert self.df_clean is not None  # set by load_data, called via fit() before build_model()
         if self.with_mean:

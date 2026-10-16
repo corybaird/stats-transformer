@@ -30,7 +30,7 @@ _STAGE_ALIASES = {"resample": "data", "regression": "model", "visualization": "r
 
 class Pipeline:
 
-    def __init__(self, params_path: Optional[str] = None, transformations: Optional[List[Dict[str, Any]]] = None, entity_column: Optional[str] = None, date_column: str = "date", target: Optional[str] = None, features: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, **kwargs: Any) -> None:
+    def __init__(self, params_path: Optional[str] = None, transformations: Optional[List[str]] = None, entity_column: Optional[str] = None, date_column: str = "date", target: Optional[str] = None, features: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, **kwargs: Any) -> None:
         self.logger = logging.getLogger(__name__)
         self.params_path = params_path
         self.entity_column = entity_column
