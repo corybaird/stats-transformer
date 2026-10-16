@@ -1,0 +1,23 @@
+# TODO add arXiv identifier after submission
+cff-version: 1.2.0
+title: "stats-transformer"
+authors:
+  - given-names: Cory
+    family-names: Baird
+    affiliation: "The University of Tokyo"
+  - given-names: Kodai
+    family-names: Minesaki
+    affiliation: "The University of Tokyo"
+version: "1.10.1"
+license: MIT
+repository-code: "https://github.com/corybaird/stats-transformer"
+message: "Please cite the preferred-citation (the paper below) if you use stats-transformer."
+type: software
+preferred-citation:
+  type: article
+  title: "stats-transformer: Reproducible Infrastructure for Econometrics"
+  authors:
+    - given-names: Cory
+      family-names: Baird
+    - given-names: Kodai
+      family-names: Minesaki
