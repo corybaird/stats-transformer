@@ -42,7 +42,7 @@ The table below catalogs every registered `load_example()` key, grouped into log
 | `bauer_swanson_2023` | `academic/bauer_swanson_2023/` | Monthly / Event | FOMC surprises (update 2023 + monthly) and macro news inputs, Robust OLS | Bauer & Swanson (2023) |
 | `bbm_2023` | `academic/bbm_2023/` | Daily | High-frequency yield-curve surprises | Bauer, Bernanke, & Milstein (2023) |
 | `pmu_data` | `academic/cieslak_hansen_mcmahon_xiao_2024/pmu_data.parquet.gzip` | Monthly | Policymakers' Uncertainty text shocks | Cieslak, Hansen, McMahon, & Xiao (2024) |
-| `greenbook_forecast_errors` | `academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip` | Quarterly | FOMC Greenbook CPI forecast errors | Coibion & Gorodnichenko (2012) |
+| `coibion_gorodnichenko_2012` | `academic/coibion_gorodnichenko_2012/` | Quarterly / FOMC meetings | FOMC Greenbook Taylor-rule series, OLS & AR(1) | Coibion & Gorodnichenko (2012) |
 | `fomc_surprises` | `academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip` | Daily / Event | BVAR sign-restriction shock classification | Jarociński & Karadi (2020) |
 | `jarocinski_2024` | `academic/jarocinski_2024/daily_surprises.parquet.gzip` | Daily | High-frequency futures surprises, Sign & Zero SVAR | Jarociński (2024) |
 | `karadi_schoenle_wursten_2024` | `academic/karadi_schoenle_wursten_2024/ce_decomp_results.parquet.gzip` | Event / Mixed | Consumer expenditure decomposition under monetary shocks | Karadi, Schoenle, & Wursten (2024) |
@@ -142,7 +142,7 @@ Run the pipeline from the repository root (`Pipeline` reads the packaged panel d
 - **Shapiro, Sudhof, & Wilson (2022)**: High-frequency daily news sentiment series in `data/examples/academic/shapiro_sudhof_wilson_2022/news_sentiment.parquet.gzip`. Used in `src/examples/academic/shapiro_sudhof_wilson_2022.py`.
 - **Lane (2025)**: Industrial policy loans and tariff data in `data/examples/academic/lane_2025/policy_loans.parquet.gzip` and `tariffs.parquet.gzip`. Used in `src/examples/academic/lane_2025.py`.
 - **Miranda-Agrippino & Rey (2020)**: Published Global Factor reference series and model input panel in `data/examples/academic/miranda_agrippino_rey_2020/`. Used in `src/examples/academic/miranda_agrippino_rey_2020.py` and the dynamic-factor YAML configuration.
-- **Coibion & Gorodnichenko (2012)**: FOMC Greenbook CPI forecast and backcast series in `data/examples/academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip`. Used in `src/examples/academic/coibion_gorodnichenko_2012.py`.
+- **Coibion & Gorodnichenko (2012)**: FOMC Greenbook quarterly and meeting-frequency Taylor-rule series in `data/examples/academic/coibion_gorodnichenko_2012/greenbook_quarterly.parquet` and `greenbook_meetings.parquet`, converted from the authors' EViews workfiles. Used in `src/examples/academic/coibion_gorodnichenko_2012.py`.
 - **Nakamura & Steinsson (2018)**: High-frequency monetary policy surprise series in `data/examples/academic/nakamura_steinsson_2018/`, with a separate `synthetic_nakamura.csv` PCA fixture. Used in `src/examples/academic/nakamura_steinsson.py` and `nakamura_steinsson_pca.py`.
 - **Bauer & Swanson (2023)**: Macro news series and FOMC event surprises (update 2023 and monthly) in `data/examples/academic/bauer_swanson_2023/`, used in `src/examples/academic/bauer_swanson_2023.py`.
 - **Bauer, Bernanke, & Milstein (2023)**: Yield curve dataset in `data/examples/academic/bbm_2023/` used in `src/examples/academic/bauer_bernanke_milstein.py`.

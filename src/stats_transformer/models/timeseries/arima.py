@@ -16,7 +16,8 @@ class ARIMAModel(ModelBase):
         if not self.target and model_params.get("target_variables"):
             self.target = model_params.get("target_variables")[0]
         self.target_variables = [self.target] if self.target else []
-        self.independent_variables = []
+        # The target is never its own regressor (older configs list it under independent_variables).
+        self.independent_variables = [c for c in (self.independent_variables or []) if c != self.target]
         self.order = tuple(model_params.get("order", order))
         self.date_column = date_column or model_params.get("date_column")
         self.time_column = self.date_column
@@ -24,6 +25,12 @@ class ARIMAModel(ModelBase):
         self.kwargs = kwargs
         self.model_spec = None
         self.model = None
+
+    def _get_required_columns(self):
+        # With exogenous regressors, keep their columns when loading so build_model
+        # can pass them; without exog this reduces to the target alone (unchanged).
+        cols = [self.target] if self.target else []
+        return cols + [c for c in self.independent_variables if c not in cols]
 
     def build_model(self):
         """Build the underlying ARIMA model object from the loaded data."""
@@ -34,6 +41,7 @@ class ARIMAModel(ModelBase):
             work = work.sort_values(self.date_column)
         self.model_spec = ARIMA(
             work[self.target],
+            exog=work[list(self.independent_variables)] if self.independent_variables else None,
             order=self.order,
             trend=self.trend,
         )
@@ -112,6 +120,9 @@ class ARIMAModel(ModelBase):
     def _validate_columns(self, df):
         if self.target not in df.columns:
             raise ValueError(f"Missing columns: ['{self.target}']")
+        missing = [col for col in self.independent_variables if col not in df.columns]
+        if missing:
+            raise ValueError(f"Missing columns: {missing}")
         if self.date_column and self.date_column not in df.columns:
             raise ValueError(f"Missing columns: ['{self.date_column}']")
 

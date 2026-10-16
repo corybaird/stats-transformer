@@ -61,6 +61,31 @@ def test_arima_model_forecast_and_metadata():
     assert metadata["target"] == "y"
     assert "ar.L1" in metadata["parameters"]
 
+def test_arima_model_with_exogenous_regressors():
+    """AR(1)-error regression: ARIMAModel passes exogenous regressors to statsmodels ARIMA."""
+    np.random.seed(7)
+    n = 400
+    x = np.random.normal(size=n)
+    u = np.zeros(n)
+    noise = np.random.normal(scale=0.5, size=n)
+    for t in range(1, n):
+        u[t] = 0.5 * u[t - 1] + noise[t]
+    y = 1.0 + 2.0 * x + u
+    df = pd.DataFrame({"date": pd.date_range(start="2000-01-01", periods=n, freq="ME"), "y": y, "x": x})
+
+    model = ARIMAModel(target="y", independent_variables=["x"], order=(1, 0, 0), date_column="date")
+    metrics = model.fit(df)
+    params = model.model.params
+
+    assert metrics["num_observations"] == n
+    assert abs(params["x"] - 2.0) < 0.15
+    assert abs(params["ar.L1"] - 0.5) < 0.15
+    # without exog the model is unchanged
+    plain = ARIMAModel(target="y", order=(1, 0, 0), date_column="date")
+    plain.fit(df)
+    assert "x" not in plain.model.params
+
+
 def test_vecm_model():
     # Simple VECM setup
     np.random.seed(42)

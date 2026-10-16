@@ -96,8 +96,8 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- *Usage*: Implemented in `GMMModel` (one-step, two-step, iterated, CUE weighting; overidentification J-test)
 		- `src/stats_transformer/models/regression/gmm.py`
 - **Coibion, O., & Gorodnichenko, Y. (2012)**.
-	- Coibion, O., & Gorodnichenko, Y. (2012). What can survey forecasts tell us about information rigidities? _Journal of Political Economy_, _120_(1), 116-159.
-	- *Usage*: Simplified single-series forecast-error orthogonality test benchmarked in
+	- Coibion, O., & Gorodnichenko, Y. (2012). Why are target interest rate changes so persistent? _American Economic Journal: Macroeconomics_, _4_(4), 126-162.
+	- *Usage*: Table 1 Taylor-rule regression benchmark (OLS and AR(1) error columns) in
 		- `src/examples/academic/coibion_gorodnichenko_2012.py`
 
 ### 1.4c Staggered Difference-in-Differences
@@ -256,7 +256,7 @@ This document catalogs the academic literature, econometric papers, benchmark da
 - **Choi, S., Willems, T., & Yoo, J. (2024)**. *Revisiting the Monetary Transmission Mechanism Through the Lens of High-Frequency Identification*. International Monetary Fund Working Paper.
 - **Christiano, L. J., Motto, R., & Trabandt, M. (2014)**. Risk shocks. *American Economic Review*, 104(1), 27–65.
 - **Cieslak, A., Hansen, S., McMahon, M., & Xiao, S. (2024)**. *Policymakers' Uncertainty*. Becker Friedman Institute for Economics Working Paper.
-- **Coibion, O., & Gorodnichenko, Y. (2012)**. What can survey forecasts tell us about information rigidities? *Journal of Political Economy*, 120(1), 116–159.
+- **Coibion, O., & Gorodnichenko, Y. (2012)**. Why are target interest rate changes so persistent? *American Economic Journal: Macroeconomics*, 4(4), 126–162.
 - **Cormun, B., & De Leo, P. (2024)**. *Exchange Rate Dynamics and Monetary Policy in Open Economies*. Working Paper.
 - **Erik, B., Lombardi, M. J., Mihaljek, D., & Shin, H. S. (2020)**. *The Dollar, Bank Leverage and Real Economic Activity: An Evolving Relationship*. BIS Working Papers No. 847.
 - **Federal Reserve Bank of San Francisco (2025)**. *Monetary Policy Surprises and Macroeconomic Dynamics Data Series*. Economic Research Data Releases.

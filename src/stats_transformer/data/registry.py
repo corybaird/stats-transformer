@@ -93,12 +93,15 @@ EXAMPLE_DATASETS: dict[str, dict[str, Any]] = {
         "Monthly",
         "Cieslak, Hansen, McMahon, and Xiao (2024)",
     ),
-    "greenbook_forecast_errors": _single(
-        "academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip",
-        "FOMC Greenbook CPI forecast errors",
-        "Quarterly",
-        "Coibion and Gorodnichenko (2012)",
-    ),
+    "coibion_gorodnichenko_2012": {
+        "description": "FOMC Greenbook quarterly and meeting-frequency Taylor-rule series",
+        "time_period": "Quarterly / FOMC meetings",
+        "source": "Coibion and Gorodnichenko (2012), authors' EViews workfiles",
+        "files": {
+            "quarterly": _file("academic/coibion_gorodnichenko_2012/greenbook_quarterly.parquet"),
+            "meetings": _file("academic/coibion_gorodnichenko_2012/greenbook_meetings.parquet"),
+        },
+    },
     "fomc_surprises": _single(
         "academic/jarocinski_karadi_2020/fomc_surprises.parquet.gzip",
         "FOMC event monetary and information surprises",
