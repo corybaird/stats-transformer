@@ -4,6 +4,7 @@ from examples.academic.vanderwel_2026 import Vanderwel2026Replication
 from examples.academic.nakamura_steinsson_2018b_jorda import NakamuraSteinsson2018bJordaReplication
 from examples.academic.nakamura_steinsson import NakamuraSteinssonExample
 from examples.academic.bauer_swanson_2023 import BauerSwanson2023Replication
+from examples.academic.king_plosser_stock_watson_1991 import KingPlosserStockWatson1991Replication
 from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.unsupervised.unsupervised import PCAModel
 from stats_transformer.models.timeseries.reduced_form.local_projections import LocalProjectionsModel
@@ -19,6 +20,27 @@ def test_vanderwel_2026_replication():
     assert res["passed"], f"Vanderwel replication failed with max error {res['max_error']}"
     for replicated, published in zip(res["r2_oos_replicated"], res["r2_oos_published"], strict=False):
         assert abs(replicated - published) <= rep.TOLERANCE
+
+
+def test_king_plosser_stock_watson_1991_svec():
+    """Verify KPSW (1991) three-variable SVEC estimation succeeds and is just-identified.
+
+    Spec: two transitory shocks have zero long-run effects (LR columns 1-2 of
+    Xi B, King et al. 1991 eq. (7)) plus one contemporaneous zero B[1,2] to
+    separate the transitory shocks (Brueggemann 2006). Published tables are
+    not directly comparable (different sample than KPSW's 1949-1988 Citibase
+    data), so success plus the identification structure is asserted.
+    """
+    rep = KingPlosserStockWatson1991Replication()
+    out = rep.run()
+    B = out["SR"]
+    assert np.isfinite(B).all()
+    assert np.isclose(B[1, 2], 0.0, atol=1e-6)
+    assert np.isclose(np.asarray(rep.model.svec_fit.LR_est)[0, 1], 0.0, atol=1e-6)
+    fit = rep.model.svec_fit
+    assert fit.max_restriction_violation <= fit.restr_tol
+    # No over-identifying restrictions: LR test statistic must be ~ 0.
+    assert abs(out["metrics"]["lr_stat"]) < 1e-6
 
 
 def test_nakamura_steinsson_transform_check():

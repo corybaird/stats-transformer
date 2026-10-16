@@ -209,31 +209,57 @@ class SVEC:
         # concentrated likelihood along the free directions from several
         # deterministic starts, keeping the best fit. Finite-difference BFGS
         # at tight tolerances can stop with a precision-loss flag while still at
-        # a good point, so a fit is accepted when the objective is finite and
-        # not worse than its start, not when the success flag is set.
+        # a good point, so a fit is accepted by what it achieves — restriction
+        # violation within tolerance and a finite objective — not by the
+        # success flag or by an improvement over its start (BFGS can leave a
+        # degenerate start and still return an unusable point, and vice versa).
+        # The concentrated likelihood min value over PD B is the unrestricted
+        # one 0.5*T*(K + logdet(sigma_u)), reached at BB' = sigma_u; anything
+        # below it (near-singular BB', logdet just above the -100 floor) is not
+        # a likelihood at all, so it fails the finiteness gate too.
         free_starts = [np.linalg.lstsq(Sb, s0, rcond=None)[0] for s0 in starts[:2]]
         rng = np.random.default_rng(0)
         free_starts += [rng.normal(0.0, 1.0, Sb.shape[1]) for _ in range(2)]
+        failed_violation = failed_objective = 0
         for g0 in free_starts:
             g_obj = lambda g: objective(Sb @ g + b_shift)
+            # Scaling the free component leaves the restrictions intact
+            # (E @ Sb = 0), so rescale each start onto the likelihood-relevant
+            # scale t^2 = tr((B0 B0')^-1 Sigma_u) / K; without this BFGS never
+            # escapes the degenerate small-|B| cone of zero-restriction fits.
+            b0 = (Sb @ g0 + b_shift).reshape((K, K))
+            try:
+                t2 = np.trace(np.linalg.inv(b0 @ b0.T) @ sigma_u) / K
+            except np.linalg.LinAlgError:
+                t2 = np.nan
+            if np.isfinite(t2) and t2 > 0.0:
+                g0 = g0 * float(np.sqrt(min(t2, 1e300)))
             fit_res = minimize(g_obj, g0, method="BFGS", options={"maxiter": self.max_iter, "gtol": 1e-8})
             b_flat = Sb @ fit_res.x + b_shift
             viol = violation(b_flat)
-            if fit_res.success or g_obj(fit_res.x) < g_obj(g0):
+            obj = objective(b_flat)
+            obj_floor = 0.5 * T * (K + np.linalg.slogdet(sigma_u)[1])
+            if fit_res.success or obj <= g_obj(g0):
                 best_viol = min(best_viol, viol)
-            if viol <= self.restr_tol and g_obj(fit_res.x) <= g_obj(g0) and objective(b_flat) < 1e10:
-                candidates.append((objective(b_flat), b_flat))
+            if viol > self.restr_tol:
+                failed_violation += 1
+            elif not np.isfinite(obj) or obj >= 1e10 or obj < obj_floor:
+                failed_objective += 1
+            else:
+                candidates.append((obj, b_flat))
 
         if not candidates:
             self.max_restriction_violation = best_viol
-            reason = (
-                "all optimiser runs failed"
-                if not np.isfinite(best_viol)
-                else f"best violation {best_viol:.3g}"
-            )
+            reasons = []
+            if failed_violation:
+                reasons.append(f"{failed_violation} violated the identifying restrictions beyond {self.restr_tol:g}")
+            if failed_objective:
+                reasons.append(f"{failed_objective} had a non-finite objective")
+            reason = "; ".join(reasons) if reasons else "all optimiser runs failed"
             err = RuntimeError(
                 f"SVEC estimation failed: no start satisfied the identifying "
-                f"restrictions to {self.restr_tol:g} ({reason}); "
+                f"restrictions to {self.restr_tol:g} with a finite objective "
+                f"({reason}; best violation {best_viol:.3g}); "
                 f"tried {len(free_starts)} deterministic starts"
             )
             err.max_restriction_violation = best_viol
