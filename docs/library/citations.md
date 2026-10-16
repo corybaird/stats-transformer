@@ -9,12 +9,12 @@ This document catalogs the academic literature, econometric papers, benchmark da
 ### 1.1 Structural VAR Identification & Cointegration
 
 - **Blanchard, O. J., & Quah, D. (1989)**. 
-	- Blanchard, O. J., & Quah, D. (1988). The dynamic effects of aggregate demand and supply disturbances.
+	- Blanchard, O. J., & Quah, D. (1989). The dynamic effects of aggregate demand and supply disturbances. _American Economic Review_, _79_(4), 655-673.
 	  - ***Usage*:** `BlanchardQuahModel`
 			  - src/stats_transformer/models/timeseries/identification/blanchard_quah.py`
 			  - Benchmarked: `src/examples/academic/var/blanchard_quah_1989.py`.
 - **King, R. G., Plosser, C. I., Stock, J. H., & Watson, M. W. (1991)**. 
-	- King, R. G., Plosser, C. I., Stock, J. H., & Watson, M. W. (1987). Stochastic trends and economic fluctuations.
+	- King, R. G., Plosser, C. I., Stock, J. H., & Watson, M. W. (1991). Stochastic trends and economic fluctuations. _American Economic Review_, _81_(4), 819-840.
 	  - ***Usage*:** Structural VECM (SVEC) long-run cointegration decomposition
 		  - `src/stats_transformer/models/timeseries/structural/svec.py`
 - **Johansen, S. (1991)**.
@@ -132,11 +132,11 @@ This document catalogs the academic literature, econometric papers, benchmark da
 
 - **Rigobon, R. (2003)**. 
 	- Rigobon, R. (2003). Identification through heteroskedasticity. _Review of Economics and Statistics_, _85_(4), 777-792.
-	- *Usage*: Implemented in `HeteroskedasticSVARModel` 
+	- *Usage*: Implemented in `VolatilitySVARModel` 
 		- `src/stats_transformer/models/timeseries/identification/volatility.py`
-- **Lanne, M., & Saikkonen, P. (2007)**. 
+- **Lanne, M., Meitz, M., & Saikkonen, P. (2017)**. 
 	- Lanne, M., Meitz, M., & Saikkonen, P. (2017). Identification and estimation of non-Gaussian structural vector autoregressions. _Journal of Econometrics_, _196_(2), 288-304.
-	- *Usage*: Statistical identification through GARCH and time-varying variance structures.
+	- *Usage*: Statistical identification through independent non-Gaussian structural shocks.
 - **Matteson, D. S., & Tsay, R. S. (2017)**.
 	- Matteson, D. S., & Tsay, R. S. (2017). Independent component analysis via distance covariance. _Journal of the American Statistical Association_, _112_(518), 623-637.
 	  - *Usage*: Implemented in `IndependenceSVARModel`
@@ -153,6 +153,9 @@ This document catalogs the academic literature, econometric papers, benchmark da
 - **Teräsvirta, T., & Yang, Y. (2014)**. 
 	- Teräsvirta, T., & Yang, Y. (2014). Specification, estimation and evaluation of vector smooth transition autoregressive models with applications.
 	  - *Usage*: Smooth Transition VAR (STVAR) formulation.
+- **Balke, N. S. (2000)**.
+	- Balke, N. S. (2000). Credit and economic activity: Credit regimes and nonlinear propagation of shocks. _The Review of Economics and Statistics_, _82_(2), 344-349.
+	- *Usage*: TVAR propagation-regime example in `src/examples/academic/balke_2000_tvar.py`.
 
 ### 1.7 Applied Time-Series Forecasting & Textbooks
 
@@ -168,7 +171,7 @@ This document catalogs the academic literature, econometric papers, benchmark da
 
 - **Description**: Quarterly and monthly macroeconomic datasets maintained by the Federal Reserve Bank of St. Louis.
 - **Citation**: McCracken, M. W., & Ng, S. (2016). FRED-MD: A monthly database for macroeconomic research. _Journal of Business & Economic Statistics_, _34_(4), 574-589.
-- **Location**: `data/examples/macrodb_gdp_inflation.parquet`, `data/examples/timeseries/`
+- **Location**: `src/stats_transformer/data/macrodb_gdp_inflation.parquet`, `data/examples/timeseries/`
 - **Usage**: Used for VAR, VECM, LP-IV, and structural monetary shock benchmarks.
 
 ### 2.2 Stock & Watson Macro Data (2001)
@@ -209,7 +212,7 @@ This document catalogs the academic literature, econometric papers, benchmark da
 ### 2.7 Mroz Female Labor Supply Dataset (1987)
 
 - **Description**: Microeconomic dataset for married women's labor force participation and wage equations.
-- **Citation**: Mroz, T. A. (1984). _The sensitivity of an empirical model of married women's hours of work to economic and statistical assumptions_. Stanford University.
+- **Citation**: Mroz, T. A. (1987). The sensitivity of an empirical model of married women's hours of work to economic and statistical assumptions. _Econometrica_, _55_(3), 765-799.
 - **Location**: `src/examples/regression/mroz_iv.py`
 - **Usage**: 2SLS Instrumental Variables regression benchmark.
 
@@ -232,9 +235,9 @@ This document catalogs the academic literature, econometric papers, benchmark da
 ## 3. Open-Source Benchmark Software
 
 - **R `vars` Package**: Pfaff, B. (2008). VAR, SVAR and SVEC models: Implementation within R package vars. _Journal of statistical software_, _27_, 1-32.
-- **R `tsDyn` Package**: Stigler, Matthieu. "Threshold cointegration: overview and implementation in R." _R package version 0.7-2. URL http://stat. ethz. ch/CRAN/web/packages/tsDyn/vignettes/ThCointOverview. pdf_ (2010).
+- **R `tsDyn` Package**: Stigler, Matthieu. "Threshold cointegration: overview and implementation in R." _R package version 0.7-2_. URL: https://cran.r-project.org/web/packages/tsDyn/vignettes/ThCointOverview.pdf (2010).
 - **R `svars` Package**: Lange, A., Dalheimer, B., Herwartz, H., & Maxand, S. (2021). svars: An R package for data-driven identification in multivariate time series analysis. _Journal of Statistical Software_, _97_,
-- **R `sstvars` Package**: 
+- **R `sstvars` Package**: Virolainen, S. _sstvars: Toolkit for Reduced Form and Structural Smooth Transition Vector Autoregressive Models_. R package, CRAN. https://cran.r-project.org/package=sstvars
 - **MATLAB VAR-Toolbox**: Cesa-Bianchi, Ambrogio. (2026). *VAR-Toolbox for MATLAB*. GitHub Repository:
 	- `https://github.com/ambropo/VAR-Toolbox`.
 - **Python `statsmodels`**: Seabold, S., & Perktold, J. (2010). Statsmodels: econometric and statistical modeling with python. _scipy_, _7_(1), 92-96.
