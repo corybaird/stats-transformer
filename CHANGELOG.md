@@ -17,12 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Blanchard-Quah (1989) pipeline config and data** (#118): `references/configs/timeseries/identification/blanchard_quah_1989.yaml`, packaged `bq_1989` data, `BlanchardQuahModel.get_model_metadata` gains `impact_matrix`, and a pipeline test matches the MATLAB VAR-Toolbox impact matrix at rtol 1e-8.
 - **`ProxySVARModel.irf(horizons)`** (#114): impulse responses of the target variables to the proxy-identified shock (VAR MA coefficients times the impact column), verified against MATLAB VAR-Toolbox `gk2015_iv` (`IR[:, :, 0]`, rtol 1e-6).
 - **ARIMAModel exogenous regressors** (#136): regression with ARMA errors; the target is never used as its own regressor; EViews AR(1)-least-squares columns differ in estimation method (exact ML) but reproduce the structure.
-- **Coibion & Gorodnichenko (2012) replication** (#136): `src/examples/timeseries/coibion_gorodnichenko_2012.py` reproduces the Table 1 Taylor-rule regressions and the two motivating regressions from `regressions_for_tables.prg` (regression columns via `RegressionModel`, AR(1)-error columns via `ARIMAModel`).
+- **Coibion & Gorodnichenko (2012) replication** (#136): `src/examples/academic/coibion_gorodnichenko_2012.py` reproduces the Table 1 Taylor-rule regressions and the two motivating regressions from `regressions_for_tables.prg` (regression columns via `RegressionModel`, AR(1)-error columns via `ARIMAModel`).
 - **EViews workfile converter and datasets** (#136): `scripts/convert_eviews_wf1.py` converts the CG 2012 replication package into `greenbook_quarterly.parquet` (1960Q1-2010Q4, 62 series) and `greenbook_meetings.parquet` (351 FOMC meetings, 27 series), validated against header ranges, spot values and program-generated series.
 - **Transformation checks** (#126, #127): `tests/test_transformation_checks.py` covers every row of the paper's feature-transformation table (Bauer & Swanson payrolls and unemployment, Bauer-Bernanke-Milstein SVENY01/SVENY10) and `test_nakamura_steinsson_transform_check` compares 4,786 dates of master.dta yields (max 4.7e-7, float32 storage).
 - **CITATION.cff** (#131): CFF 1.2.0 metadata with a preferred-citation placeholder for the paper, validated with cffconvert; arXiv id to follow after submission.
 - **CI wheel smoke test** (#131): a job builds the wheel, installs it into a clean venv and imports it from outside the repository.
-- Example scripts gain `__main__` blocks with rounded `format_metrics` output so replication runs print their estimates (#132, #133).
+- Example scripts gain `__main__` blocks with rounded `format_metrics` output so replication runs print their estimates (#133).
+- **`LocalProjectionsIVModel` cumulative responses, integral multipliers, lag blocks and robust inference** (#105): `cumulative=True` ($y_{t+h} - y_{t-1}$), `multiplier=True` (Ramey & Zubairy 2018 integral multiplier, $\sum_{j=0}^h x_{t+j}$ instrumented by $z_t$), `lags=P`, and `cov_type` `"HC1"` / `"HAC"` (Newey-West, bandwidth $h+1$). Estimation now uses `linearmodels` IV2SLS; the default stays `"nonrobust"` to keep Stata parity, and `"HC3"` raises `ValueError`.
+- **Gürkaynak, Sack & Swanson (2005) Target & Path rotation** (#108): `PCAModel.rotate_target_path()` and a standalone `rotate_target_path(factors, loadings, target_index, path_index)`.
+- **Academic datasets** (#109): FRBSF FOMC surprises (update 2023 and monthly) under `bauer_swanson_2023`, plus `jarocinski_2024`, `karadi_schoenle_wursten_2024`, `fukui_nakamura_steinsson_2025`, and a `gertler_karadi_2015` alias of the GK2015 workbook.
+- **Bauer & Swanson (2023) benchmark** (#109): `src/examples/academic/bauer_swanson_2023.py` regresses raw `mps` on pre-FOMC news with `RobustOLSModel(cov_type="HC3")` and checks the `mps_orth` placebo.
 
 ### Changed
 
@@ -32,8 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Notebooks** (#130): notebook 08 uses the shipped `SignZeroSVARModel` and notebook 0 runs the `mincer_wage` paper config; all nine re-executed from the repository root with zero errors and no absolute paths in outputs.
 - **Pipeline refactor, no behaviour change** (#134): run-folder plumbing split into `utils/run_context.py` (`RunContext`), `models/builder.py` (`ModelSpec` / `ModelBuilder`) and `reporting/tables/pipeline_tables.py` (`PipelineTables`); public API, CLI and outputs unchanged.
 - **Docstrings and type checking** (#132): one-line docstrings for 442 of 442 public definitions and full type hints with mypy coverage for feature_engineering, data_merger, models/registry, data loading, table_generator and unsupervised; two wrong signatures fixed at the source (`Pipeline(transformations=)` is a list of names, `DataMerger` accepts `params_path=None`).
-- Example scripts resolve config and data paths from the script location so they run from any folder in a clone (#131).
-- Pipeline restores date/entity columns stored as parquet index levels, so `local_projections.yaml` runs (#131).
 - Duplicate macrodb parquet copies removed; the packaged copy is the only one (#131).
 
 ### Deprecated
@@ -43,8 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Feature upsampling with an entity column under pandas 3** (#130): `FeatureEngineer.resample_dataset` raised `KeyError` because pandas 3 no longer passes the grouping column to `groupby().apply`; replaced with an explicit per-entity loop working on pandas 2.2 and 3.x.
-- **KPSW (1991) SVEC specification and fit acceptance** (#131): the example's restriction pattern forced `det B = 0`, so no estimate existed; replaced with the standard KPSW identification (transitory shocks have no long-run effect, one impact zero separates them, just-identified per Bruggemann 2006, matching R `vars::SVEC`); `svec.py` now accepts a start meeting the restrictions with a finite objective, rescales starts to the likelihood scale, and names the failed check.
-- **Example paths** (#131): config and data resolution relative to the script location fixes the sign-zero SVAR example; `local_projections.yaml` was failing on a `date_column` absent from `sofr_surprises` (strict xfail removed).
+- **KPSW (1991) SVEC specification and fit acceptance** (#131): the example's restriction pattern forced `det B = 0`, so no estimate existed; replaced with the standard KPSW identification (transitory shocks have no long-run effect, one impact zero separates them, just-identified per Bruggemann 2006); `svec.py` now accepts a start meeting the restrictions with a finite objective, rescales starts to the likelihood scale, and names the failed check.
+- **Example paths and raw parquet index** (#131): example scripts resolve config and data paths from the script location, so they run from any folder in a clone (this fixes the sign-zero SVAR example); the pipeline restores date/entity columns stored as parquet index levels, so `local_projections.yaml` runs (strict xfail removed).
 - **`FeatureEngineer.save_features` never wrote the file it was given** (#132): it only logged quality metrics; it now writes `.csv` or parquet.
 - **Nakamura-Steinsson transformation check event-date convention** (#126): master.dta books the 15 Oct 1998 intermeeting cut on the next day's yield change; applying the authors' convention all 4,786 dates match with a documented maximum difference of 4.7e-7.
 - **`DiDModel` with `control_variables`** (#115): conditional DiD is not implemented, so fitting with controls now raises `ValueError` instead of silently ignoring them.
@@ -52,26 +54,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`ModelBase.fit` silently dropping rows and refitting** (#117): removed the catch-and-refit; NaN/±inf inputs now raise `ValueError` naming the columns and row count, chained from the original error.
 - **Lane (2025) DiD design** (#135): treatment is the paper's design (products in HCI-targeted industries against never-targeted ones, before vs after the 1973 drive) instead of a derived cohort; the policy-loans regression is unchanged; `DiDModel` has no clustering option, so the SEs differ in method.
 - **Acosta et al. (2024) checks** (#135): removed the regression of `ns` on the two factors it is built from ($R^2 = 1$ by construction); it now checks the GSS rotation property of the authors' series and reports variance shares.
-
-### Removed
-
-- The `greenbook_forecast_errors` example dataset used different series definitions (its 1979 values do not match the authors') and ran past the workfile range (#136).
-
-### Added
-
-- **`LocalProjectionsIVModel` cumulative responses, integral multipliers, lag blocks and robust inference** (#105): `cumulative=True` ($y_{t+h} - y_{t-1}$), `multiplier=True` (Ramey & Zubairy 2018 integral multiplier, $\sum_{j=0}^h x_{t+j}$ instrumented by $z_t$), `lags=P`, and `cov_type` `"HC1"` / `"HAC"` (Newey-West, bandwidth $h+1$). Estimation now uses `linearmodels` IV2SLS; the default stays `"nonrobust"` to keep Stata parity, and `"HC3"` raises `ValueError`.
-- **Gürkaynak, Sack & Swanson (2005) Target & Path rotation** (#108): `PCAModel.rotate_target_path()` and a standalone `rotate_target_path(factors, loadings, target_index, path_index)`.
-- **Academic datasets** (#109): FRBSF FOMC surprises (update 2023 and monthly) under `bauer_swanson_2023`, plus `jarocinski_2024`, `karadi_schoenle_wursten_2024`, `fukui_nakamura_steinsson_2025`, and a `gertler_karadi_2015` alias of the GK2015 workbook.
-- **Bauer & Swanson (2023) benchmark** (#109): `src/examples/academic/bauer_swanson_2023.py` regresses raw `mps` on pre-FOMC news with `RobustOLSModel(cov_type="HC3")` and checks the `mps_orth` placebo.
-
-### Fixed
-
 - **`ProxySVARModel` shock scaling** (#111): impact column now uses the Gertler-Karadi / Mertens-Ravn closed form, and the reduced-form VAR uses the full endogenous sample (missing-instrument rows only drop out of the proxy moments). The MATLAB `gk2015_iv` parity test passes (previously strict xfail).
 - **`RobustOLSModel` YAML `cov_type`** (#107): precedence is now explicit kwarg > YAML > `"HC3"`.
 - **SVAR-family YAML params** (#107, #112): identification models read `target_variables` and their other model params (`maxlags`, `n_starts`, `regime_column`, `instrument_variable`, `A`/`B`, ...) from YAML via `ModelBase._param`. `volatility_svar.yaml` uses a new `regime` column in `macrodata.csv` (1984 Great Moderation break).
 - **Pipeline multivariate configs** (#110): the model stage fits VAR / VECM / SVAR / DynamicFactor / ARIMA configs declared with `target_variables` and writes `03_model/model_summary.json`; ARIMA via pipeline no longer raises `KeyError: None`. `dynamic_factor.yaml` now lists series present in `var_panel`.
 - **Example scripts no longer overwrite tracked data** (#106): eight scripts load packaged files via `load_example()` instead of downloading into `data/`.
 - **Docs:** roadmap open-work tables drop the items completed above.
+
+### Removed
+
+- The `greenbook_forecast_errors` example dataset used different series definitions (its 1979 values do not match the authors') and ran past the workfile range (#136).
 
 ## [1.10.1] - 2026-10-15
 
