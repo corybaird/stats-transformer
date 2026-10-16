@@ -27,7 +27,8 @@
 # documentation or test ids drift from this file.
 
 - family: Regression
-  models: [RegressionModel]
+  models:
+    - {name: RegressionModel, tex: 'Regression\-Model'}
   benchmark: {name: Longley, path: data/examples/regression/longley.csv}
   targets:
     - {software: Stata, func: regress}
@@ -49,7 +50,8 @@
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_robust_ols_longley_matches_r_and_stata]
 
 - family: Regression
-  models: [PanelRegressionModel]
+  models:
+    - {name: PanelRegressionModel, tex: 'Panel\-Regression\-Model'}
   benchmark: {name: Grunfeld, path: data/examples/regression/grunfeld.csv}
   targets:
     - {software: Stata, func: "xtreg, fe"}
@@ -144,7 +146,8 @@
   note: The recorded MATLAB `bvar_kl_minnesota` reference uses a Litterman fixed-Sigma prior, a different prior family from the wrapper's natural-conjugate Minnesota prior (benchmarks.md 2.2.2).
 
 - family: Reduced-form time series
-  models: [PandemicBVARModel]
+  models:
+    - {name: PandemicBVARModel, tex: 'Pandemic\-BVAR\-Model'}
   benchmark: {name: U.S. macro growth rates, path: data/examples/timeseries/macrodata.csv}
   targets:
     - {software: MATLAB, desc: "Cascaldi-Garcia (2022) replication code"}
@@ -160,7 +163,9 @@
   status: python_tested
 
 - family: Reduced-form time series
-  models: [LocalProjectionsModel, LocalProjectionsIVModel]
+  models:
+    - {name: LocalProjectionsModel, tex: 'Local\-Projections\-Model'}
+    - {name: LocalProjectionsIVModel, tex: 'Local\-Projections\-IV\-Model'}
   benchmark:
     name: Jorda & Taylor
     path: data/examples/matlab_examples/JT2025_Data.xlsx
@@ -197,11 +202,12 @@
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_blanchard_quah_matches_matlab_and_r]
 
 - family: Structural and nonlinear time series
-  models: [VolatilitySVARModel]
+  models:
+    - {name: VolatilitySVARModel, tex: 'Volatility\-SVAR\-Model'}
   benchmark:
     name: U.S. macro
     path: tests/integration/svar/data_usa.csv
-    tex: "---"
+    tex: '---'
   targets:
     - {software: R, func: svars::id.cv, note: preserved output}
   status: unresolved
@@ -218,11 +224,16 @@
   tests: [tests/test_external_parity/test_wrapper_parity.py::test_proxy_svar_gk2015_matches_matlab]
 
 - family: Structural and nonlinear time series
-  models: [SignZeroSVARModel, BayesianSignZeroSVARModel, IndependenceSVARModel, CVMSVARModel, NonGaussianSVARModel]
+  models:
+    - {name: SignZeroSVARModel, tex: 'Sign\-Zero\-SVAR\-Model'}
+    - {name: BayesianSignZeroSVARModel, tex: 'Bayesian\-Sign\-Zero\-SVAR\-Model'}
+    - {name: IndependenceSVARModel, tex: 'Independence\-SVAR\-Model'}
+    - {name: CVMSVARModel, tex: 'CVM\-SVAR\-Model'}
+    - {name: NonGaussianSVARModel, tex: 'Non\-Gaussian\-SVAR\-Model'}
   benchmark:
     name: U.S. macro
     path: data/examples/timeseries/macrodata.csv
-    tex: "---"
+    tex: '---'
   targets:
     - {software: R, func: svars}
     - {software: MATLAB, desc: VAR-Toolbox 4.0}
@@ -251,7 +262,7 @@
   benchmark:
     name: Ghysels & Marcellino Ch 7
     path: data/examples/timeseries/ghysels_ch7/
-    tex: "---"
+    tex: '---'
   targets:
     - {software: R, func: tsDyn::TVECM}
     - {software: R, func: sstvars::STVAR}
