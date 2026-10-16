@@ -60,8 +60,10 @@ def test_generator_writes_one_row_per_application(tmp_path, monkeypatch):
     assert "MATLAB: VAR-Toolbox 4.0; R: \\texttt{vars::BQ}" in tex
     # Grunfeld two-way FE made it into the config and the generated row.
     assert "entity + time FE" in tex
-    # The row is the whole table body: no note rows, nothing but ' \\\\' lines.
-    assert all(line.endswith(" \\\\") for line in tex.splitlines())
+    # The row is the whole table body, ending in \bottomrule: no note rows,
+    # nothing but ' \\\\' lines and the closing rule.
+    assert tex.endswith("\\bottomrule\n")
+    assert all(line.endswith(" \\\\") for line in tex.splitlines()[:-1])
     # Config cells print basenames only; the appendix holds the full paths.
     assert "references/configs" not in tex
     assert tex.count("VAR(2), constant") == 1
