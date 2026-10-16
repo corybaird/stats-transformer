@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from stats_transformer.models.timeseries.reduced_form.dynamic_factor import DynamicFactorModel
+from examples._print import format_metrics
 
 class MirandaAgrippinoRey2020Replication:
 
@@ -45,9 +46,14 @@ class MirandaAgrippinoRey2020Replication:
 
         reference_df = self._load_reference_factor()
 
-        print("Miranda, Agrippino & Rey (2020) Global Factor - illustrative DFM extraction:", metrics)
+        print("Miranda, Agrippino & Rey (2020) Global Factor - illustrative DFM extraction:")
+        format_metrics(metrics)
         print("Correlation between extracted and simulated true factor:", round(correlation, 4))
         print("Published Global Factor reference series (not used as model input):")
         print(reference_df.tail())
 
         return {"metrics": metrics, "extracted_factor": extracted, "true_factor_correlation": correlation, "reference_series": reference_df}
+
+
+if __name__ == "__main__":
+    MirandaAgrippinoRey2020Replication().run()

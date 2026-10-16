@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.timeseries.reduced_form.var import VARModel
+from examples._print import format_metrics
 
 class CieslakHansenMcMahonXiao2024Replication:
 
@@ -23,6 +24,12 @@ class CieslakHansenMcMahonXiao2024Replication:
         ols_metrics = self.ols_model.fit(df)
         self.var_model = VARModel(target_variables=["unct_iw_staff_1", "unct_eg_staff_1"], maxlags=1)
         var_metrics = self.var_model.fit(df)
-        print("Cieslak et al. (2024) OLS Metrics:", ols_metrics)
-        print("Cieslak et al. (2024) VAR Metrics:", var_metrics)
+        print("Cieslak et al. (2024) OLS:")
+        format_metrics(ols_metrics)
+        print("Cieslak et al. (2024) VAR:")
+        format_metrics(var_metrics)
         return {"ols_metrics": ols_metrics, "var_metrics": var_metrics}
+
+
+if __name__ == "__main__":
+    CieslakHansenMcMahonXiao2024Replication().run()

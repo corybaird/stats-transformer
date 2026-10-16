@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from stats_transformer.models.regression.gmm import GMMModel
+from examples._print import format_metrics
 
 class CoibionGorodnichenko2012Replication:
 
@@ -30,5 +31,10 @@ class CoibionGorodnichenko2012Replication:
         df = self._load_data()
         self.gmm_model = GMMModel(target="forecast_error", independent_variables=["prior_inflation_level"], endogenous=["forecast_revision"], instruments=["backcast_revision"], method="two_step", weighting="hac")
         metrics = self.gmm_model.fit(df)
-        print("Coibion & Gorodnichenko (2012) GMM Metrics:", metrics)
+        print("Coibion & Gorodnichenko (2012) GMM:")
+        format_metrics(metrics)
         return {"metrics": metrics}
+
+
+if __name__ == "__main__":
+    CoibionGorodnichenko2012Replication().run()
