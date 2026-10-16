@@ -17,6 +17,7 @@ EXPECTED_EXAMPLES = {
     "bauer_swanson_2023",
     "bbm_2023",
     "bq_1989",
+    "coibion_gorodnichenko_2012",
     "fomc_surprises",
     "fukui_nakamura_steinsson_2025",
     "ghysels_ch1",
