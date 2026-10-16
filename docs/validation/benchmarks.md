@@ -71,12 +71,6 @@ All bugs below are in `stats-transformer`, not in R, Stata or MATLAB. Fix on a d
 
 | Pri | Bug | Location | Verification hook after the fix |
 | --- | --- | --- | --- |
-| 1 | Cointegration rank fixed at 1 | `vecm.py:32` | flips `test_vecm_ghysels_ch7_uk_rank3_matches_r` |
-| 1 | Proxy SVAR scaling and instrument sample | `proxy_svar.py:49-63` | flips `test_proxy_svar_gk2015_matches_matlab` |
-| 1 | Minnesota prior multiplies by sigma_j squared — FIXED: divides by sigma_j^2 | `bvar.py` (`minnesota_prior_moments`, shared with `pandemic_bvar.py`, `bayesian_sign_zero.py`) | `test_bvar_minnesota_prior_variance_matches_hand_computation`, `test_bvar_posterior_mean_is_scale_equivariant` (both fail on main); exact parity with `bvar_kl_minnesota` NOT expected (Litterman fixed-Sigma prior, different family) |
-| 1 | Sign-zero "exact zeros" use a 1e-10 tolerance | `sign_zero.py:158`, `bayesian_sign_zero.py:121` | fixed: zeros imposed by construction (Arias, Rubio-Ramírez & Waggoner 2018, Algorithm 2); tests in `tests/test_models/test_structural_restrictions.py` and `tests/test_models/test_bayesian_sign_zero.py` (acceptance-rate tests fail on `origin/main`) |
-| 1 | TVECM error-correction term lag | `tvecm.py:63` | fixed: regressor is ECT_{t-1}, threshold variable is ECT_{t-d} (Hansen & Seo 2002); alignment tests in `tests/test_models/test_nonlinear_models.py` (statsmodels VECM design comparison fails on `origin/main`, which uses ECT_{t-2} even at d = 1) |
-| 1 | TVAR / TVECM empty-regime fallback | `tvar.py:140`, `tvecm.py:148` | fixed: an empty or below-minimum regime raises `ValueError`; tests in `tests/test_models/test_nonlinear_models.py` (fail on `origin/main`, which silently estimates both "regimes" on the full sample) |
 | 2 | DiD controls unused, standard errors | `did.py:14` | R `did::att_gt`, Stata `csdid` |
 | 2 | Ghysels Ch 7 example uses `co` on 500 rows; book uses `ci` on rows 1 to 400 | `src/examples/timeseries/ghysels_chap7.py` | existing `vecm_ghysels_ch7` references |
 
@@ -113,21 +107,21 @@ Legend: **Code** new driver or test, **Data** dataset to add or move, **Lib** wr
 Run the wrapper parity tests (no external software needed):
 
 ```bash
-/opt/homebrew/bin/uv run python -m pytest tests/test_external_parity
+uv run python -m pytest tests/test_external_parity
 ```
 
 Re-record the external outputs (needs MATLAB with a shared engine, Docker image `st-ref-r:1`, or Stata):
 
 ```bash
-/opt/homebrew/bin/uv run python -m tests.external_benchmarks.matlab.record_matlab_refs
-/opt/homebrew/bin/uv run python -m tests.external_benchmarks.r.record_r_refs
-/opt/homebrew/bin/uv run python -m tests.external_benchmarks.stata.record_stata_refs
+uv run python -m tests.external_benchmarks.matlab.record_matlab_refs
+uv run python -m tests.external_benchmarks.r.record_r_refs
+uv run python -m tests.external_benchmarks.stata.record_stata_refs
 ```
 
 The older live suite in `src/examples/software_benchmarks/` remains available as an optional tool but is not used as evidence:
 
 ```bash
-/opt/homebrew/bin/uv run python -m src.examples.software_benchmarks.benchmark_suite
+uv run python -m src.examples.software_benchmarks.benchmark_suite
 ```
 
 ---
@@ -148,7 +142,7 @@ The recorded `bq1989_long` case in Section 2 is the evidence for this comparison
 
 ## 4. Academic Paper Replications & Example Scripts
 
-This section catalogs all 27 runnable example modules in `src/examples/`, detailing their academic source papers, module paths, data source files, and empirical verification role.
+This section catalogs 30 runnable example modules in `src/examples/`, detailing their academic source papers, module paths, data source files, and empirical verification role.
 
 | Domain / Method | Script Module Path | Academic Paper / Benchmark Target | Data Source File | Verification Status | Target Verification / Compared Object |
 | --- | --- | --- | --- | --- | --- |
@@ -169,8 +163,8 @@ This section catalogs all 27 runnable example modules in `src/examples/`, detail
 | **Collinear OLS** | `src.examples.regression.longley` | Longley (1967) | `data/examples/regression/longley.csv` | **Cross-Language Verified (R, Stata, MATLAB)** | OLS & Robust OLS numerical stability under collinearity |
 | **Panel Regression** | `src.examples.regression.grunfeld` | Grunfeld (1958) | `data/examples/regression/grunfeld.csv` | **Cross-Language Verified (R, Stata)** | Fixed-effects corporate investment panel regression |
 | **Instrumental Variables** | `src.examples.regression.mroz_iv` | Mroz (1987) | `data/examples/regression/mroz.csv` | **Cross-Language Verified (R, Stata)** | 2SLS female labor supply hours equation |
-| **Mincer Wage Equation** | `src.examples.regression.mincer_wage` | Mincer (1974) | `data/examples/regression/mroz.csv` | **Textbook Replication Example** | Semi-logarithmic human capital wage regression |
-| **Okun's Law** | `src.examples.regression.okuns_law` | Okun (1962) | `data/examples/timeseries/macrodata.csv` | **Textbook Replication Example** | GDP growth vs unemployment rate change regression |
+| **Mincer Wage Equation** | `src.examples.regression.mincer_wage` | Mincer (1974) | `data/examples/regression/mincer_wage.csv` | **Textbook Replication Example** | Semi-logarithmic human capital wage regression |
+| **Okun's Law** | `src.examples.regression.okuns_law` | Okun (1962) | `data/examples/regression/okuns_law.csv` | **Textbook Replication Example** | GDP growth vs unemployment rate change regression |
 | **Applied Regression** | `src.examples.regression.ghysels_chap1` | Ghysels & Marcellino (2018) Chapter 1 | `data/examples/regression/ghysels_ch1/ex2_regress_gdp.csv` | **Textbook Replication Example** | Linear trend & seasonal dummy regression models |
 | **Applied Regression** | `src.examples.regression.ghysels_chap2` | Ghysels & Marcellino (2018) Chapter 2 | `data/examples/regression/ghysels_ch2/ex1_regress_gdp.csv` | **Textbook Replication Example** | Autoregressive distributed lag (ARDL) forecasting |
 | **Binary Discrete Choice** | `src.examples.discrete.spector_logit` | Spector & Mazzeo (1980) | `data/examples/discrete/spector.csv` | **Cross-Language Verified (R, Stata)** | Binary Logit educational choice estimation |
@@ -180,8 +174,8 @@ This section catalogs all 27 runnable example modules in `src/examples/`, detail
 | **Industrial Policy** | `src.examples.academic.lane_2025` | Lane (2025) | `data/examples/academic/lane_2025/policy_loans.parquet.gzip` | **Paper Replication Example** | Targeted policy lending Robust OLS regression |
 | **Dynamic Factor Model** | `src.examples.academic.miranda_agrippino_rey_2020` | Miranda-Agrippino & Rey (2020) | `data/examples/academic/miranda_agrippino_rey_2020/global_factor.parquet.gzip` | **Illustrative Method Demo (Synthetic Input)** | EM-estimated dynamic factor extraction from risky-asset panel |
 | **Survey Forecast Rigidity** | `src.examples.academic.coibion_gorodnichenko_2012` | Coibion & Gorodnichenko (2012) | `data/examples/academic/coibion_gorodnichenko_2012/greenbook_forecast_errors.parquet.gzip` | **Paper Replication Example** | Two-step GMM forecast-error orthogonality test |
-| **Provider Pipeline** | `src.examples.featurization.fred` | St. Louis Fed FRED API | `data/raw/fred_cache.parquet` | **Data & Feature Pipeline Demo** | Automated multi-series FRED data download & alignment |
-| **Provider Pipeline** | `src.examples.featurization.monetary` | Federal Reserve Macro Series | `data/macrodb_gdp_inflation.parquet` | **Data & Feature Pipeline Demo** | Monetary policy indicator featurization pipeline |
+| **Provider Pipeline** | `src.examples.featurization.fred` | St. Louis Fed FRED API | FRED API download (no bundled file) | **Data & Feature Pipeline Demo** | Automated FRED series download & alignment |
+| **Provider Pipeline** | `src.examples.featurization.monetary` | St. Louis Fed FRED API | FRED API download (no bundled file) | **Data & Feature Pipeline Demo** | Monetary policy indicator featurization pipeline |
 
 ---
 

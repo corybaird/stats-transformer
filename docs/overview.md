@@ -37,7 +37,7 @@
 
 ## 3. Library Model Summary
 
-`stats-transformer` implements 32 specialized model classes and diagnostic engines across five functional domains. Every model is accessible via YAML pipeline configuration (`model.model_type`) or direct Python class instantiation.
+`stats-transformer` implements 32 specialized model classes and diagnostic engines across seven functional domains. Every model is accessible via YAML pipeline configuration (`model.model_type`) or direct Python class instantiation.
 
 | Functional Domain | Key Implemented Classes | Primary Capabilities |
 | --- | --- | --- |
@@ -57,6 +57,6 @@ For full mathematical definitions, estimation algorithms, parameter tables, and 
 
 The library maintains strict protocols for empirical and numerical validation:
 
-- **Automated Unit & Integration Testing**: Over 400 test cases running under continuous integration. See [Testing suite](validation/testing_suite.md).
+- **Automated Unit & Integration Testing**: Over 650 test cases running under continuous integration. See [Testing suite](validation/testing_suite.md).
 - **Cross-Language Software Parity**: Automated benchmark suites verifying machine precision against StataNow 19.5, MATLAB 2025b, and containerized R. See [Cross-language software benchmarks](validation/benchmarks.md).
 - **Academic Replications**: Runnable Python translations of empirical macroeconomic papers with bundled datasets.

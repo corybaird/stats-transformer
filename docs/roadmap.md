@@ -19,7 +19,6 @@ Actionable open items verified against `origin/main` (release 1.10.1 plus PRs #1
 | `DiDModel` accepts `control_variables` but never conditions on them; SEs are unclustered | `st/models/regression/did.py:73-92` | P0 | M | in progress (raises on controls; conditional DiD still open) |
 | `BayesianSignZeroSVARModel` draws not re-weighted to the ARW conditional posterior | `st/models/timeseries/identification/bayesian_sign_zero.py:176-188` | P1 | M | open |
 | `VolatilitySVARModel` regime variance ratio differs from R `svars::id.cv` | `docs/validation/model_status.yaml:200-207` | P1 | M | open |
-| `ModelBase.fit` silently row-drops and refits when the error message contains "NaN"/"inf" | `st/models/base.py:236-250` | P1 | S | in progress |
 | Nonlinear models compute AIC/BIC from summed SSR instead of $\log\det\hat\Sigma_u$ | `st/models/timeseries/nonlinear/tvar.py:172-173` (+`tvecm.py`, `stvar.py`) | P2 | S | open |
 | Nonlinear models overwrite config `self.params` with the regime-1 DataFrame | `st/models/timeseries/nonlinear/tvar.py:185` | P2 | S | open |
 | Upstream statsmodels SVAR type-A, $K=2$, 1-free-parameter crash | `tests/test_models/test_svar.py:42` | P2 | S | open (upstream xfail) |
@@ -31,8 +30,6 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
 | `save_features` only logs metrics; writes nothing to disk | `st/featurization/feature_engineering.py:478-481` | P1 | S | open |
-| Featurization does not sort rows by date within entity before lag/lead shifts | `st/featurization/feature_engineering.py:354` | P1 | S | in progress |
-| Featurization logs and swallows per-column transformation failures | `st/featurization/feature_engineering.py:311-313` | P1 | S | in progress |
 | `zscore` uses full-sample mean/std per entity (look-ahead leakage) | `st/featurization/feature_engineering.py:272-276` | P1 | M | open |
 | `EventStudyBuilder` clamps event horizon to sample end, fabricating tail values | `st/featurization/event_study.py:131` | P1 | S | open |
 | `KMeansModel` `n_clusters` not configurable from YAML; seed hardcoded to 42 | `st/models/unsupervised/unsupervised.py:127` | P1 | S | open |
@@ -67,15 +64,8 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| Wrong module locations (`pca.py`, `kmeans.py`, `timeseries/structural/decompositions.py`) | `docs/library/models.md:160,168,373` | P1 | S | open |
-| `architecture.md` claims every model implements `predict`; stale model count | `docs/library/architecture.md:141,143` | P1 | S | open |
-| Hardcoded `/opt/homebrew/bin/uv` paths | `docs/validation/benchmarks.md:114-128`, `docs/validation/testing_suite.md:18,47` | P1 | S | open |
-| Sample YAML uses `country`/`date` columns absent from `macrodata.csv` | `docs/library/data.md:113-128` | P1 | S | open |
-| Model counts disagree across docs (registry: 32) | `docs/library/architecture.md:143`, `docs/library/models.md` | P2 | S | open |
-| `macrodata.csv` = 100 × log-diff growth of statsmodels macrodata; say so, recommend Ghysels Ch 7 for cointegration | `docs/library/data.md:63` | P2 | S | open |
-| `data.md` omits packaged `ghysels_ch5/ch8/ch10` | `docs/library/data.md:55-65` | P2 | S | open |
-| Reference to deleted `tests/verification/` | `docs/validation/testing_suite.md:42` | P2 | S | open |
 | Agent skill model docs: obsolete class names, dispatcher claims | `.agents/skills/stats-transformer-architecture/models.md` | P2 | S | open |
+| `macrodata.csv` = 100 × log-diff growth of statsmodels macrodata; say so, recommend Ghysels Ch 7 for cointegration | `docs/library/data.md` | P2 | S | open |
 
 ### Packaging / CI
 

@@ -124,7 +124,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    MB[ModelBase Interface: fit / predict / get_model_metadata] --> REG[Applied Regression]
+    MB[ModelBase Interface: build_model / get_summary / get_model_metrics] --> REG[Applied Regression]
     MB --> TS[Time-Series Models]
     MB --> UNSUP[Discrete & Unsupervised]
 
@@ -138,9 +138,9 @@ flowchart TD
     REG --> META
 ```
 
-- **Unified Base Contract (`ModelBase`)**: Every model implements the `ModelBase` abstract contract (`fit`, `predict`, `get_model_metadata`).
+- **Unified Base Contract (`ModelBase`)**: Every model implements the `ModelBase` abstract contract (`build_model`, `get_summary`, `get_model_metrics`); `fit` and the JSON metadata method `get_model_metadata` are provided by the base class.
 - **Normalized Outputs**: All estimators return normalized DataFrames and structured JSON metadata containing coefficients, standard errors, $t$-statistics, $p$-values, covariance matrices, and model diagnostic metrics.
-- **Complete Reference**: For full mathematical specifications, access aliases, and benchmark comparisons for all 30 implemented model classes, see the [Implemented Models Catalog](models.md).
+- **Complete Reference**: For full mathematical specifications, access aliases, and benchmark comparisons for all 32 implemented model classes, see the [Implemented Models Catalog](models.md).
 
 ---
 

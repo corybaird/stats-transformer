@@ -85,7 +85,9 @@ uv sync
 
 #### 3.2.1. With `params.yaml`
 
-Define your data sources, pipeline parameters, and model specifications in a `params.yaml` file:
+Define your data sources, pipeline parameters, and model specifications in a `params.yaml` file. The example below uses `data/examples/regression/grunfeld.csv` from this repository: if you installed from PyPI, point `raw_data_file` at your own CSV and set the mapping and model columns for your data.
+
+> **Note:** the example YAML, paper configs under `references/configs/`, and their datasets ship with the GitHub repository, not with the PyPI wheel. Clone the repo to run them.
 
 ```yaml
 data:
@@ -111,8 +113,10 @@ reporting:
 Execute the full pipeline via the command line using the `Pipeline` orchestrator:
 
 ```bash
-uv run python -m stats_transformer.pipeline --config params.yaml
+python -m stats_transformer.pipeline --config params.yaml
 ```
+
+(In a local checkout you can additionally `uv sync` and run `uv run python -m stats_transformer.pipeline --config params.yaml`.)
 
 Or drive the same configuration programmatically:
 
@@ -120,11 +124,12 @@ Or drive the same configuration programmatically:
 from stats_transformer import Pipeline
 
 pipeline = Pipeline(params_path="params.yaml")
-merged_data = pipeline.run(stage="data")
 transformed_data = pipeline.run(stage="features")
 model_results = pipeline.run(stage="model")
 pipeline.run(stage="reporting")
 ```
+
+With a `raw_data_file` config like the one above, the features stage reads the raw CSV directly and the data stage is skipped (it only applies to multi-dataset `data.datasets` configs; a full run with no `stage` argument handles this automatically).
 
 #### 3.2.2. With the API directly
 

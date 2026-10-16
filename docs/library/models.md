@@ -53,14 +53,14 @@ These models are fully implemented and covered by automated Python unit and inte
 | **Reduced-Form Time Series** | `BVARModel` | `bvar` | `BVARModel` | FOMC Surprises (`data/examples/academic/jarocinski_karadi_2020/`) | R `BVAR::bvar`, Stata `bayes: var` | **Implemented** |
 | **Reduced-Form Time Series** | `DynamicFactorModel` | `dynamic_factor` | `DynamicFactorModel` | Global Factor (`data/examples/academic/miranda_agrippino_rey_2020/`) | R `MARSS`, Stata `dfactor` | **Implemented** |
 | **Reduced-Form Time Series** | `PandemicBVARModel` | `pandemic_bvar` | `PandemicBVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | Cascaldi-Garcia (2022) | **Implemented** |
-| **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Known issue** (MATLAB `gk2015_iv`: shock scaling and sample) |
+| **Structural Identification** | `ProxySVARModel` | `proxy_svar` | `ProxySVARModel` | GK Macro (`data/examples/matlab_examples/GK2015_Data.xlsx`) | R `svars`, MATLAB `VAR-Toolbox 4.0` | **Verified** (MATLAB `gk2015_iv`, $2 \times 10^{-8}$) |
 | **Structural Identification** | `SignZeroSVARModel` | `sign_restrictions` (`sign_zero`) | `SignZeroSVARModel` | Kilian & Lütkepohl (`data/examples/timeseries/macrodata.csv`) | MATLAB `VAR-Toolbox 4.0`, R `BMR` | **Implemented** (zero restrictions by construction, ARW 2018) |
 | **Structural Identification** | `BayesianSignZeroSVARModel` | `bsvar_sign_zero` (`bayesian_sign_zero`) | `BayesianSignZeroSVARModel` | UK SVAR (`data/examples/timeseries/macrodata.csv`) | Bank of England (Brignone & Piffer 2025), Arias et al. (2018) | **Implemented** (zero restrictions by construction; ARW importance weights not applied) |
 | **Structural Identification** | `VolatilitySVARModel` | `volatility_svar` | `VolatilitySVARModel` | US output gap, inflation, rate (`tests/integration/svar/data_usa.csv`) | R `svars::id.cv` | **Unresolved** (regime variance ratios differ from R by up to 0.16) |
 | **Structural Identification** | `IndependenceSVARModel` | `independence_svar` | `IndependenceSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.dc` | **Implemented** |
 | **Structural Identification** | `CVMSVARModel` | `cvm_svar` (`cvm`) | `CVMSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.cvm` | **Implemented** |
 | **Structural Identification** | `NonGaussianSVARModel` | `non_gaussian_svar` (`non_gaussian`) | `NonGaussianSVARModel` | FastICA Macro Panel (`data/examples/timeseries/macrodata.csv`) | R `svars::id.ng` | **Implemented** |
-| **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`data/examples/matlab_examples/SW2001_Data.xlsx`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Verified** (R `svec_canada`, $10^{-6}$; column signs aligned) |
+| **Structural Identification** | `SVECModel` | `svec` | `SVECModel` | King et al. (`tests/integration/var/canada.csv`) | R `vars::SVEC`, MATLAB `VAR-Toolbox 4.0` | **Verified** (R `svec_canada`, $10^{-6}$; column signs aligned) |
 | **Nonlinear Dynamics** | `TVECMModel` | `tvecm` | `TVECMModel` | Cointegration Panel (`data/examples/timeseries/ghysels_ch7/`) | R `tsDyn::TVECM` | **Implemented** (ECT regressor ECT_{t-1}, threshold ECT_{t-d}; empty regime raises) |
 | **Nonlinear Dynamics** | `TVARModel` | `tvar` | `TVARModel` | US Macro (`data/examples/timeseries/macrodata.csv`) | R `tsDyn::TVAR` | **Unresolved** (recorded Stata `threshold` comparison provides no evidence of agreement; empty/undersized regime raises) |
 | **Nonlinear Dynamics** | `STVARModel` | `stvar` | `STVARModel` | Smooth Transition Panel (`data/examples/timeseries/macrodata.csv`) | R `sstvars::STVAR` | **Implemented** |
@@ -157,7 +157,7 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Description**: Standardized or demean-only PCA feature extraction producing factor loadings, scree variance shares, and orthogonal latent components.
 - **Specification**: Spectral decomposition of correlation or covariance matrix $\Sigma_X = V \Lambda V'$.
 - **Parameters**: `standardize: bool = True` (set `standardize=False` for demean-only/covariance PCA preserving relative variance scale across variables, e.g. for yield curves or macroeconomic factor models), `with_mean: bool = True` (set `with_mean=False` to skip centering: `PCAModel` then performs non-centered SVD, since sklearn `PCA` always centers).
-- **Module Location**: `src/stats_transformer/models/unsupervised/pca.py`
+- **Module Location**: `src/stats_transformer/models/unsupervised/unsupervised.py`
 - **Pipeline Access**: `pca` (direct instantiation: `PCAModel`)
 - **Benchmark Target**: R (`stats::prcomp`), Stata (`pca`)
 - **Verified Discrepancy**: Variance shares and absolute loadings agree with R `prcomp` and Stata `pca` to $10^{-8}$ on Longley (component signs are arbitrary).
@@ -166,7 +166,7 @@ These models are fully implemented and covered by automated Python unit and inte
 ### 4.2 K-Means Clustering (`KMeansModel`)
 - **Description**: Standardized K-means clustering algorithm partitioning observations into $K$ disjoint clusters by minimizing within-cluster sum of squares.
 - **Specification**: $\arg\min_S \sum_{i=1}^K \sum_{x \in S_i} \| x - \mu_i \|^2$
-- **Module Location**: `src/stats_transformer/models/unsupervised/kmeans.py`
+- **Module Location**: `src/stats_transformer/models/unsupervised/unsupervised.py`
 - **Pipeline Access**: `kmeans` (direct instantiation: `KMeansModel`)
 - **Benchmark Target**: R (`stats::kmeans`), Stata (`cluster kmeans`)
 
@@ -280,7 +280,7 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/proxy_svar.py`
 - **Pipeline Access**: `proxy_svar` (direct instantiation: `ProxySVARModel`)
 - **Benchmark Target**: R (`svars`), MATLAB (`VAR-Toolbox 4.0`)
-- **Known Issue**: Impact column differs from MATLAB VAR-Toolbox `gk2015_iv` (shock scaling by $\sqrt{\Sigma_{11}}$ and instrument-missing rows dropped before VAR estimation); tracked as a strict `xfail`.
+- **Verified Discrepancy**: Impact column matches MATLAB VAR-Toolbox `gk2015_iv` to $2 \times 10^{-8}$ (shock scaling by $\sqrt{\Sigma_{11}}$ and instrument-missing rows dropped before VAR estimation).
 
 ### 6.4 Sign, Zero, & Narrative Restrictions (`SignZeroSVARModel`)
 - **Description**: Non-Bayesian set identification imposing directional inequality signs, exact zero impact constraints, and historical narrative restrictions (Antolín-Díaz & Rubio-Ramírez 2018).
@@ -375,5 +375,5 @@ These models are fully implemented and covered by automated Python unit and inte
 | `StationarityDiagnostics` | `src/stats_transformer/models/timeseries/diagnostics/stationarity.py` | Augmented Dickey-Fuller (ADF) and KPSS unit root testing |
 | `VARLagSelector` | `src/stats_transformer/models/timeseries/reduced_form/lag_selection.py` | Information criteria evaluation across lag orders ($AIC, HQ, SC/BIC, FPE$) |
 | `VARForecaster` | `src/stats_transformer/models/timeseries/reduced_form/forecasting.py` | Iterative and direct multi-step point forecasting with analytical confidence intervals |
-| `ForecastEvaluator` | `src/stats_transformer/models/timeseries/analysis/forecast_evaluation.py` | Out-of-sample RMSE, MAE, and directional forecast evaluation |
-| `TimeSeriesDecompositions` | `src/stats_transformer/models/timeseries/structural/decompositions.py` | Historical shock decomposition and forecast error variance decomposition |
+| `ForecastEvaluator` | `src/stats_transformer/models/timeseries/utilities.py` | Out-of-sample RMSE, MAE, and directional forecast evaluation |
+| `TimeSeriesDecompositions` | `src/stats_transformer/models/timeseries/decompositions.py` | Historical shock decomposition and forecast error variance decomposition |

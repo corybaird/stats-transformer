@@ -15,7 +15,7 @@ The automated suite checks package behavior on controlled data. It is the first 
 From the repository root:
 
 ```bash
-/opt/homebrew/bin/uv run python -m pytest tests/ -q
+uv run python -m pytest tests/ -q
 ```
 
 The `pyproject.toml` test configuration adds `src/` to the Python path. The test suite does not require MATLAB, network access, or external academic replication data.
@@ -39,12 +39,11 @@ The `pyproject.toml` test configuration adds `src/` to the Python path. The test
 | `tests/test_examples/` | example registry | example discovery and registration |
 | `tests/integration/` | multi-language integration tests | containerized R, Stata, and local cross-checks |
 | `tests/data/` | stable test fixtures | small local inputs used by tests |
-| `tests/verification/` | opt-in external verification | MATLAB Engine comparison (not collected by default) |
 
 Run a focused area with the same module form, for example:
 
 ```bash
-/opt/homebrew/bin/uv run python -m pytest tests/test_timeseries_extensions.py -q
+uv run python -m pytest tests/test_timeseries_extensions.py -q
 ```
 
 Add a regression test beside the smallest existing test that exercises the behavior. Keep MATLAB, network, and large external-data checks in an opt-in verification or example workflow rather than the default suite.
@@ -76,4 +75,4 @@ Keep these categories separate in user-facing claims. Passing tests show that th
 The following checks have additional prerequisites and are not part of the default suite:
 
 - Academic feature examples require the relevant research data under `data/examples/academic/`.
-- The MATLAB comparator requires MATLAB Engine for Python and a local VAR-Toolbox checkout. See [Cross-Language MATLAB Comparator](benchmarks.md#3-cross-language-matlab-comparator).
+- Cross-language parity is checked with the recorded outputs in `tests/test_external_parity`; re-recording them needs the external software described in the software benchmarks guide.
