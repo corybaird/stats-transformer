@@ -5,6 +5,7 @@ import xarray as xr
 
 class TimeSeriesReportData:
 
+    """Container for the data tables of a report."""
     def __init__(self, specification=None, coefficients=None, irfs=None, fevd=None, historical_decomposition=None, structural_shocks=None):
         self.specification = specification if specification is not None else pd.DataFrame()
         self.coefficients = coefficients if coefficients is not None else pd.DataFrame()
@@ -14,6 +15,7 @@ class TimeSeriesReportData:
         self.structural_shocks = structural_shocks if structural_shocks is not None else xr.Dataset()
 
     def tables(self):
+        """Return the non-empty tables as name and DataFrame pairs."""
         table_items = [
             ("specification", self.specification),
             ("coefficients", self.coefficients),
@@ -33,6 +35,7 @@ class TimeSeriesReportData:
 
 class TimeSeriesReportRun:
 
+    """The figures and tables produced by one report run."""
     def __init__(self, data, figures=None, tables=None):
         self.data = data
         self.figures = figures or {}

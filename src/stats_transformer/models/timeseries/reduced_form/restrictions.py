@@ -31,9 +31,11 @@ class RestrictedVARResults:
 
     @property
     def exog_names(self):
+        """Return the names of the exogenous regressors."""
         return self._exog_names
 
     def ma_rep(self, maxn=10):
+        """Compute moving average representation matrices."""
         return compute_ma_rep(self.params, k_ar=self.k_ar, k_trend=self.k_trend, neqs=self.neqs, steps=maxn + 1)
 
 class RestrictedVAR:
@@ -53,6 +55,7 @@ class RestrictedVAR:
         self.trend = trend
         
     def fit(self):
+        """Fit the model on the data and store the results."""
         y = np.asarray(self.endog)
         names = list(self.endog.columns)
         nobs_raw, neqs = y.shape

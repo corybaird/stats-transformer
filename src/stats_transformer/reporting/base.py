@@ -15,6 +15,7 @@ DEFAULT_STYLE = "default"
 
 class BaseVisualizer(ABC):
 
+    """Abstract base class for visualizers with shared styling and saving."""
     def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', handlers=[logging.StreamHandler(sys.stdout)])
         self.logger = logging.getLogger(__name__)
@@ -48,12 +49,15 @@ class BaseVisualizer(ABC):
     
     @abstractmethod
     def create_visualization(self, *args, **kwargs):
+        """Create the visualization handled by this visualizer."""
         pass
     
     def run(self):
+        """Run the full workflow end to end."""
         pass
 
     def save_figure(self, fig, filename, subdir=None, display_only=False):
+        """Save the figure in the configured formats, or show it when display_only."""
         if display_only:
             fig.tight_layout()
             plt.show(block=False)

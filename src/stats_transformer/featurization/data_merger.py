@@ -1,40 +1,42 @@
 import logging
 import os
+from typing import Any, Optional
+
 import pandas as pd
 import yaml
 from stats_transformer.utils.dict_country_converter import dict_country
-
 # Was an empty dict, so standardize_entity silently mapped every code to
 # itself and the bundled converter was never actually used.
-ISO2_TO_ISO3 = dict_country["iso2_to_iso3"]
+ISO2_TO_ISO3: dict[str, str] = dict_country["iso2_to_iso3"]
 
 class DataMerger:
-
-    def __init__(self, params_path="params.yaml"):
+    """Merge datasets from different sources into one panel."""
+    def __init__(self, params_path: Optional[str] = "params.yaml") -> None:
         self.params_path = params_path
         self.logger = logging.getLogger(__name__)
         self._setup_logging()
         self.config = self._load_config()
 
-    def _setup_logging(self):
+    def _setup_logging(self) -> None:
         self.logger.setLevel(logging.INFO)
         if not self.logger.handlers:
             handler = logging.StreamHandler()
             handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
             self.logger.addHandler(handler)
 
-    def _load_config(self):
+    def _load_config(self) -> dict[str, Any]:
         if not self.params_path or not os.path.exists(self.params_path):
             return {}
         with open(self.params_path, "r") as f:
             return yaml.safe_load(f)
 
-    def load_dataset(self, path):
+    def load_dataset(self, path: str) -> pd.DataFrame:
+        """Load a CSV or parquet file into a DataFrame."""
         if path.endswith(".parquet"):
             return pd.read_parquet(path)
         return pd.read_csv(path)
 
-    def _log_merge_diagnostics(self, df_left, df_right, merged_df, entity_col):
+    def _log_merge_diagnostics(self, df_left: pd.DataFrame, df_right: pd.DataFrame, merged_df: pd.DataFrame, entity_col: str) -> None:
         rows_left, rows_right, rows_merged = len(df_left), len(df_right), len(merged_df)
         if entity_col in df_left.columns:
             countries_left = set(df_left[entity_col].unique())
@@ -57,32 +59,37 @@ class DataMerger:
         if dropped:
             self.logger.warning(f"Dropped countries from left: {sorted(dropped)}")
 
-    def merge(self, df_left, df_right, on, how="inner"):
+    def merge(self, df_left: pd.DataFrame, df_right: pd.DataFrame, on: list[str], how: str = "inner") -> pd.DataFrame:
+        """Merge left and right on key columns and log merge diagnostics."""
         merged_df = pd.merge(df_left, df_right, on=on, how=how)
         entity_col = on[0] if on else "country"
         self._log_merge_diagnostics(df_left, df_right, merged_df, entity_col)
         return merged_df
 
-    def merge_on_index(self, df_left, df_right, how="inner"):
+    def merge_on_index(self, df_left: pd.DataFrame, df_right: pd.DataFrame, how: str = "inner") -> pd.DataFrame:
+        """Merge left and right on their index."""
         merged_df = pd.merge(df_left, df_right, how=how, left_index=True, right_index=True)
         entity_col = "country"
         if "country" in df_left.index.names:
             self._log_merge_diagnostics(df_left, df_right, merged_df, entity_col)
         return merged_df
 
-    def merge_asof(self, df_left, df_right, left_on, right_on, by="country", direction="backward"):
+    def merge_asof(self, df_left: pd.DataFrame, df_right: pd.DataFrame, left_on: str, right_on: str, by: str = "country", direction: str = "backward") -> pd.DataFrame:
+        """As-of merge two DataFrames ordered by the given date columns."""
         df_left_sorted = df_left.sort_values(by=left_on)
         df_right_sorted = df_right.sort_values(by=right_on)
         merged_df = pd.merge_asof(df_left_sorted, df_right_sorted, left_on=left_on, right_on=right_on, by=by, direction=direction)
         self._log_merge_diagnostics(df_left, df_right, merged_df, by)
         return merged_df
 
-    def standardize_entity(self, df, entity_col):
+    def standardize_entity(self, df: pd.DataFrame, entity_col: str) -> pd.DataFrame:
+        """Rename the entity column to country and map ISO2 codes to ISO3."""
         df = df.rename(columns={entity_col: "country"})
         df["country"] = df["country"].map(lambda x: ISO2_TO_ISO3.get(x, x))
         return df
 
-    def run(self):
+    def run(self) -> Optional[pd.DataFrame]:
+        """Run the full workflow end to end."""
         data_config = self.config.get("data", {})
         datasets_config = data_config.get("datasets", [])
 

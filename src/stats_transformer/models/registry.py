@@ -1,3 +1,5 @@
+from typing import Any
+
 from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.regression.panel import PanelRegressionModel
@@ -32,7 +34,7 @@ from stats_transformer.models.timeseries import (
     PandemicBVARModel,
 )
 
-MODEL_REGISTRY = {
+MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     # regression models
     "ols": {"cls": RegressionModel, "kind": "single_equation"}, 
     "robust_ols": {"cls": RobustOLSModel, "kind": "single_equation"}, 
@@ -71,7 +73,7 @@ MODEL_REGISTRY = {
     "pandemic_bvar": {"cls": PandemicBVARModel, "kind": "svar_family"},
 }
 
-MODEL_TYPE_ALIASES = {
+MODEL_TYPE_ALIASES: dict[str, str] = {
     "iv_2sls": "iv",
     "2sls": "iv",
     "sign_zero": "sign_restrictions",
@@ -84,6 +86,6 @@ MODEL_TYPE_ALIASES = {
 # model_type dispatch (e.g. abstract bases, or models requiring construction
 # paths the pipeline does not support). Checked by the registry-completeness
 # test so a newly added model is never silently unreachable by omission.
-NOT_PIPELINE_EXPOSED = {
+NOT_PIPELINE_EXPOSED: set[str] = {
     "UnsupervisedModel",  # abstract base for PCAModel/KMeansModel; not directly instantiable
 }

@@ -4,7 +4,9 @@ from stats_transformer.reporting.charts.timeseries_reporting import HistoricalDe
 
 class TimeSeriesVisualizer(BaseVisualizer):
 
+    """Charts for time-series report data."""
     def create_visualization(self, report_data, outputs=None, labels=None, display_only=False):
+        """Create the report charts."""
         selected_outputs = outputs or ["irfs", "fevd", "historical_decomposition"]
         saved = {}
         if "irfs" in selected_outputs and len(report_data.irfs.data_vars) > 0:
@@ -19,6 +21,7 @@ class TimeSeriesVisualizer(BaseVisualizer):
         return saved
 
     def plot_irfs(self, data, labels=None, display_only=False):
+        """Plot impulse response panels from report data."""
         paths = []
         chart = ImpulseResponseChart(style_path=self.viz_params.get("style", "timeseries"))
         for shock in data["shock"].drop_duplicates().tolist():
@@ -28,11 +31,13 @@ class TimeSeriesVisualizer(BaseVisualizer):
         return paths
 
     def plot_fevd(self, data, labels=None, display_only=False):
+        """Plot variance decomposition panels from report data."""
         chart = VarianceDecompositionChart(style_path=self.viz_params.get("style", "timeseries"))
         figure, _ = chart.plot(data, labels=labels)
         return self.save_figure(figure, "forecast_error_variance_decomposition", subdir="timeseries", display_only=display_only)
 
     def plot_historical_decomposition(self, data, labels=None, display_only=False):
+        """Plot historical decomposition panels from report data."""
         chart = HistoricalDecompositionChart(style_path=self.viz_params.get("style", "timeseries"))
         figure, _ = chart.plot(data, labels=labels)
         return self.save_figure(figure, "historical_decomposition", subdir="timeseries", display_only=display_only)

@@ -5,6 +5,7 @@ from linearmodels.iv import IV2SLS
 from stats_transformer.models.regression.regression import RegressionModel
 
 class IV2SLSModel(RegressionModel):
+    """Instrumental variable regression estimated by two-stage least squares."""
     def __init__(self, target=None, independent_variables=None, instruments=None, endogenous=None, cov_type="robust", **kwargs):
         super().__init__(target=target, independent_variables=independent_variables, **kwargs)
         model_params = self.params.get("model", {}) if self.params else {}
@@ -19,6 +20,7 @@ class IV2SLSModel(RegressionModel):
                 columns.append(col)
         return columns
     def build_model(self, drop_na=True):
+        """Build the underlying model object from the loaded data."""
         if self.X is None or self.y is None:
             # We skip RegressionModel's split_xy because linearmodels needs endogenous and instruments separate
             pass
@@ -45,11 +47,13 @@ class IV2SLSModel(RegressionModel):
         return self.model
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         return str(self.model.summary)
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         

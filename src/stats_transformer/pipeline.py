@@ -31,7 +31,7 @@ class Pipeline:
     def __init__(
         self,
         params_path: Optional[str] = None,
-        transformations: Optional[List[Dict[str, Any]]] = None,
+        transformations: Optional[List[str]] = None,
         entity_column: Optional[str] = None,
         date_column: str = "date",
         target: Optional[str] = None,

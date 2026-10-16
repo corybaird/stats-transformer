@@ -78,6 +78,12 @@ files = [
     "src/stats_transformer/reporting/tables/pipeline_tables.py",
     "src/stats_transformer/models/regression/regression.py",
     "src/stats_transformer/models/unsupervised/unsupervised.py",
+    "src/stats_transformer/featurization/feature_engineering.py",
+    "src/stats_transformer/featurization/data_merger.py",
+    "src/stats_transformer/models/registry.py",
+    "src/stats_transformer/data/__init__.py",
+    "src/stats_transformer/data/registry.py",
+    "src/stats_transformer/reporting/tables/table_generator.py",
 ]
 
 [dependency-groups]

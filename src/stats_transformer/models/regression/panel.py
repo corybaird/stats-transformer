@@ -7,6 +7,7 @@ from datetime import datetime
 class PanelRegressionModel(ModelBase):
     # Panel data modeling using entity and time fixed effects
 
+    """Fixed effects panel regression model."""
     def __init__(self, params_path=None, target=None, independent_variables=None, entity_column=None, time_column="date", entity_effects=True, time_effects=False, check_rank=True, cov_type="unadjusted", cluster_entity=False, cluster_time=False, **kwargs):
         super().__init__(params_path=params_path, target=target, independent_variables=independent_variables, entity_column=entity_column, **kwargs)
         self.time_column = time_column
@@ -29,6 +30,7 @@ class PanelRegressionModel(ModelBase):
 
 
     def load_data(self, data):
+        """Load and clean the data, keeping the required columns."""
         self.logger.info("Loading data for PanelRegressionModel")
         df = pd.read_csv(data) if isinstance(data, str) and data.endswith(".csv") else (pd.read_parquet(data) if isinstance(data, str) else data.copy())
         
@@ -56,6 +58,7 @@ class PanelRegressionModel(ModelBase):
         return self.df_clean
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if self.X is None or self.y is None:
             raise ValueError("Data not loaded, X or y is None")
         
@@ -74,9 +77,11 @@ class PanelRegressionModel(ModelBase):
         return self.model
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         return str(self.model.summary) if self.model else "Panel Model not trained"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if not self.model:
             return {}
         return {
@@ -89,6 +94,7 @@ class PanelRegressionModel(ModelBase):
         }
 
     def get_model_metadata(self, metrics=None):
+        """Assemble the metadata dictionary saved with the model."""
         if metrics is None:
             metrics = self.get_model_metrics()
 
@@ -128,6 +134,7 @@ class PanelRegressionModel(ModelBase):
         return metadata
 
     def run(self, data_path=None, output_path=None):
+        """Run the full workflow end to end."""
         self.fit(data_path)
         if output_path:
             self.save_model_metadata(self.get_model_metrics(), output_dir=output_path)

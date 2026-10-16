@@ -9,6 +9,7 @@ from stats_transformer.models.base import ModelBase
 class PanelIV2SLSModel(ModelBase):
     # Panel 2SLS with entity and time fixed effects
 
+    """Panel regression with an instrumental variable."""
     def __init__(self, params_path=None, 
                  target=None, independent_variables=None, 
                  # IV
@@ -47,6 +48,7 @@ class PanelIV2SLSModel(ModelBase):
         return columns
 
     def load_data(self, data):
+        """Load and clean the data, keeping the required columns."""
         self.logger.info("Loading data for PanelIV2SLSModel")
         df = pd.read_csv(data) if isinstance(data, str) and data.endswith(".csv") else (pd.read_parquet(data) if isinstance(data, str) else data.copy())
 
@@ -83,6 +85,7 @@ class PanelIV2SLSModel(ModelBase):
         return pd.Series(pd.Categorical(values).codes, index=self.df_clean.index)
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         self.y = self.df_clean[self.target]
         self.X_exog = self._add_fixed_effects(self.df_clean[self.independent_variables])
         self.X_endog = self.df_clean[self.endogenous]
@@ -102,11 +105,13 @@ class PanelIV2SLSModel(ModelBase):
         return self.model
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         return str(self.model.summary)
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
 
@@ -125,6 +130,7 @@ class PanelIV2SLSModel(ModelBase):
         }
 
     def get_model_metadata(self, metrics=None):
+        """Assemble the metadata dictionary saved with the model."""
         if metrics is None:
             metrics = self.get_model_metrics()
 
@@ -161,6 +167,7 @@ class PanelIV2SLSModel(ModelBase):
         }
 
     def run(self, data_path=None, output_path=None):
+        """Run the full workflow end to end."""
         self.fit(data_path)
         if output_path:
             self.save_model_metadata(self.get_model_metrics(), output_dir=output_path)

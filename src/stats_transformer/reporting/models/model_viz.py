@@ -8,10 +8,12 @@ from stats_transformer.reporting.charts.bar import CoefficientBarChart, Coeffici
 
 class ModelVisualizer(BaseVisualizer):
 
+    """Visualizations for saved model summaries."""
     def __init__(self, params_path=None, output_dir=None, file_format=None, dpi=None, style=None):
         super().__init__(params_path, output_dir, file_format, dpi, style)
     
     def load_model_from_json(self, json_path):
+        """Load a saved model summary from JSON."""
         try:
             with open(json_path, "r") as f:
                 model_data = json.load(f)
@@ -22,6 +24,7 @@ class ModelVisualizer(BaseVisualizer):
             raise
     
     def create_coefficient_plot_from_json(self, model_summary, subdir="regression", display_only=False, kind=None, include_intercept=None):
+        """Draw a coefficient chart from a model summary."""
         self.logger.info("Creating coefficient plot from JSON")
         if 'coefficients' in model_summary:
             coefficients = model_summary['coefficients']
@@ -91,6 +94,7 @@ class ModelVisualizer(BaseVisualizer):
         return self.save_figure(fig, "coefficient_plot", subdir, display_only=display_only)
     
     def create_visualization(self, model_data, visualization_type="coefficient", **kwargs):
+        """Create the visualization selected by visualization_type."""
         if type(model_data) == str:
             model_data = self.load_model_from_json(model_data)
         if visualization_type == "coefficient":
@@ -98,4 +102,5 @@ class ModelVisualizer(BaseVisualizer):
         return None
 
     def run(self):
+        """Run the full workflow end to end."""
         pass

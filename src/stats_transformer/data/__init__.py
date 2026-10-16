@@ -3,6 +3,7 @@
 from contextlib import contextmanager
 from importlib.resources import as_file, files
 from pathlib import Path
+from typing import Any, Iterator, Optional, Union
 
 import pandas as pd
 
@@ -12,24 +13,24 @@ from stats_transformer.data.registry import EXAMPLE_DATASETS
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
-def list_examples():
+def list_examples() -> list[str]:
     """List registered example datasets."""
     return sorted(EXAMPLE_DATASETS)
 
 
-def _get_example(name):
+def _get_example(name: str) -> dict[str, Any]:
     if name not in EXAMPLE_DATASETS:
         available = ", ".join(list_examples())
         raise ValueError(f"Unknown example dataset '{name}'. Available examples: {available}")
     return EXAMPLE_DATASETS[name]
 
 
-def list_example_files(name):
+def list_example_files(name: str) -> list[str]:
     """List the named files belonging to an example dataset."""
     return sorted(_get_example(name)["files"])
 
 
-def describe_example(name="macrodb_gdp_inflation"):
+def describe_example(name: str = "macrodb_gdp_inflation") -> dict[str, Any]:
     """Return metadata for a registered example dataset."""
     dataset = _get_example(name)
     metadata = {key: value for key, value in dataset.items() if key != "files"}
@@ -43,7 +44,7 @@ def describe_example(name="macrodb_gdp_inflation"):
 
 
 @contextmanager
-def _example_path(spec):
+def _example_path(spec: dict[str, Any]) -> Iterator[Path]:
     repository_path = REPOSITORY_ROOT / spec.get("repository_path", f"data/examples/{spec['path']}")
     if repository_path.is_file():
         yield repository_path
@@ -63,7 +64,7 @@ def _example_path(spec):
     )
 
 
-def _read_example_file(spec, read_kwargs):
+def _read_example_file(spec: dict[str, Any], read_kwargs: dict[str, Any]) -> pd.DataFrame:
     path_name = spec["path"].lower()
     options = dict(spec.get("read_kwargs", {}))
     options.update(read_kwargs)
@@ -82,7 +83,11 @@ def _read_example_file(spec, read_kwargs):
     raise ValueError(f"Unsupported example data format: {spec['path']}")
 
 
-def load_example(name="macrodb_gdp_inflation", member=None, **read_kwargs):
+def load_example(
+    name: str = "macrodb_gdp_inflation",
+    member: Optional[str] = None,
+    **read_kwargs: Any,
+) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """Load one registered dataset or one of its named files."""
     dataset = _get_example(name)
     dataset_files = dataset["files"]
@@ -104,7 +109,7 @@ def load_example(name="macrodb_gdp_inflation", member=None, **read_kwargs):
     }
 
 
-def load_sample_data():
+def load_sample_data() -> pd.DataFrame:
     """Load the default sample macroeconomic dataset.
 
     Returns:
@@ -118,7 +123,7 @@ def load_sample_data():
     return load_example("macrodb_gdp_inflation")
 
 
-def get_sample_data_description():
+def get_sample_data_description() -> dict[str, Any]:
     """Get description of the sample dataset.
 
     Returns:

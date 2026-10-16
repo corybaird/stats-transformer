@@ -4,6 +4,7 @@ from statsmodels.tsa.vector_ar.vecm import VECM
 from stats_transformer.models.base import ModelBase
 
 class VECMModel(ModelBase):
+    """Vector error correction model."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, date_column=None, k_ar_diff=1, coint_rank=1, deterministic='n', **kwargs):
@@ -22,6 +23,7 @@ class VECMModel(ModelBase):
         return cols
 
     def build_model(self, drop_na=True):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
         
@@ -35,6 +37,7 @@ class VECMModel(ModelBase):
         return self.model
 
     def fit(self, df, drop_na=True):
+        """Fit the VECM on the data and store the results."""
         required_cols = self._get_required_columns()
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -48,11 +51,13 @@ class VECMModel(ModelBase):
         return self.get_model_metrics()
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.model is None:
             raise ValueError("Model not trained")
         return str(self.model.summary())
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.model is None:
             raise ValueError("Model not trained")
         return {

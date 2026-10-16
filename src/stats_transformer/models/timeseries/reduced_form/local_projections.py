@@ -4,6 +4,7 @@ import statsmodels.api as sm
 from stats_transformer.models.base import ModelBase
 
 class LocalProjectionsModel(ModelBase):
+    """Local projections model for impulse responses."""
     def __init__(
         self,
         target,
@@ -58,6 +59,7 @@ class LocalProjectionsModel(ModelBase):
         return y.shift(-h)
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         self.irf_results = []
         if self.date_column and self.date_column in self.df_clean.columns:
             self.df_clean = self.df_clean.sort_values(self.date_column)
@@ -100,11 +102,13 @@ class LocalProjectionsModel(ModelBase):
             })
 
     def compute_irf(self):
+        """Compute impulse responses from the local projections."""
         if not self.irf_results:
             self.build_model()
         return pd.DataFrame(self.irf_results)
 
     def compute_vd(self):
+        """Compute the variance decomposition from the local projections."""
         vd_results = []
         y = self.df_clean[self.target]
         x_full = self._build_design_matrix()
@@ -140,12 +144,15 @@ class LocalProjectionsModel(ModelBase):
         return pd.DataFrame(vd_results)
 
     def summary_df(self):
+        """Return the estimation results as a DataFrame."""
         return self.compute_irf()
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         return self.summary_df().to_string()
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         irf = self.compute_irf()
         return {
             "horizon": self.horizon,
@@ -155,5 +162,6 @@ class LocalProjectionsModel(ModelBase):
         }
 
     def run(self, data):
+        """Fit the model on data and return its metadata."""
         self.fit(data)
         return self.get_model_metadata()

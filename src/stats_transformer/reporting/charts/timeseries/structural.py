@@ -12,6 +12,7 @@ class RestrictionHeatmap:
         self.shocks = shocks
         
     def plot(self, ax=None):
+        """Draw the restriction matrix as a heatmap on the given axes."""
         if ax is None:
             _, ax = plt.subplots(figsize=(8, 6))
             
@@ -52,6 +53,7 @@ class SwathePlot:
         self.shocks = shocks
         
     def plot(self, axes=None):
+        """Draw swathe uncertainty bands on the given axes."""
         K = len(self.variables)
         S = len(self.shocks)
         

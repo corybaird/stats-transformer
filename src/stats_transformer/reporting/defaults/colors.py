@@ -22,6 +22,7 @@ PALETTE_DIVERGING = [
 ]
 
 def get_color_palette(palette_type="default", n_colors=10):
+    """Return a list of colors from the named palette type."""
     import matplotlib.colors as mcolors
     import matplotlib.pyplot as plt
     import numpy as np

@@ -5,6 +5,7 @@ from stats_transformer.models.base import ModelBase
 
 class ProxySVARModel(ModelBase):
 
+    """Proxy-SVAR estimated with external instruments."""
     _is_multivariate = True
 
     def __init__(self, target_variables=None, instrument_variable=None, date_column=None, maxlags=1, **kwargs):
@@ -26,6 +27,7 @@ class ProxySVARModel(ModelBase):
         return cols
 
     def load_data(self, data):
+        """Load and clean the data, keeping the required columns."""
         # The reduced-form VAR is estimated on the full sample of endogenous
         # variables: rows where the instrument is missing must survive ModelBase's
         # NaN-drop, so the instrument is held out of the shared row cleaning and
@@ -42,6 +44,7 @@ class ProxySVARModel(ModelBase):
         return cleaned
 
     def build_model(self):
+        """Build the underlying model object from the loaded data."""
         if getattr(self, 'df_clean', None) is None:
             raise ValueError("No cleaned data available")
         if self.date_column and self.date_column in self.df_clean.columns:
@@ -85,6 +88,7 @@ class ProxySVARModel(ModelBase):
         self.impact_column = np.r_[b11, b11 * s21]
 
     def irf(self, horizons=24):
+        """Compute impulse responses from the estimated impact matrix."""
         # Responses of every variable to a one-std-dev proxy-identified shock at
         # h = 0..horizons-1: VAR MA coefficients times the impact column
         if self.var_result is None or self.impact_column is None:
@@ -93,11 +97,13 @@ class ProxySVARModel(ModelBase):
         return pd.DataFrame(responses, columns=self.target_variables)
 
     def get_summary(self):
+        """Return a text summary of the fitted model."""
         if self.var_result is None:
             raise ValueError("Model not trained")
         return f"Proxy SVAR Model (Instrument: {self.instrument_variable})\nStructural Impact Column:\n{self.impact_column}\n\nVAR Summary:\n{self.var_result.summary()}"
 
     def get_model_metrics(self):
+        """Return key fit metrics as a dictionary."""
         if self.var_result is None:
             raise ValueError("Model not trained")
         return {
@@ -107,5 +113,6 @@ class ProxySVARModel(ModelBase):
         }
 
     def run(self, data):
+        """Run the full workflow end to end."""
         self.fit(data)
         return self.get_model_metadata()

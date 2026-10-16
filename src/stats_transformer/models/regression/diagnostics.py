@@ -6,26 +6,32 @@ from statsmodels.stats.diagnostic import het_breuschpagan, het_white
 from statsmodels.stats.stattools import durbin_watson, jarque_bera
 
 class RegressionDiagnostics:
+    """Diagnostic tests on a fitted regression model."""
     def __init__(self, model_fit):
         self.model_fit = model_fit
 
     def breusch_pagan_test(self):
+        """Run the Breusch-Pagan heteroskedasticity test."""
         bp_test = het_breuschpagan(self.model_fit.resid, self.model_fit.model.exog)
         return {"statistic": bp_test[0], "p_value": bp_test[1]}
 
     def jarque_bera_test(self):
+        """Run the Jarque-Bera normality test on the residuals."""
         jb_test = jarque_bera(self.model_fit.resid)
         return {"statistic": jb_test[0], "p_value": jb_test[1]}
 
     def white_test(self):
+        """Run the White heteroskedasticity test."""
         white_test = het_white(self.model_fit.resid, self.model_fit.model.exog)
         return {"statistic": white_test[0], "p_value": white_test[1]}
 
     def durbin_watson_test(self):
+        """Compute the Durbin-Watson autocorrelation statistic."""
         dw_test = durbin_watson(self.model_fit.resid)
         return {"statistic": dw_test}
 
     def chow_test(self, data, formula, split_point):
+        """Run a Chow structural break test at the given split point."""
         data1 = data.iloc[:split_point]
         data2 = data.iloc[split_point:]
         ols1 = smf.ols(formula=formula, data=data1).fit()
@@ -42,4 +48,5 @@ class RegressionDiagnostics:
         return {"statistic": chow_stat, "p_value": p_value}
 
     def run(self):
+        """Run all available diagnostic tests."""
         pass

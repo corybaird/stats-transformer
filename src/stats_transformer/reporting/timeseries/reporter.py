@@ -8,6 +8,7 @@ from stats_transformer.reporting.tables.timeseries import TimeSeriesTableBuilder
 
 class TimeSeriesReporter:
 
+    """Build and export a time-series report from model results."""
     def __init__(self, adapter, output_dir="reports", params_path=None, labels=None):
         self.adapter = adapter
         self.output_dir = Path(output_dir)
@@ -18,21 +19,26 @@ class TimeSeriesReporter:
 
     @classmethod
     def from_var(cls, model, horizons=20, output_dir="reports", params_path=None, labels=None):
+        """Create a reporter from a fitted VAR."""
         return cls(VARResultAdapter(model, horizons=horizons), output_dir=output_dir, params_path=params_path, labels=labels)
 
     @classmethod
     def from_blanchard_quah(cls, model, horizons=20, output_dir="reports", params_path=None, labels=None):
+        """Create a reporter from a fitted Blanchard-Quah model."""
         return cls(BlanchardQuahResultAdapter(model, horizons=horizons), output_dir=output_dir, params_path=params_path, labels=labels)
 
     @classmethod
     def from_local_projections(cls, model, output_dir="reports", params_path=None, labels=None):
+        """Create a reporter from a fitted local projections model."""
         return cls(LocalProjectionsResultAdapter(model), output_dir=output_dir, params_path=params_path, labels=labels)
 
     @classmethod
     def from_local_projections_iv(cls, model, output_dir="reports", params_path=None, labels=None):
+        """Create a reporter from a fitted local projections IV model."""
         return cls(LocalProjectionsIVResultAdapter(model), output_dir=output_dir, params_path=params_path, labels=labels)
 
     def run(self, figure_outputs=None, table_formats=None, display_only=False):
+        """Generate the report figures and tables."""
         self.report_data = self.adapter.build()
         figures = self.visualizer.create_visualization(self.report_data, outputs=figure_outputs, labels=self.labels, display_only=display_only)
         tables = self.table_builder.export(self.report_data, formats=table_formats)
