@@ -1,5 +1,6 @@
 """Unit and regression tests for academic paper replications."""
 import pytest
+from examples.academic.acosta_brennan_jacobson_2024 import AcostaBrennanJacobson2024Replication
 from examples.academic.vanderwel_2026 import Vanderwel2026Replication
 from examples.academic.nakamura_steinsson_2018b_jorda import NakamuraSteinsson2018bJordaReplication
 from examples.academic.nakamura_steinsson import NakamuraSteinssonExample
@@ -77,6 +78,24 @@ def test_bauer_swanson_2023_news_predictability():
     assert res["r_squared"] >= rep.MIN_NEWS_R2
     assert res["placebo_r_squared"] < rep.MAX_PLACEBO_R2
     assert len(res["significant_news"]) >= 1
+
+
+def test_acosta_brennan_jacobson_2024_gss_rotation():
+    """Verify the GSS rotation properties of the shipped surprise factors.
+
+    ns (the policy-rate surprise) is mechanically built from gss_target and
+    gss_path, so no OLS of ns on the factors is fitted; instead the GSS
+    rotation is checked: target and path are orthogonal (correlation near
+    zero) and the orthogonal factor variance shares of ns sum to one.
+    """
+    out = AcostaBrennanJacobson2024Replication().run()
+    rotation = out["rotation_metrics"]
+    assert abs(rotation["target_path_corr"]) < 0.05
+    assert np.isfinite(rotation["variance_share_target"])
+    assert np.isfinite(rotation["variance_share_path"])
+    assert rotation["variance_share_target"] + rotation["variance_share_path"] > 0.99
+    assert rotation["num_observations"] > 0
+    assert "var_metrics" in out
 
 
 def test_regression_predict_accessor():
