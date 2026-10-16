@@ -186,10 +186,20 @@ def test_gmm_model_underidentified_raises():
         model.fit(df)
 
 def test_coibion_gorodnichenko_2012_replication():
+    """Sanity-check the Table 1 Taylor-rule replication of Coibion & Gorodnichenko (2012)."""
     result = CoibionGorodnichenko2012Replication().run()
-    assert "metrics" in result
-    assert result["metrics"]["num_observations"] > 0
-    assert "forecast_revision" in result["metrics"]["coefficients"]
+    assert set(result["coefficients"]) == set(result["metrics"])
+    for metrics in result["metrics"].values():
+        assert metrics["num_observations"] == 77  # sample 1987:4-2006:4
+    # Economic signs in Table 1 column 1: expected inflation, output gap, and
+    # interest smoothing all enter positively with large smoothing persistence.
+    col1 = result["coefficients"]["table1_col1"]
+    assert col1["EPIA"] > 0
+    assert col1["EX"] > 0
+    assert col1["ffr_l1"] > 0.5
+    assert col1["ar.L1"] > 0
+    # Without smoothing (motivate01) all persistence falls on expected inflation.
+    assert result["coefficients"]["reg_motivate01"]["EPIA"] > 1
 
 def test_regression_diagnostics():
     from stats_transformer.models.regression.diagnostics import RegressionDiagnostics
