@@ -105,3 +105,13 @@ def test_failing_transformation_raises():
     })
     with pytest.raises(ValueError, match="column 'val' in entity 'A'"):
         fe.transform(df)
+
+
+@pytest.mark.parametrize("suffix", [".csv", ".parquet"])
+def test_save_features_writes_output_path(tmp_path, suffix):
+    df = pd.DataFrame({"date": pd.date_range("2020-01-01", periods=3, freq="MS"), "x": [1.0, 2.0, 3.0]})
+    fe = FeatureEngineer(params_path=None, transformations=[], date_column="date", data_columns=["x"], verbose=False)
+    out = tmp_path / "nested" / f"features{suffix}"
+    fe.save_features(df, str(out))
+    back = pd.read_csv(out) if suffix == ".csv" else pd.read_parquet(out)
+    assert back["x"].tolist() == [1.0, 2.0, 3.0]

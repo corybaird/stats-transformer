@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
@@ -516,9 +517,14 @@ class FeatureEngineer:
         return resampled_df
 
     def save_features(self, df: pd.DataFrame, output_path: str) -> None:
-        """Write the transformed features to disk."""
+        """Write the transformed features to output_path (.csv, otherwise parquet)."""
         try:
             self._log_data_quality_metrics(df)
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            if str(output_path).endswith(".csv"):
+                df.to_csv(output_path, index=False)
+            else:
+                df.to_parquet(output_path, index=False)
         except Exception as e:
             error_msg = f"Error saving features to {output_path}: {str(e)}"
             self.logger.error(error_msg)
