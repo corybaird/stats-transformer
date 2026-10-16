@@ -8,15 +8,15 @@ For correctness fixes to existing models and the plan for external verification 
 
 ---
 
-## 0. Open Work after 1.10.1
+## 0. Open Work after 1.11.0
 
-Actionable open items verified against `origin/main` (release 1.10.1 plus PRs #105–#112). Completed items are removed from these tables and recorded in [CHANGELOG.md](../CHANGELOG.md). Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
+Actionable open items verified against `origin/main` (release 1.11.0). Completed items are removed from these tables and recorded in [CHANGELOG.md](../CHANGELOG.md). Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
 
 ### Library correctness
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| `DiDModel` accepts `control_variables` but never conditions on them; SEs are unclustered | `st/models/regression/did.py:73-92` | P0 | M | in progress (raises on controls; conditional DiD still open) |
+| `DiDModel` accepts `control_variables` but never conditions on them; SEs are unclustered, so the Lane (2025) example cannot use the paper's product-clustered TWFE inference | `st/models/regression/did.py:73-92` | P0 | M | in progress (raises on controls; conditional DiD still open) |
 | `BayesianSignZeroSVARModel` draws not re-weighted to the ARW conditional posterior | `st/models/timeseries/identification/bayesian_sign_zero.py:176-188` | P1 | M | open |
 | `VolatilitySVARModel` regime variance ratio differs from R `svars::id.cv` | `docs/validation/model_status.yaml:200-207` | P1 | M | open |
 | Nonlinear models compute AIC/BIC from summed SSR instead of $\log\det\hat\Sigma_u$ | `st/models/timeseries/nonlinear/tvar.py:172-173` (+`tvecm.py`, `stvar.py`) | P2 | S | open |
@@ -29,11 +29,9 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| `save_features` only logs metrics; writes nothing to disk | `st/featurization/feature_engineering.py:478-481` | P1 | S | open |
 | `zscore` uses full-sample mean/std per entity (look-ahead leakage) | `st/featurization/feature_engineering.py:272-276` | P1 | M | open |
 | `EventStudyBuilder` clamps event horizon to sample end, fabricating tail values | `st/featurization/event_study.py:131` | P1 | S | open |
 | `KMeansModel` `n_clusters` not configurable from YAML; seed hardcoded to 42 | `st/models/unsupervised/unsupervised.py:127` | P1 | S | open |
-| `local_projections.yaml` declares `date_column: date` absent from `sofr_surprises` | `references/configs/timeseries/reduced_form/local_projections.yaml`, `tests/test_cross_sectional_configs.py:153` (xfail) | P1 | S | open |
 | `structural_restrictions.yaml` is a restriction-matrix input, not a standalone pipeline config | `references/configs/timeseries/identification/structural_restrictions.yaml`, `tests/test_cross_sectional_configs.py:152` (xfail) | P2 | S | open |
 
 ### Validation / parity
@@ -58,6 +56,9 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | Ghysels Ch 7 example uses `deterministic='co'` on 500 rows; book uses `'ci'` on rows 1–400 | `src/examples/timeseries/ghysels_chap7.py:13` | P2 | S | open |
 | Undefined name `r_sim_data_est` | `data/examples/regression/ghysels_ch2/Chap2.py:84` | P1 | S | open |
 | Miranda-Agrippino & Rey (2020, AEA P&P) replication: example still uses simulated data; port the authors' MATLAB specification (`MAIN_GFC_and_USUMP_FIGURE1/2.m`, proxy identification with Swanson's FG/LSAP factors) onto their `MAIN_DataFile.xlsx`; a frequentist ProxySVAR port gives signs opposite to their Figure 1 (global factor, cross-border flows, global liquidity, TYVIX), likely because of their Bayesian NIW prior on the short sample (124 months, 8 variables, 6 lags), so needs a Bayesian proxy-SVAR or a check against their identification code | `src/examples/academic/miranda_agrippino_rey_2020.py` | P2 | L | open |
+| Nine replication scripts compare nothing to published or reference output (Lane, Coibion–Gorodnichenko, Jarociński–Karadi, Stock–Watson, Shapiro et al., Cieślak et al., Kilian–Lütkepohl, Balke, Acosta et al.); add authors' output files and assert against them as Nakamura–Steinsson does | `src/examples/academic/` | P2 | L | open |
+| Coibion–Gorodnichenko Table 1 coefficients printed by the script are not yet compared with the paper; AR(1)-error columns use exact ML, EViews uses least squares with backcasting | `src/examples/academic/coibion_gorodnichenko_2012.py` | P2 | S | open |
+| `jorda2005estimation` row in the paper's replications table has no dedicated script | `src/examples/academic/` | P2 | S | open |
 | Move `src/examples/` to top-level `examples/` | `src/examples/` | P2 | S | open |
 | Move `canada.csv`/`data_usa.csv` to `data/examples/timeseries/`; document in `data.md` | `tests/integration/var/canada.csv`, `tests/integration/{,svar/}data_usa.csv` | P2 | S | open |
 
@@ -65,6 +66,7 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
+| One-line docstrings are in place; add a generated API reference (MkDocs + mkdocstrings) and generate the model list from `MODEL_REGISTRY` and the example catalog from `src/examples/` so they cannot drift | `docs/` | P2 | M | open |
 | Agent skill model docs: obsolete class names, dispatcher claims | `.agents/skills/stats-transformer-architecture/models.md` | P2 | S | open |
 | `macrodata.csv` = 100 × log-diff growth of statsmodels macrodata; say so, recommend Ghysels Ch 7 for cointegration | `docs/library/data.md` | P2 | S | open |
 
@@ -72,13 +74,18 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| Mypy covers only 5 files while shipping `py.typed` | `pyproject.toml:71-80`, `src/stats_transformer/py.typed` | P1 | M | open |
-| Notebook ruff F821: `SignRestrictionsSVARModel` undefined | `notebooks/08_structural_timeseries_models.ipynb` (cell 11) | P1 | S | open |
+| Mypy covers 14 files (pipeline, config, base, feature engineering, data merger, registries, tables, unsupervised); extend to `models/` and `reporting/` | `pyproject.toml` `[tool.mypy]`, `st/py.typed` | P2 | M | open |
 | `test_data_loading.py` resolves `PROJECT_ROOT` to `tests/`, test skips | `tests/test_data/test_data_loading.py:6` | P1 | S | open |
+| Every pipeline run logs `Could not apply style default`; the default `plot_style` name does not resolve | `st/reporting/` | P2 | S | open |
+| CI builds the wheel but does not execute the notebooks | `.github/workflows/ci.yml` | P2 | M | open |
+| Remove the deprecated top-level export shim (37 names) after one release | `st/__init__.py` | P2 | S | open |
+| sdist ships `scripts/` and `docker-compose.yml` | `pyproject.toml` `[tool.hatch.build.targets.sdist]` | P2 | S | open |
+| Test hygiene: `"\+"` regex escapes warn in `test_nonlinear_models.py`; unused fixtures; R integration tests overwrite tracked `*_results.json` | `tests/` | P2 | S | open |
+| Coverage gaps: `data_merger.py` 46%, `r_package_replications` 0% | `st/featurization/data_merger.py` | P2 | M | open |
 | Duplicate `*_results.json` fixtures (subdir + root) | `tests/integration/{panel,regression,svars,var}_results.json` | P2 | S | open |
 | No pre-commit hook / notebook output stripping | `.pre-commit-config.yaml` missing | P2 | S | open |
 | Wheel force-includes example data files | `pyproject.toml:117` | P2 | M | open |
-| Pin R Docker image by digest | `tests/external_benchmarks/r/Dockerfile:1` | P2 | S | open |
+| Pin R Docker image by digest; it is `r-base:4.4.2` while the recorded outputs came from R 4.6.1 | `tests/external_benchmarks/r/Dockerfile:1` | P2 | S | open |
 | Retire legacy `tests/integration/*.R` raw-library suite | `tests/integration/` | P2 | S | open |
 
 ### Refactor
