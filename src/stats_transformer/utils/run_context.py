@@ -70,7 +70,9 @@ class RunContext:
         params = self._config_fn().to_dict()
         inputs: Dict[str, str] = {}
         data_config = params.get("data", {})
-        input_paths = [ds.get("path") for ds in data_config.get("datasets", [])] + [data_config.get("raw_data_file")]
+        input_paths = (
+            [ds.get("path") for ds in data_config.get("datasets", [])] + [data_config.get("raw_data_file")]
+        )
         for path in input_paths:
             if path and os.path.isfile(path) and path not in inputs:
                 try:
@@ -78,7 +80,9 @@ class RunContext:
                 except OSError:
                     pass
         try:
-            git_sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
+            git_sha = subprocess.run(
+                ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10
+            ).stdout.strip() or None
         except Exception:
             git_sha = None
         config_sha256: Optional[str] = None

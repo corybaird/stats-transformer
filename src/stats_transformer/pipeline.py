@@ -10,7 +10,7 @@ import pandas as pd
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 from stats_transformer.featurization.data_merger import DataMerger
 from stats_transformer.models.base import ModelBase
-from stats_transformer.models.builder import ModelBuilder
+from stats_transformer.models.builder import ModelBuilder, ModelSpec, has_model_target
 from stats_transformer.reporting.models.regression_viz import RegressionVisualizer
 from stats_transformer.reporting.eda.data_viz import DataVisualizer
 from stats_transformer.reporting.eda.eda import EDAVisualizer
@@ -28,7 +28,17 @@ _STAGE_ALIASES = {"resample": "data", "regression": "model", "visualization": "r
 class Pipeline:
     """End-to-end research pipeline: data -> features -> model -> reporting stages."""
 
-    def __init__(self, params_path: Optional[str] = None, transformations: Optional[List[Dict[str, Any]]] = None, entity_column: Optional[str] = None, date_column: str = "date", target: Optional[str] = None, features: Optional[List[str]] = None, add_entity_fixed_effects: bool = False, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        params_path: Optional[str] = None,
+        transformations: Optional[List[Dict[str, Any]]] = None,
+        entity_column: Optional[str] = None,
+        date_column: str = "date",
+        target: Optional[str] = None,
+        features: Optional[List[str]] = None,
+        add_entity_fixed_effects: bool = False,
+        **kwargs: Any,
+    ) -> None:
         self.logger = logging.getLogger(__name__)
         self.params_path = params_path
         self.entity_column = entity_column
@@ -44,8 +54,7 @@ class Pipeline:
         self.model_results: Optional[Dict[str, Any]] = None
         self._config: Optional[Config] = None
         self._run_ctx = RunContext(lambda: self._get_config(), params_path)
-        self._builder = ModelBuilder(self)
-        self._tables = PipelineTables(self)
+        self._tables = PipelineTables(self.logger)
 
     # -- Full run ---------------------------------------------------------
 
@@ -59,10 +68,16 @@ class Pipeline:
 
         if stage is not None and stage in _STAGE_ALIASES:
             canonical = _STAGE_ALIASES[stage]
-            warnings.warn(f'Pipeline stage "{stage}" is deprecated and will be removed in a future release; use "{canonical}".', DeprecationWarning, stacklevel=2)
+            warning = (
+                f'Pipeline stage "{stage}" is deprecated and will be removed in a future release; '
+                f'use "{canonical}".'
+            )
+            warnings.warn(warning, DeprecationWarning, stacklevel=2)
             stage = canonical
         if stage is not None and stage != "eda" and stage not in STAGES:
-            raise ValueError(f"Unknown stage '{stage}'. Valid values: {', '.join(STAGES)} (or 'eda'), or None for a full run")
+            raise ValueError(
+                f"Unknown stage '{stage}'. Valid values: {', '.join(STAGES)} (or 'eda'), or None for a full run"
+            )
 
         if stage is not None:
             return self._run_stage(stage)
@@ -108,7 +123,10 @@ class Pipeline:
         # leave an empty run folder behind.
         datasets = data_config.get("datasets") or []
         if not datasets:
-            raise ValueError("Data stage requires data.datasets in the config; this config only sets data.raw_data_file, which the features stage consumes directly (a full run skips the data stage automatically).")
+            raise ValueError(
+                "Data stage requires data.datasets in the config; this config only sets data.raw_data_file, "
+                "which the features stage consumes directly (a full run skips the data stage automatically)."
+            )
         ctx = self._run_ctx
         run_dir = ctx.begin_run()
         # The canonical chaining location stays exactly as on main: the explicit
@@ -123,7 +141,10 @@ class Pipeline:
             self.logger.info(f"Resampling dataset: {ds_cfg.get('name')}")
             df = self.feature_engineer.load_data(ds_cfg.get("path"))
             # Raw (pre-resample) source copy, named after the config's dataset key.
-            raw_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(ds_cfg.get("name") or os.path.splitext(os.path.basename(str(ds_cfg.get("path"))))[0]))
+            raw_name = re.sub(
+            r"[^A-Za-z0-9_.-]+", "_",
+            str(ds_cfg.get("name") or os.path.splitext(os.path.basename(str(ds_cfg.get("path"))))[0]),
+        )
             raw_path = os.path.join(raw_dir, f"{raw_name}.parquet")
             df.to_parquet(raw_path)
             ctx.files.append(raw_path)
@@ -177,7 +198,11 @@ class Pipeline:
 
     # -- Stage 3: model -----------------------------------------------------
 
-    def run_model(self, data_path: Optional[str] = None, transformed_data: Optional[pd.DataFrame] = None) -> Optional[Dict[str, Any]]:
+    def run_model(
+        self,
+        data_path: Optional[str] = None,
+        transformed_data: Optional[pd.DataFrame] = None,
+    ) -> Optional[Dict[str, Any]]:
         """Model stage: fit the configured estimator and save its JSON summary."""
         paths = self._resolve_paths()
         processed_path = paths["processed_path"]
@@ -185,7 +210,7 @@ class Pipeline:
 
         if transformed_data is not None:
             # Full run: fit on the in-memory features, not the CSV round-trip (keeps dtypes such as dates)
-            if self.model and self._builder.has_model_target():
+            if self.model and has_model_target(self.target, self.model):
                 self.model.fit(transformed_data)
                 self.model_results = self.model.get_model_metadata()
         elif processed_path and os.path.exists(processed_path):
@@ -210,7 +235,7 @@ class Pipeline:
             self.save_model_summary(summary_path)
             ctx.files.append(summary_path)
         if self.model is not None:  # args-mode pipelines without target/features have no model
-            model_df = self._tables.model_data()
+            model_df = self._tables.model_data(self.model)
             if model_df is not None:
                 # The exact data the model was fitted on (df_clean restricted to the
                 # columns the model uses); the descriptive-stats table reads the same.
@@ -247,7 +272,8 @@ class Pipeline:
         run_dir = ctx.begin_run()
         # Charts live under the run folder's 04_reporting; an explicit
         # reporting.output_dir still receives a copy when one is configured.
-        results = self.create_visualizations(output_dir=os.path.join(run_dir, "04_reporting"))
+        reporting_dir = os.path.join(run_dir, "04_reporting")
+        results = self.create_visualizations(output_dir=reporting_dir)
         explicit_output_dir = report_config.get("output_dir")
         chart_values: List[Any] = []
         for value in results.values():
@@ -258,7 +284,16 @@ class Pipeline:
                 if explicit_output_dir:
                     os.makedirs(explicit_output_dir, exist_ok=True)
                     ctx.files.append(shutil.copyfile(path, os.path.join(explicit_output_dir, os.path.basename(path))))
-        self._tables.generate_tables(report_config.get("tables"), run_dir)
+        tables_dir = os.path.join(reporting_dir, "tables")
+        written = self._tables.generate_tables(
+            self.model,
+            self.transformed_data,
+            self.target,
+            self.model_results,
+            report_config.get("tables"),
+            tables_dir,
+        )
+        ctx.files.extend(written)
         ctx.end_stage("reporting")
         return results
 
@@ -288,7 +323,7 @@ class Pipeline:
         else:
             raise ValueError("No feature engineering component initialized")
 
-        if fit_model and self.model and self._builder.has_model_target():
+        if fit_model and self.model and has_model_target(self.target, self.model):
             self.model.fit(self.transformed_data)
             self.model_results = self.model.get_model_metadata()
 
@@ -354,7 +389,12 @@ class Pipeline:
         with open(output_path, "w") as f:
             json.dump(self.model_results, f, indent=4)
 
-    def create_visualizations(self, output_dir: str = "reports/visualizations", visualization_types: Optional[List[str]] = None, display_only: bool = False) -> Dict[str, Any]:
+    def create_visualizations(
+        self,
+        output_dir: str = "reports/visualizations",
+        visualization_types: Optional[List[str]] = None,
+        display_only: bool = False,
+    ) -> Dict[str, Any]:
         """Create regression and time-series charts from the pipeline's results."""
         if not self.model_results and self.transformed_data is None:
             return {}
@@ -365,22 +405,45 @@ class Pipeline:
 
         results = {}
         if self.model_results:
-            reg_viz = RegressionVisualizer(params_path=self.params_path, output_dir=output_dir, file_format=report_config.get("file_format", "png"), dpi=report_config.get("dpi", 300), style=report_config.get("style", "default"))
-            viz_types = visualization_types or report_config.get("regression", {}).get("plots", ["coefficient_plot", "model_summary", "residuals"])
+            reg_viz = RegressionVisualizer(
+                params_path=self.params_path,
+                output_dir=output_dir,
+                file_format=report_config.get("file_format", "png"),
+                dpi=report_config.get("dpi", 300),
+                style=report_config.get("style", "default"),
+            )
+            viz_types = visualization_types or report_config.get("regression", {}).get(
+                "plots", ["coefficient_plot", "model_summary", "residuals"]
+            )
             for viz_type in viz_types:
                 try:
                     if viz_type == "coefficient_plot":
-                        results["coefficient_plot"] = reg_viz.create_coefficient_plot_from_json(self.model_results, subdir="regression", display_only=display_only)
+                        results["coefficient_plot"] = reg_viz.create_coefficient_plot_from_json(
+                            self.model_results, subdir="regression", display_only=display_only
+                        )
                     elif viz_type == "model_summary":
-                        results["model_summary"] = reg_viz.create_model_summary_plot(self.model_results, subdir="regression", display_only=display_only)
+                        results["model_summary"] = reg_viz.create_model_summary_plot(
+                            self.model_results, subdir="regression", display_only=display_only
+                        )
                 except Exception as e:
                     self.logger.error(f"Error creating {viz_type} visualization: {e}")
 
         if self.transformed_data is not None:
-            data_viz = DataVisualizer(params_path=self.params_path, output_dir=output_dir, file_format=report_config.get("file_format", "png"), dpi=report_config.get("dpi", 300), style=report_config.get("style", "default"))
+            data_viz = DataVisualizer(
+                params_path=self.params_path,
+                output_dir=output_dir,
+                file_format=report_config.get("file_format", "png"),
+                dpi=report_config.get("dpi", 300),
+                style=report_config.get("style", "default"),
+            )
             try:
                 if self.entity_column and self.date_column:
-                    results["time_series"] = data_viz.create_time_series_plot(self.transformed_data, entity_column=self.entity_column, date_column=self.date_column, display_only=display_only)
+                    results["time_series"] = data_viz.create_time_series_plot(
+                        self.transformed_data,
+                        entity_column=self.entity_column,
+                        date_column=self.date_column,
+                        display_only=display_only,
+                    )
             except Exception as e:
                 self.logger.error(f"Error creating data visualization: {e}")
         return results
@@ -409,21 +472,40 @@ class Pipeline:
 
         self.feature_engineer = FeatureEngineer(params_path=self.params_path)
 
-        model_type = params.get("model", {}).get("model_type", "ols").lower()
-        entry = self._builder.resolve_registry_entry(model_type)
-        self.model = self._builder.build_from_params(entry)
+        model_config = params.get("model", {})
+        spec = ModelSpec(
+            params_path=self.params_path,
+            model_config=model_config,
+            target=self.target,
+            features=self.features,
+            entity_column=self.entity_column,
+            date_column=self.date_column,
+            add_entity_fixed_effects=self.add_entity_fixed_effects,
+        )
+        self.model = ModelBuilder(spec).build(model_config.get("model_type", "ols").lower())
 
     def _initialize_from_args(self) -> None:
         """Initialize the feature engineer and model from constructor arguments."""
         if not self.entity_column:
             raise ValueError("entity_column must be specified when not using params_path")
 
-        self.feature_engineer = FeatureEngineer(params_path=None, transformations=self.transformations, entity_column=self.entity_column, date_column=self.date_column)
+        self.feature_engineer = FeatureEngineer(
+            params_path=None,
+            transformations=self.transformations,
+            entity_column=self.entity_column,
+            date_column=self.date_column,
+        )
 
         if self.target or self.features:
-            model_type = self.kwargs.get("model_type", "ols").lower()
-            entry = self._builder.resolve_registry_entry(model_type)
-            self.model = self._builder.build_from_args(entry)
+            spec = ModelSpec(
+                target=self.target,
+                features=self.features,
+                entity_column=self.entity_column,
+                date_column=self.date_column,
+                add_entity_fixed_effects=self.add_entity_fixed_effects,
+                kwargs=self.kwargs,
+            )
+            self.model = ModelBuilder(spec).build(self.kwargs.get("model_type", "ols").lower())
 
     def _resolve_paths(self) -> Dict[str, Any]:
         """Resolve config-derived paths used by the stage methods."""
@@ -436,7 +518,8 @@ class Pipeline:
 
         data_config = params.get("data", {})
         raw_data_file = data_config.get("raw_data_file")
-        merged_output_path = data_config.get("merge", {}).get("output_path", "data/pipeline/resampled_merged.parquet")
+        merge_config = data_config.get("merge", {})
+        merged_output_path = merge_config.get("output_path", "data/pipeline/resampled_merged.parquet")
 
         # Prefer merged output if it exists or if we are in a later stage
         effective_data_path = merged_output_path if os.path.exists(merged_output_path) else raw_data_file
@@ -460,7 +543,10 @@ class Pipeline:
         # Parquet files written from pandas often carry the date/entity columns
         # as (named) index levels, so columns the config declares (date_column,
         # entity_column) are invisible downstream until the index is reset.
-        wanted = {getattr(self.feature_engineer, "date_column", None), getattr(self.feature_engineer, "entity_column", None)} - {None}
+        wanted = {
+            getattr(self.feature_engineer, "date_column", None),
+            getattr(self.feature_engineer, "entity_column", None),
+        } - {None}
         named = df.index.names if isinstance(df.index, pd.MultiIndex) else [df.index.name]
         if any(n in wanted for n in named):
             df = df.reset_index()
@@ -470,7 +556,11 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="params.yaml")
-    parser.add_argument("--stage", type=str, choices=[*STAGES, "eda", *_STAGE_ALIASES], help="Run a single stage (data, features, model, reporting; default: run them all in order). Legacy names resample/regression/visualization are accepted but deprecated.")
+    parser.add_argument(
+        "--stage", type=str, choices=[*STAGES, "eda", *_STAGE_ALIASES],
+        help="Run a single stage (data, features, model, reporting; default: run them all in order). "
+             "Legacy names resample/regression/visualization are accepted but deprecated.",
+    )
     args = parser.parse_args()
     pipeline = Pipeline(params_path=args.config)
     pipeline.run(stage=args.stage)
