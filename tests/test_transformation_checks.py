@@ -13,7 +13,9 @@ import pytest
 
 from stats_transformer.featurization.feature_engineering import FeatureEngineer
 
-DATA_DIR = Path(__file__).parent.parent / "data" / "examples" / "academic"
+# Walk up from this file to the checkout root (the dir holding pyproject.toml).
+REPO_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
+DATA_DIR = REPO_ROOT / "data" / "examples" / "academic"
 
 
 def _engineer(transformations, data_columns, date_column, period):
