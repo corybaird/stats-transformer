@@ -40,8 +40,11 @@ class NakamuraSteinssonExample:
         # This requires the 'pyreadstat' library to be installed.
         print(f"Loading official Stata .dta ground truth from {path}...")
         df = pd.read_stata(path)
-        # master.dta uses 'date_daily' as the primary time index.
-        df["date"] = pd.to_datetime(df["date_daily"])
+        # master.dta uses 'date_daily' as the primary time index. Built with
+        # pd.concat rather than column assignment: read_stata returns a badly
+        # fragmented frame and inserting a column triggers a PerformanceWarning.
+        date = pd.to_datetime(df["date_daily"]).rename("date")
+        df = pd.concat([df, date], axis=1)
         return df
 
     def transform_raw(self, df):
