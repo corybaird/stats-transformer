@@ -94,6 +94,9 @@ def test_run_handles_multiindex_panel(panel):
     assert result.iloc[0]["n_obs"] == 6
 
 
+# The constant-target spec has df_resid=0 and makes statsmodels divide by zero; the
+# test checks the runner survives that, so the warning is expected here.
+@pytest.mark.filterwarnings("ignore:divide by zero encountered in scalar divide:RuntimeWarning:statsmodels\\.regression\\.linear_model")
 def test_run_continues_after_model_failure(panel):
     runner = SpecificationRunner(RegressionModel)
     # x1 is a valid spec; a second spec targeting a constant column

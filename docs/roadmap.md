@@ -80,6 +80,7 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | sdist ships `scripts/` and `docker-compose.yml` | `pyproject.toml` `[tool.hatch.build.targets.sdist]` | P2 | S | open ([#149](https://github.com/corybaird/stats-transformer/issues/149)) |
 | Test hygiene: `"\+"` regex escapes warn in `test_nonlinear_models.py`; unused fixtures; R integration tests overwrite tracked `*_results.json` | `tests/` | P2 | S | open ([#149](https://github.com/corybaird/stats-transformer/issues/149)) |
 | Coverage gap: `data_merger.py` 46% | `st/featurization/data_merger.py` | P2 | M | open ([#149](https://github.com/corybaird/stats-transformer/issues/149)) |
+| Date-sorted time-series input keeps a shuffled integer index, so statsmodels warns "unsupported index" and cannot forecast from the fit (allowed in `pyproject.toml` filterwarnings) | `st/models/timeseries/utilities.py:55` | P2 | S | open |
 | Duplicate `*_results.json` fixtures (subdir + root) | `tests/integration/{panel,regression,svars,var}_results.json` | P2 | S | open |
 | No pre-commit hook / notebook output stripping | `.pre-commit-config.yaml` missing | P2 | S | open |
 | Wheel force-includes example data files | `pyproject.toml:117` | P2 | M | open |
