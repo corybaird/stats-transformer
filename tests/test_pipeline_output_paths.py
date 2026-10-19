@@ -10,7 +10,17 @@ import yaml
 
 from stats_transformer.pipeline import Pipeline
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+
+def _repo_root() -> Path:
+    """Walk up from this file to the first directory holding pyproject.toml."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    raise RuntimeError(f"no pyproject.toml above {__file__}")
+
+
+# Test paths are resolved from the repository root, never from the CWD.
+REPO_ROOT = _repo_root()
 
 
 def _write_full_config(tmp_path, with_explicit_paths=False, with_processed=False):

@@ -5,10 +5,23 @@ import numpy as np
 import pandas as pd
 import pytest
 import yaml
+from pathlib import Path
 
 from stats_transformer.models.regression.panel import PanelRegressionModel
 from stats_transformer.models.timeseries import LocalProjectionsModel, VARModel
 from stats_transformer.pipeline import Pipeline
+
+
+def _repo_root() -> Path:
+    """Walk up from this file to the first directory holding pyproject.toml."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    raise RuntimeError(f"no pyproject.toml above {__file__}")
+
+
+# Test paths are resolved from the repository root, never from the CWD.
+REPO_ROOT = _repo_root()
 
 
 def _write_dataset_config(tmp_path, datasets, model, wide=False):
@@ -125,7 +138,7 @@ def test_model_joblib_roundtrips_ols(tmp_path, test_df):
 
 
 def test_model_joblib_roundtrips_panel_ols(tmp_path):
-    df = pd.read_csv("data/examples/regression/grunfeld.csv")
+    df = pd.read_csv(REPO_ROOT / "data" / "examples" / "regression" / "grunfeld.csv")
     model = PanelRegressionModel(target="invest", independent_variables=["value", "capital"], entity_column="firm", time_column="year")
     model.fit(df)
 

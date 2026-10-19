@@ -9,10 +9,24 @@ from stats_transformer.pipeline import Pipeline
 from stats_transformer.models.registry import MODEL_REGISTRY
 from stats_transformer.models.regression.iv import IV2SLSModel
 
+
+def _repo_root() -> Path:
+    """Walk up from this file to the first directory holding pyproject.toml."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    raise RuntimeError(f"no pyproject.toml above {__file__}")
+
+
+# Test paths are resolved from the repository root, never from the CWD.
+REPO_ROOT = _repo_root()
+
+
 def test_pipeline_run_model(project_root, tmp_path):
     # Copy the tracked config into tmp_path and point every data/temp path in it
     # at tmp_path, so the run's artefacts never land in the repo work tree.
     params = yaml.safe_load((project_root / "references" / "configs" / "test_pipeline.yaml").read_text())
+    params["data"]["raw_data_file"] = str(REPO_ROOT / "tests" / "data" / "test_data.csv")
     params["output"]["root"] = str(tmp_path / "runs")
     params["model"]["summary_output_path"] = str(tmp_path / "test_summary.json")
     params["reporting"]["output_dir"] = str(tmp_path / "visualizations")
@@ -89,7 +103,7 @@ def test_pipeline_construction_validates_config_before_dispatch(project_root):
     pipeline._get_config()
 
 
-@pytest.mark.parametrize("config_path", sorted(Path("references/configs").rglob("*.yaml")))
+@pytest.mark.parametrize("config_path", sorted((REPO_ROOT / "references" / "configs").rglob("*.yaml")))
 def test_pipeline_configs_pass_validation_or_are_not_pipeline_configs(config_path):
     with open(config_path, "r") as f:
         params = yaml.safe_load(f)
@@ -159,7 +173,7 @@ def test_arima_model_is_available_from_models_public_api():
     assert ARIMAModel is TimeSeriesARIMAModel
 
 
-@pytest.mark.parametrize("config_path", sorted(Path("references/configs").rglob("*.yaml")))
+@pytest.mark.parametrize("config_path", sorted((REPO_ROOT / "references" / "configs").rglob("*.yaml")))
 def test_pipeline_configs_dispatch_to_declared_model_type(config_path):
     with open(config_path, "r") as f:
         params = yaml.safe_load(f)
@@ -180,9 +194,9 @@ def test_pipeline_configs_dispatch_to_declared_model_type(config_path):
 
 def test_pipeline_multivariate_var_config_writes_model_summary(tmp_path):
     """Full run on the packaged VAR config: the model stage must fit and write 03_model/model_summary.json (roadmap item 37)."""
-    params = yaml.safe_load((Path("references/configs/timeseries/reduced_form/macro_var.yaml")).read_text())
+    params = yaml.safe_load((REPO_ROOT / "references" / "configs" / "timeseries" / "reduced_form" / "macro_var.yaml").read_text())
     params["output"] = {"root": str(tmp_path)}
-    params["data"]["raw_data_file"] = str(Path("data/examples/timeseries/macrodata.csv").resolve())
+    params["data"]["raw_data_file"] = str(REPO_ROOT / "data" / "examples" / "timeseries" / "macrodata.csv")
     config_path = tmp_path / "macro_var.yaml"
     config_path.write_text(yaml.dump(params))
 
@@ -197,7 +211,7 @@ def test_pipeline_multivariate_var_config_writes_model_summary(tmp_path):
 def test_pipeline_arima_config_with_target_variables_writes_model_summary(tmp_path):
     """ARIMA declared via target_variables (no target_variable): the model stage must fit instead of raising KeyError: None (roadmap item 39)."""
     params = {
-        "data": {"raw_data_file": str(Path("data/examples/timeseries/ghysels_ch5/arma_inven.csv").resolve())},
+        "data": {"raw_data_file": str(REPO_ROOT / "data" / "examples" / "timeseries" / "ghysels_ch5" / "arma_inven.csv")},
         "output": {"root": str(tmp_path)},
         "model": {"model_type": "arima", "target_variables": ["rcpi"], "order": [1, 0, 1]},
     }
