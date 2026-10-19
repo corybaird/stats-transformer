@@ -42,6 +42,8 @@ def test_restriction_heatmap_accepts_supplied_axis(restrictions):
         plt.close("all")
 
 
+# Every cell stays NaN, so seaborn's all-NaN min/max normalisation warns: expected here.
+@pytest.mark.filterwarnings("ignore:All-NaN slice encountered:RuntimeWarning:seaborn\\.matrix")
 def test_restriction_heatmap_ignores_nonzero_horizon_restrictions():
     # Only horizon-0 restrictions belong on the impact matrix; the horizon=4
     # entry must not be drawn.
@@ -55,6 +57,8 @@ def test_restriction_heatmap_ignores_nonzero_horizon_restrictions():
         plt.close("all")
 
 
+# Unknown variable/shock leaves every cell NaN; see the test above for the warning.
+@pytest.mark.filterwarnings("ignore:All-NaN slice encountered:RuntimeWarning:seaborn\\.matrix")
 def test_restriction_heatmap_skips_unknown_variables_and_shocks():
     unknown = [{"shock": "not_a_shock", "response": "not_a_var", "type": "sign", "value": "+", "horizon": 0}]
     chart = RestrictionHeatmap(unknown, variables=["gdp"], shocks=["supply"])

@@ -345,6 +345,10 @@ def _fit_fe_regression_model():
     model.fit(df)
     return model
 
+# A saturated fit (2 regressors + constant, n=3) has df_resid=0, so statsmodels'
+# R^2 divides by zero. That is what this test is exercising, not a defect.
+@pytest.mark.filterwarnings("ignore:divide by zero encountered in divide:RuntimeWarning:statsmodels\\.regression\\.linear_model")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in scalar multiply:RuntimeWarning:statsmodels\\.regression\\.linear_model")
 def test_regression_model_predict_accepts_series():
     df = pd.DataFrame({"x1": [1, 2, 3], "x2": [2, 1, 4], "y": [9.0, 8.0, 19.0]})  # y = 1 + 2*x1 + 3*x2
     model = RegressionModel(target="y", independent_variables=["x1", "x2"])

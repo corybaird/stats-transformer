@@ -54,6 +54,21 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "--strict-markers --strict-config -ra"
 xfail_strict = true
+# Warnings are errors by default so a new deprecation fails CI. The entries below
+# are the only tolerances: each is message+category(+module) narrow, and the
+# deliberately-provoked ones live on the individual test instead (marks).
+filterwarnings = [
+  "error",
+  # pandas cannot guess a single format for the object-dtype date column here and
+  # falls back to its documented per-element dateutil parsing (unchanged results).
+  "ignore:Could not infer format:UserWarning:stats_transformer\\.featurization\\.feature_engineering",
+  # statsmodels re-parses the object-dtype date index it is handed and guesses per element.
+  "ignore:Could not infer format:UserWarning:statsmodels\\.tsa\\.base\\.tsa_model",
+  # statsmodels warns it has no explicit freq for that index, then infers QS-OCT itself.
+  "ignore:No frequency information was provided:statsmodels.tools.sm_exceptions.ValueWarning:statsmodels\\.tsa\\.base\\.tsa_model",
+  # statsmodels warns forecasting is unavailable from that index; only fitted values are used.
+  "ignore:An unsupported index was provided:statsmodels.tools.sm_exceptions.ValueWarning:statsmodels\\.tsa\\.base\\.tsa_model",
+]
 
 [tool.ruff]
 target-version = "py312"
