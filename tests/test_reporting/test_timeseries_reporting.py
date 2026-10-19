@@ -11,16 +11,14 @@ from stats_transformer.models.timeseries.reduced_form.var import VARModel
 from stats_transformer.reporting.timeseries import BlanchardQuahResultAdapter, LocalProjectionsIVResultAdapter, LocalProjectionsResultAdapter, TimeSeriesReporter, TimeSeriesResultAdapter, VARResultAdapter
 
 
-def _synthetic_data(observations=120):
+def _reporting_data(var1_data):
+    """The var1_data fixture plus the instrument/date columns the reporters need."""
+    data = var1_data()
+    # Same seed as the fixture, so the shocks (and the instrument built from them) are identical.
     generator = np.random.default_rng(42)
-    shocks = generator.normal(size=(observations, 2))
-    values = np.zeros((observations, 2))
-    transition = np.array([[0.55, 0.10], [0.15, 0.40]])
-    for index in range(1, observations):
-        values[index] = transition @ values[index - 1] + shocks[index]
-    data = pd.DataFrame(values, columns=["output", "inflation"])
-    data["instrument"] = shocks[:, 0] + generator.normal(scale=0.2, size=observations)
-    data["date"] = pd.date_range("1990-01-01", periods=observations, freq="QE")
+    shocks = generator.normal(size=(len(data), 2))
+    data["instrument"] = shocks[:, 0] + generator.normal(scale=0.2, size=len(data))
+    data["date"] = pd.date_range("1990-01-01", periods=len(data), freq="QE")
     return data
 
 
@@ -29,8 +27,8 @@ def test_time_series_result_adapter_is_abstract():
         TimeSeriesResultAdapter(None)
 
 
-def test_var_adapter_normalizes_reporting_results():
-    data = _synthetic_data()
+def test_var_adapter_normalizes_reporting_results(var1_data):
+    data = _reporting_data(var1_data)
     model = VARModel(target_variables=["output", "inflation"], date_column="date", maxlags=2)
     model.fit(data)
 
@@ -49,8 +47,8 @@ def test_var_adapter_normalizes_reporting_results():
     assert len(report.structural_shocks.data_vars) > 0
 
 
-def test_blanchard_quah_adapter_uses_long_run_impact_matrix():
-    data = _synthetic_data()
+def test_blanchard_quah_adapter_uses_long_run_impact_matrix(var1_data):
+    data = _reporting_data(var1_data)
     model = BlanchardQuahModel(target_variables=["output", "inflation"], date_column="date", maxlags=2)
     model.fit(data)
 
@@ -61,8 +59,8 @@ def test_blanchard_quah_adapter_uses_long_run_impact_matrix():
     assert report.specification.loc[report.specification["statistic"] == "identification", "value"].iloc[0] == "long-run restrictions"
 
 
-def test_local_projection_adapters_preserve_inference():
-    data = _synthetic_data()
+def test_local_projection_adapters_preserve_inference(var1_data):
+    data = _reporting_data(var1_data)
     lp_model = LocalProjectionsModel(target="output", shock_var="inflation", horizon=4)
     lp_model.fit(data)
     lp_report = LocalProjectionsResultAdapter(lp_model).build()
@@ -77,8 +75,8 @@ def test_local_projection_adapters_preserve_inference():
     assert len(iv_report.irfs.coords["horizon"]) == 5
 
 
-def test_reporter_exports_var_figures_and_tables(tmp_path):
-    data = _synthetic_data()
+def test_reporter_exports_var_figures_and_tables(tmp_path, var1_data):
+    data = _reporting_data(var1_data)
     model = VARModel(target_variables=["output", "inflation"], date_column="date", maxlags=2)
     model.fit(data)
     reporter = TimeSeriesReporter.from_var(model, horizons=4, output_dir=tmp_path)

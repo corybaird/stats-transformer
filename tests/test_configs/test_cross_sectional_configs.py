@@ -240,8 +240,15 @@ def test_config_features_and_model_smoke(config, tmp_path, monkeypatch):
     config_path = _prepare_config(tmp_path, config)
     monkeypatch.chdir(tmp_path)
     pipeline = Pipeline(params_path=str(config_path))
-    pipeline.run_features()
-    pipeline.run_model()
+    transformed = pipeline.run_features()
+    assert isinstance(transformed, pd.DataFrame)
+    assert not transformed.empty
+    results = pipeline.run_model()
+    # Every model type reports metrics (ARIMA/PCA/VECM have no coefficients).
+    assert isinstance(results, dict)
+    assert results.get("metrics"), "model stage returned no metrics"
+    summaries = list(tmp_path.rglob("03_model/model_summary.json"))
+    assert len(summaries) == 1
 
 
 @pytest.mark.parametrize("config", _config_params())
@@ -249,4 +256,11 @@ def test_config_full_run_smoke(config, tmp_path, monkeypatch):
     """Every YAML under references/configs also runs the full pipeline (stage=None)."""
     config_path = _prepare_config(tmp_path, config)
     monkeypatch.chdir(tmp_path)
-    Pipeline(params_path=str(config_path)).run()
+    transformed = Pipeline(params_path=str(config_path)).run()
+    assert isinstance(transformed, pd.DataFrame)
+    assert not transformed.empty
+    manifests = list(tmp_path.rglob("manifest.json"))
+    assert len(manifests) == 1
+    manifest = json.loads(manifests[0].read_text())
+    assert manifest["stages_run"] == ["features", "model", "reporting"]
+    assert (manifests[0].parent / "03_model" / "model_summary.json").is_file()
