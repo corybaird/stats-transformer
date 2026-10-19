@@ -74,7 +74,6 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
-| `test_data_loading.py` resolves `PROJECT_ROOT` to `tests/`, test skips | `tests/test_data/test_data_loading.py:6` | P1 | S | open |
 | Every pipeline run logs `Could not apply style default`; the default `plot_style` name does not resolve | `st/reporting/` | P2 | S | open ([#147](https://github.com/corybaird/stats-transformer/issues/147)) |
 | CI builds the wheel but does not execute the notebooks | `.github/workflows/ci.yml` | P2 | M | open ([#146](https://github.com/corybaird/stats-transformer/issues/146)) |
 | Remove the deprecated top-level export shim (37 names) after one release | `st/__init__.py` | P2 | S | open ([#148](https://github.com/corybaird/stats-transformer/issues/148)) |
