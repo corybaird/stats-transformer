@@ -1,21 +1,10 @@
 import numpy as np
-import pandas as pd
 import pytest
 from stats_transformer.models.timeseries.reduced_form.lag_selection import VARLagSelector
 from stats_transformer.models.timeseries.reduced_form.restrictions import RestrictedVAR
 
-def _synthetic_data(observations=120):
-    generator = np.random.default_rng(42)
-    shocks = generator.normal(size=(observations, 2))
-    values = np.zeros((observations, 2))
-    transition = np.array([[0.55, 0.10], [0.15, 0.40]])
-    for index in range(1, observations):
-        values[index] = transition @ values[index - 1] + shocks[index]
-    data = pd.DataFrame(values, columns=["output", "inflation"])
-    return data
-
-def test_var_lag_selector_returns_criteria():
-    data = _synthetic_data()
+def test_var_lag_selector_returns_criteria(var1_data):
+    data = var1_data()
     selector = VARLagSelector(target_variables=["output", "inflation"], maxlags=4)
     selected = selector.fit(data)
     
@@ -28,8 +17,8 @@ def test_var_lag_selector_returns_criteria():
     assert len(selector.criteria_history) == 5 # lags 0 to 4
     assert set(selector.criteria_history.columns) == {"aic", "bic", "fpe", "hqic"}
 
-def test_restricted_var_estimates_with_mask():
-    data = _synthetic_data()
+def test_restricted_var_estimates_with_mask(var1_data):
+    data = var1_data()
     
     # 2 variables, lag 1, trend 'c' -> 3 regressors (const, L1.output, L1.inflation)
     # Mask out L1.inflation in output equation (equation 0)
