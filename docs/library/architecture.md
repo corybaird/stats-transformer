@@ -61,9 +61,20 @@ The repository follows a Cookiecutter Data Science-style separation between reus
 │   └── temp/                      # Disposable development scripts
 └── tests/
     ├── data/                      # Stable test fixtures
+    ├── external_benchmarks/       # Reference outputs and recorders (MATLAB, R, Stata)
     ├── integration/               # Multi-language integration tests (R, Stata)
-    ├── verification/              # Opt-in external verification (MATLAB)
-    └── test_*.py                  # Automated unit and integration tests
+    ├── test_configs/              # Every YAML config under references/configs/
+    ├── test_data/                 # Packaged data, DataMerger, panel builder
+    ├── test_docs/                 # Doc/code contracts and paper application artefacts
+    ├── test_examples/             # Example registry and academic replications
+    ├── test_external_parity/      # Recorded cross-language parity checks
+    ├── test_feature_engineering/  # FeatureEngineer transformations and resampling
+    ├── test_models/               # Regression, discrete, and time-series models
+    ├── test_package/              # Packaging and public API exports
+    ├── test_pipeline/             # Pipeline orchestration, stages, and output paths
+    ├── test_reporting/            # Charts, tables, and visualizers
+    ├── test_utils/                # Configuration and utility helpers
+    └── conftest.py                # Shared fixtures
 ```
 
 ---

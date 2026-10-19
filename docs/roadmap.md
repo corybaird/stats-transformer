@@ -32,7 +32,7 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | `zscore` uses full-sample mean/std per entity (look-ahead leakage) | `st/featurization/feature_engineering.py:272-276` | P1 | M | open |
 | `EventStudyBuilder` clamps event horizon to sample end, fabricating tail values | `st/featurization/event_study.py:131` | P1 | S | open |
 | `KMeansModel` `n_clusters` not configurable from YAML; seed hardcoded to 42 | `st/models/unsupervised/unsupervised.py:127` | P1 | S | open |
-| `structural_restrictions.yaml` is a restriction-matrix input, not a standalone pipeline config | `references/configs/timeseries/identification/structural_restrictions.yaml`, `tests/test_cross_sectional_configs.py:152` (xfail) | P2 | S | open |
+| `structural_restrictions.yaml` is a restriction-matrix input, not a standalone pipeline config | `references/configs/timeseries/identification/structural_restrictions.yaml`, `tests/test_configs/test_cross_sectional_configs.py:225` (xfail) | P2 | S | open |
 
 ### Validation / parity
 

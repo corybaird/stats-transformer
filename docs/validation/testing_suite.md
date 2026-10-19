@@ -26,24 +26,28 @@ The `pyproject.toml` test configuration adds `src/` to the Python path. The test
 
 | Test path | Library area | Typical evidence |
 | --- | --- | --- |
-| `tests/test_pipeline.py` | `Pipeline` orchestration | configured stages, paths, and persisted outputs |
+| `tests/test_pipeline/` | `Pipeline` orchestration | configured stages, paths, and persisted outputs |
+| `tests/test_configs/test_cross_sectional_configs.py` | YAML configs under `references/configs/` | every config's features, model, and full-pipeline stages |
 | `tests/test_data/` | packaged data and `DataMerger` | loading, joins, and data contracts |
-| `tests/test_feature_engineering/` | `FeatureEngineer` | transformations, resampling, entity-aware behavior |
+| `tests/test_feature_engineering/` | `FeatureEngineer` | transformations, resampling, entity-aware behavior, paper transform checks |
 | `tests/test_models/test_regression_models.py` | OLS, robust OLS, panel OLS, IV, diagnostics | estimator behavior and summary metrics |
 | `tests/test_models/test_discrete_models.py` | logit and probit | binary-model fitting and metrics |
 | `tests/test_models/test_timeseries_models.py` | VAR, VECM, and core time-series methods | estimator and utility behavior |
+| `tests/test_models/test_timeseries_extensions.py` | structural VAR extensions and VAR-Toolbox translations | synthetic-data execution and bundled-example execution |
 | `tests/test_models/test_unsupervised_models.py` | PCA and K-means | component and cluster outputs |
-| `tests/test_timeseries_extensions.py` | structural VAR extensions and VAR-Toolbox translations | synthetic-data execution and bundled-example execution |
 | `tests/test_reporting/` | charts, EDA, model visualizers, event studies, exporters | plot and visualizer construction, report serialization |
 | `tests/test_utils/` | configuration, country conversion, time-series utilities | helper behavior and error conditions |
-| `tests/test_examples/` | example registry | example discovery and registration |
+| `tests/test_docs/` | documentation and paper artefacts | model-status node IDs, doc/code consistency, paper application contract |
+| `tests/test_examples/` | example registry and academic replications | example discovery, no-data-overwrite, published-value replications |
+| `tests/test_package/` | packaging and public API | sdist/wheel contents, `__all__`, deprecation shims |
+| `tests/test_external_parity/` | recorded cross-language references | MATLAB, R, and Stata parity |
 | `tests/integration/` | multi-language integration tests | containerized R, Stata, and local cross-checks |
 | `tests/data/` | stable test fixtures | small local inputs used by tests |
 
-Run a focused area with the same module form, for example:
+Run a focused area with the same path form, for example:
 
 ```bash
-uv run python -m pytest tests/test_timeseries_extensions.py -q
+uv run python -m pytest tests/test_models/test_timeseries_extensions.py -q
 ```
 
 Add a regression test beside the smallest existing test that exercises the behavior. Keep MATLAB, network, and large external-data checks in an opt-in verification or example workflow rather than the default suite.
@@ -52,10 +56,10 @@ Add a regression test beside the smallest existing test that exercises the behav
 
 | Area | Primary tests | What is checked |
 | --- | --- | --- |
-| Pipeline | `tests/test_pipeline.py` | YAML configuration, stage orchestration, and persisted workflow behavior |
+| Pipeline | `tests/test_pipeline/`, `tests/test_configs/` | YAML configuration, stage orchestration, and persisted workflow behavior |
 | Features and data | `tests/test_feature_engineering/`, `tests/test_data/` | transformations, resampling, merging, data loading, and packaged examples |
 | Regression and discrete models | `tests/test_models/test_regression_models.py`, `tests/test_models/test_discrete_models.py` | OLS variants, panel models, IV, diagnostics, logit, and probit behavior |
-| Time series | `tests/test_models/test_timeseries_models.py`, `tests/test_timeseries_extensions.py` | VAR, VECM, Granger utilities, Blanchard-Quah, proxy SVAR, sign restrictions, LP-IV, and decompositions |
+| Time series | `tests/test_models/test_timeseries_models.py`, `tests/test_models/test_timeseries_extensions.py` | VAR, VECM, Granger utilities, Blanchard-Quah, proxy SVAR, sign restrictions, LP-IV, and decompositions |
 | Reporting | `tests/test_reporting/` | chart construction, visualizer behavior, event studies, and exporters |
 | Utilities | `tests/test_utils/` | configuration and country-name conversion |
 

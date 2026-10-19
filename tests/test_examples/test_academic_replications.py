@@ -1,4 +1,6 @@
 """Unit and regression tests for academic paper replications."""
+from pathlib import Path
+
 import pytest
 from examples.academic.acosta_brennan_jacobson_2024 import AcostaBrennanJacobson2024Replication
 from examples.academic.vanderwel_2026 import Vanderwel2026Replication
@@ -12,6 +14,10 @@ from stats_transformer.models.timeseries.reduced_form.local_projections import L
 from stats_transformer.models.timeseries.reduced_form.forecasting import VARForecaster
 import pandas as pd
 import numpy as np
+
+# Walk up from this file to the checkout root (the dir holding pyproject.toml) so
+# the tests do not depend on pytest's working directory.
+REPO_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 
 
 def test_vanderwel_2026_replication():
@@ -46,7 +52,11 @@ def test_king_plosser_stock_watson_1991_svec():
 
 def test_nakamura_steinsson_transform_check():
     """Verify FeatureEngineer changeraw on SVENY01 matches master.dta DNY1 (n = 4,786)."""
-    res = NakamuraSteinssonExample().run()
+    example = NakamuraSteinssonExample()
+    # The example holds repo-relative paths; anchor them to the checkout root.
+    example.raw_path = REPO_ROOT / example.raw_path
+    example.transformed_path = REPO_ROOT / example.transformed_path
+    res = example.run()
     assert res["passed"], f"max error {res['max_error']}"
     assert res["n"] == 4786
     assert res["max_error"] < 1e-6

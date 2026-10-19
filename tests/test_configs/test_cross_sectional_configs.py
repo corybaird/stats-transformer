@@ -8,13 +8,15 @@ entity nor date columns.
 import glob
 import json
 import os
+from pathlib import Path
 
 import pandas as pd
 import yaml
 import pytest
 from stats_transformer import FeatureEngineer, Pipeline
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# Walk up from this file to the checkout root (the dir holding pyproject.toml).
+REPO_ROOT = str(next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file()))
 
 ALL_CONFIGS = sorted(glob.glob(os.path.join(REPO_ROOT, "references", "configs", "**", "*.yaml"), recursive=True))
 
