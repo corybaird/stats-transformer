@@ -42,7 +42,7 @@ def test_tvar_model_estimation(sample_tvar_data):
 def test_tvar_user_gamma_empty_regime_raises(sample_tvar_data):
     # gamma far above the threshold series leaves regime 2 empty
     model = TVARModel(target_variables=["y1", "y2"], threshold_variable="threshold", lags=1, delay=1, gamma=1e6)
-    with pytest.raises(ValueError, match="gamma=1e\+06"):
+    with pytest.raises(ValueError, match=r"gamma=1e\+06"):
         model.fit(sample_tvar_data)
 
     # gamma near the upper tail leaves regime 2 below the minimum sample size
@@ -140,7 +140,7 @@ def test_tvecm_user_gamma_empty_regime_raises():
 
     # gamma far above the ECT series leaves regime 2 empty
     model = TVECMModel(target_variables=["y1", "y2"], k_ar_diff=1, coint_rank=1, delay=1, gamma=1e6)
-    with pytest.raises(ValueError, match="gamma=1e\+06"):
+    with pytest.raises(ValueError, match=r"gamma=1e\+06"):
         model.fit(df)
 
     # gamma far below the ECT series leaves regime 1 empty

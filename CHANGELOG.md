@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **`stats_transformer.validation`**: the undocumented, unused subpackage of R benchmark reference dataclasses (`VarsCanadaBenchmark`, `SvarsUsaBenchmark`) is removed; recorded parity references live in `tests/external_benchmarks/` and are checked by `tests/test_external_parity/`.
+
 ## [1.11.0] - 2026-10-16
 
 ### Added

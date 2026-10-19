@@ -13,13 +13,3 @@ def project_root() -> Path:
 @pytest.fixture
 def test_df() -> pd.DataFrame:
     return pd.read_csv(PROJECT_ROOT / "tests" / "data" / "test_data.csv")
-
-
-@pytest.fixture
-def panel_df() -> pd.DataFrame:
-    return pd.read_csv(PROJECT_ROOT / "tests" / "data" / "test_data.csv")
-
-
-@pytest.fixture
-def macro_ts_df() -> pd.DataFrame:
-    return pd.read_parquet(PROJECT_ROOT / "src" / "stats_transformer" / "data" / "macrodb_gdp_inflation.parquet")
