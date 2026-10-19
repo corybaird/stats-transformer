@@ -3,7 +3,8 @@ from pathlib import Path
 
 from stats_transformer.data.registry import EXAMPLE_DATASETS
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# Walk up from this file to the checkout root (the dir holding pyproject.toml).
+PROJECT_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 
 def _registry_file_paths():
     paths = []
