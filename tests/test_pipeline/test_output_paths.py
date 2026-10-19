@@ -10,8 +10,6 @@ import yaml
 
 from stats_transformer.pipeline import Pipeline
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-
 
 def _write_full_config(tmp_path, with_explicit_paths=False, with_processed=False):
     raw_dir = tmp_path / "raw"
@@ -58,11 +56,11 @@ def _write_full_config(tmp_path, with_explicit_paths=False, with_processed=False
     return config_path, raw_dir
 
 
-def _repo_snapshot():
+def _repo_snapshot(root: Path):
     """Snapshot the repo tree (git status including ignored files, plus file paths + mtimes)."""
-    status = subprocess.run(["git", "-C", str(REPO_ROOT), "status", "--porcelain", "--ignored"], capture_output=True, text=True).stdout
+    status = subprocess.run(["git", "-C", str(root), "status", "--porcelain", "--ignored"], capture_output=True, text=True).stdout
     files = set()
-    for p in REPO_ROOT.rglob("*"):
+    for p in root.rglob("*"):
         if {".git", ".venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"} & set(p.parts):
             continue
         if p.is_file():
@@ -107,41 +105,41 @@ def test_run_writes_run_folder_and_nothing_in_reports(tmp_path, monkeypatch, sta
 # --- nothing leaks outside tmp_path (repo tree snapshot before/after) ---
 
 @pytest.mark.parametrize("stage", [None, "data", "features", "model", "reporting"])
-def test_run_writes_nothing_outside_tmp_path(tmp_path, monkeypatch, stage):
+def test_run_writes_nothing_outside_tmp_path(tmp_path, monkeypatch, project_root, stage):
     monkeypatch.chdir(tmp_path)
     if stage == "reporting":
         # Give the reporting stage readable disk artefacts so it actually draws
-        test_df = pd.read_csv(REPO_ROOT / "tests" / "data" / "test_data.csv")
+        test_df = pd.read_csv(project_root / "tests" / "data" / "test_data.csv")
         test_df.to_csv(tmp_path / "processed.csv", index=False)
         (tmp_path / "summary.json").write_text(json.dumps({"metrics": {"r_squared": 0.5}}))
 
     config_path, _ = _write_full_config(tmp_path, with_explicit_paths=stage == "reporting", with_processed=stage == "model")
-    before_status, before_files = _repo_snapshot()
+    before_status, before_files = _repo_snapshot(project_root)
 
     pipeline = Pipeline(params_path=str(config_path))
     pipeline.run(stage=stage)
 
-    after_status, after_files = _repo_snapshot()
+    after_status, after_files = _repo_snapshot(project_root)
     # Snapshot covers tracked files, ignored dirs (data/pipeline/, reports/) and mtimes
     assert after_status == before_status, f"repo tree changed:\n{after_status}"
     assert {name for name, _ in after_files} == {name for name, _ in before_files}
     assert after_files == before_files
 
 
-def test_run_with_repo_cwd_writes_nothing_into_repo(tmp_path, monkeypatch):
+def test_run_with_repo_cwd_writes_nothing_into_repo(tmp_path, monkeypatch, project_root):
     # Mirrors the leak that produced the stray CSVs in reports/: tests whose config
     # lives in tmp_path but whose CWD stays at the repo root. On main,
     # run_model() wrote reports/transformed_data_*.csv relative to the repo CWD;
     # these writes must go to the output.root run folder or the explicit paths
     # instead. Deliberately does not chdir; explicit paths keep the branch side
     # of the comparison clean (the default merge path is repo-CWD-relative).
-    before_status, before_files = _repo_snapshot()
+    before_status, before_files = _repo_snapshot(project_root)
 
     config_path, _ = _write_full_config(tmp_path, with_explicit_paths=True)
     pipeline = Pipeline(params_path=str(config_path))
     pipeline.run()
 
-    after_status, after_files = _repo_snapshot()
+    after_status, after_files = _repo_snapshot(project_root)
     assert after_status == before_status, f"repo tree changed:\n{after_status}"
     assert {name for name, _ in after_files} == {name for name, _ in before_files}
     assert after_files == before_files
