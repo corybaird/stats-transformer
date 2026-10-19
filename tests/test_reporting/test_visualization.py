@@ -2,13 +2,12 @@ import pytest
 import pandas as pd
 import numpy as np
 import os
-import shutil
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.reporting.models.regression_viz import RegressionVisualizer
 from stats_transformer.reporting.eda.data_viz import DataVisualizer
 from stats_transformer.reporting.models.model_viz import ModelVisualizer
 
-def test_regression_visualizer():
+def test_regression_visualizer(tmp_path):
     # 1. Create a model and fit it to get metadata
     df = pd.DataFrame({
         "y": [1, 2, 3, 4, 5],
@@ -24,7 +23,7 @@ def test_regression_visualizer():
     metadata = model.get_model_metadata()
     
     # 2. Test visualizer
-    viz_dir = "data/temp/visualizations"
+    viz_dir = tmp_path / "visualizations"
     os.makedirs(viz_dir, exist_ok=True)
     
     viz = RegressionVisualizer(output_dir=viz_dir)
@@ -39,11 +38,7 @@ def test_regression_visualizer():
     assert all(os.path.exists(path) for path in results_with_files["coefficient_plot"])
     assert all(os.path.exists(path) for path in results_with_files["model_summary"])
 
-    # Clean up
-    if os.path.exists(viz_dir):
-        shutil.rmtree(viz_dir)
-
-def test_eda_visualizer():
+def test_eda_visualizer(tmp_path):
     from stats_transformer.reporting.eda.eda import EDAVisualizer
     
     df = pd.DataFrame({
@@ -52,7 +47,7 @@ def test_eda_visualizer():
         "c": ["x", "y", "z", "w"]
     })
     
-    viz_dir = "data/temp/eda_viz"
+    viz_dir = tmp_path / "eda_viz"
     os.makedirs(viz_dir, exist_ok=True)
     
     viz = EDAVisualizer(output_dir=viz_dir)
@@ -64,12 +59,8 @@ def test_eda_visualizer():
     assert results["distributions"]
     assert all(os.path.exists(path) for path in results["missingness"])
     assert all(os.path.exists(path) for path in results["distributions"])
-    
-    # Clean up
-    if os.path.exists(viz_dir):
-        shutil.rmtree(viz_dir)
 
-def test_data_visualizer():
+def test_data_visualizer(tmp_path):
     df = pd.DataFrame({
         "x": np.random.randn(100),
         "y": np.random.randn(100),
@@ -77,7 +68,7 @@ def test_data_visualizer():
         "date": pd.date_range("2020-01-01", periods=100)
     })
     
-    viz_dir = "data/temp/data_viz"
+    viz_dir = tmp_path / "data_viz"
     os.makedirs(viz_dir, exist_ok=True)
     viz = DataVisualizer(output_dir=viz_dir)
     
@@ -95,12 +86,8 @@ def test_data_visualizer():
     ts_files = viz.create_time_series_plot(df, date_column="date", display_only=False)
     assert ts_files
     assert all(os.path.exists(path) for path in ts_files)
-    
-    # Clean up
-    if os.path.exists(viz_dir):
-        shutil.rmtree(viz_dir)
 
-def test_model_visualizer():
+def test_model_visualizer(tmp_path):
     model_summary = {
         "coefficients": {
             "const": {"value": 1.0, "std_err": 0.1},
@@ -109,14 +96,10 @@ def test_model_visualizer():
         }
     }
     
-    viz_dir = "data/temp/model_viz"
+    viz_dir = tmp_path / "model_viz"
     os.makedirs(viz_dir, exist_ok=True)
     viz = ModelVisualizer(output_dir=viz_dir)
     
     coef_plots = viz.create_visualization(model_summary, visualization_type="coefficient", display_only=False)
     assert coef_plots
     assert all(os.path.exists(path) for path in coef_plots)
-    
-    # Clean up
-    if os.path.exists(viz_dir):
-        shutil.rmtree(viz_dir)
