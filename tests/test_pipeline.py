@@ -9,26 +9,26 @@ from stats_transformer.pipeline import Pipeline
 from stats_transformer.models.registry import MODEL_REGISTRY
 from stats_transformer.models.regression.iv import IV2SLSModel
 
-def test_pipeline_run_model(project_root):
-    # Setup
-    config_path = project_root / "references" / "configs" / "test_pipeline.yaml"
-    temp_dir = project_root / "data" / "temp"
-    temp_dir.mkdir(parents=True, exist_ok=True)
+def test_pipeline_run_model(project_root, tmp_path):
+    # Copy the tracked config into tmp_path and point every data/temp path in it
+    # at tmp_path, so the run's artefacts never land in the repo work tree.
+    params = yaml.safe_load((project_root / "references" / "configs" / "test_pipeline.yaml").read_text())
+    params["output"]["root"] = str(tmp_path / "runs")
+    params["model"]["summary_output_path"] = str(tmp_path / "test_summary.json")
+    params["reporting"]["output_dir"] = str(tmp_path / "visualizations")
+    config_path = tmp_path / "test_pipeline.yaml"
+    config_path.write_text(yaml.dump(params))
 
     pipeline = Pipeline(params_path=str(config_path))
 
     # Run the model stage
     results = pipeline.run(stage="model")
 
-    summary_path = temp_dir / "test_summary.json"
+    summary_path = tmp_path / "test_summary.json"
     assert results is not None
     assert "metrics" in results
     assert "r_squared" in results["metrics"]
     assert summary_path.exists()
-
-    # Clean up
-    if summary_path.exists():
-        summary_path.unlink()
 
 def test_pipeline_fit_transform(project_root, test_df):
     config_path = project_root / "references" / "configs" / "test_pipeline.yaml"
