@@ -14,15 +14,19 @@ BENCHMARKS_DOC = DOCS_DIR / "validation" / "benchmarks.md"
 
 def _importable_names():
     names = set()
+    failures = []
     package = stats_transformer.models
     for module_info in pkgutil.walk_packages(package.__path__, prefix=package.__name__ + "."):
         try:
             module = importlib.import_module(module_info.name)
-        except Exception:
+        except Exception as exc:
+            failures.append(f"{module_info.name} ({type(exc).__name__}: {exc})")
             continue
         for attr in dir(module):
             if not attr.startswith("_"):
                 names.add(attr)
+    # A module that fails to import must fail the doc checks, not silently drop its names.
+    assert not failures, "stats_transformer.models modules failed to import:\n" + "\n".join(failures)
     return names
 
 
