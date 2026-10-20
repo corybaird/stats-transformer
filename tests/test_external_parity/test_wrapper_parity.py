@@ -191,9 +191,6 @@ def test_blanchard_quah_1989_pipeline_config_matches_matlab(tmp_path, monkeypatc
     assert summary["metrics"]["nobs"] == 159 - 8
 
 
-# statsmodels' ML optimiser stops short of convergence on this mask; the impact
-# matrix still matches R to the tolerance above, which is the point of the test.
-@pytest.mark.filterwarnings("ignore:Maximum Likelihood optimization failed to converge:statsmodels.tools.sm_exceptions.ConvergenceWarning:statsmodels\\.base\\.model")
 def test_svar_a_model_canada_matches_r():
     df = _csv("tests/integration/var/canada.csv")
     mask = np.array([["E", 0, 0, 0], ["E", "E", 0, 0], [0, 0, "E", 0], ["E", 0, 0, "E"]], dtype=object)

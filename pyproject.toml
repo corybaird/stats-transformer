@@ -68,6 +68,10 @@ filterwarnings = [
   "ignore:No frequency information was provided:statsmodels.tools.sm_exceptions.ValueWarning:statsmodels\\.tsa\\.base\\.tsa_model",
   # statsmodels warns forecasting is unavailable from that index; only fitted values are used.
   "ignore:An unsupported index was provided:statsmodels.tools.sm_exceptions.ValueWarning:statsmodels\\.tsa\\.base\\.tsa_model",
+  # Whether statsmodels' ML optimiser reports convergence depends on the platform's
+  # BLAS/LAPACK (it does on macOS, not on the Linux CI runners for the SVAR tests);
+  # tests assert on the estimates themselves, not on the optimiser's flag.
+  "ignore:Maximum Likelihood optimization failed to converge:statsmodels.tools.sm_exceptions.ConvergenceWarning:statsmodels\\.base\\.model",
 ]
 
 [tool.ruff]
