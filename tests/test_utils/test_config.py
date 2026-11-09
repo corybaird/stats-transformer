@@ -77,6 +77,15 @@ def test_validate_passes_for_svar_family_without_target_or_independent_variables
     config.validate()  # svar_family models don't use target_variable/independent_variables
 
 
+def test_yaml_bool_words_stay_strings(tmp_path):
+    # YAML 1.1 treats on/off/yes/no as booleans; a `merge.on:` key must survive as a string.
+    p = tmp_path / "params.yaml"
+    p.write_text("data:\n  merge:\n    on: [date]\n    how: inner\n")
+    config = Config(config_path=str(p))
+    assert config.get("data.merge.on") == ["date"]
+    assert config.get("data.merge.how") == "inner"
+
+
 def test_validate_defaults_to_ols_when_model_type_absent():
     config = Config(model={"target_variable": "y", "independent_variables": ["x1"]})
     config.validate()  # should not raise; model_type defaults to "ols"
