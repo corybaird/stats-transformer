@@ -1,167 +1,63 @@
 ---
 name: stats-transformer-architecture
-description: Library architecture and pipeline usage for the stats-transformer Python package. Use this skill when working in this repo on params.yaml changes, Pipeline stage additions or modifications, FeatureEngineer transformations (log, lag, lead, zscore, changepct, rollingmean), DataMerger joins, model implementations (OLS, Robust OLS, Panel OLS, PCA, KMeans, LocalProjections, VAR, VECM, SVAR, IV, Logit), visualization components (CoefficientBarChart, TimeSeriesPlot, IRFPlot, FacetedTimeSeries, BinnedScatterPlot, CorrelationHeatmap), resampling logic across annual/quarterly/monthly/daily frequencies, or any file under src/stats_transformer/, references/configs/, or dvc.yaml.
+description: How to run the stats-transformer pipeline from a params.yaml config. Use when estimating a model (OLS, robust OLS, panel OLS, IV, logit/probit, PCA/KMeans, VAR/VECM/SVAR, local projections, BVAR), writing a params.yaml, or running a Pipeline stage. For modifying the library (adding a model, transformation, chart, or stage), read the supporting files in this directory.
 ---
 
-# stats-transformer Architecture
+# stats-transformer
 
-`stats-transformer` is a configuration-driven Python library for macroeconomic data transformation, modeling, and reporting. A single `params.yaml` describes datasets, transformations, model choice, and reporting style; the `Pipeline` class in `src/stats_transformer/pipeline.py:15` runs the configured stages end-to-end.
+Configuration-driven econometrics pipeline: one `params.yaml` declares data, transformations, model, and reporting; `Pipeline` runs it end-to-end. Each stage persists its artifact (parquet/csv/json), so stages can be re-run independently.
 
-## Mental model
+## Run a model
 
-`params.yaml` → `Pipeline` orchestrator → stages in order: `data` → `features` → `model` → `reporting`. Each stage persists its artifact (parquet, csv, json) so stages can be run individually and re-cached.
-
-The mermaid diagram in `docs/library/architecture.md:9` is the canonical flow. Read it before adding anything new.
-
-## Repository layout
-
-```
-src/stats_transformer/
-├── __init__.py            # Public API re-exports
-├── pipeline.py            # YAML-driven orchestrator (Pipeline class)
-├── featurization/
-│   ├── feature_engineering.py   # FeatureEngineer: transformations + resampling
-│   ├── data_merger.py           # DataMerger: multi-source panel joins
-│   └── event_study.py           # EventStudyBuilder
-├── models/
-│   ├── base.py                  # ModelBase: fit / get_model_metadata contract
-│   ├── regression/              # OLS, Robust OLS, Panel OLS, IV
-│   ├── timeseries/              # VAR, VECM, SVAR, LocalProjections, Granger
-│   ├── discrete/                # Logit
-│   └── unsupervised/            # PCA, KMeans
-├── reporting/
-│   ├── base.py                  # BaseVisualizer
-│   ├── charts/                  # Standalone chart components
-│   ├── models/                  # RegressionVisualizer, ModelVisualizer
-│   ├── eda/                     # DataVisualizer, EDAVisualizer
-│   ├── defaults/                # Bundled palettes, styles
-│   ├── formatters/              # Output formatters
-│   ├── tables/                  # TableGenerator
-│   └── utils/
-├── data/                        # Packaged example datasets
-├── reporting/                   # Reporting helpers
-└── utils/                       # Shared utilities
-
-references/
-├── configs/                     # params.yaml files (the control center)
-├── dictionaries/                # Constant-only mapping files
-└── viz/                         # Generated viz configs (gitignored)
-```
-
-## Public API entry points
-
-`src/stats_transformer/__init__.py:8` re-exports:
-
-- `Pipeline`, `FeatureEngineer`, `EventStudyBuilder`
-- `RegressionModel`
-- `BaseVisualizer`, `DataVisualizer`, `ModelVisualizer`, `RegressionVisualizer`
-- Standalone charts: `CoefficientBarChart`, `GroupedBarChart`, `StackedBarChart`, `TimeSeriesPlot`, `IRFPlot`, `FacetedTimeSeries`, `BinnedScatterPlot`, `ScatterWithRegression`, `CorrelationHeatmap`
-- `TableGenerator`
-- `LocalProjectionsModel`
-
-## Where to make changes
-
-| Task | Touch |
-| --- | --- |
-| Add a transformation (e.g. new `rollingstd`) | `src/stats_transformer/featurization/feature_engineering.py` (extend `valid_base_transformations` at line 309 and the dispatch in `fit_transform`) |
-| Add a new model | New file under `src/stats_transformer/models/<family>/` subclassing `ModelBase` (`src/stats_transformer/models/base.py:10`); register in that family's `__init__.py` and in `src/stats_transformer/models/__init__.py`; wire into `Pipeline._initialize_from_params` (`src/stats_transformer/pipeline.py:50`) and `_initialize_from_args` (line 69) |
-| Add a new chart component | New class in `src/stats_transformer/reporting/charts/` (mirror `bar.py` / `time_series.py`), then export from `src/stats_transformer/reporting/charts/__init__.py` and `src/stats_transformer/reporting/__init__.py` |
-| Add a new YAML config | `references/configs/<name>.yaml` (template: `references/configs/test_pipeline.yaml`) |
-| Add a packaged example dataset | `src/stats_transformer/data/` and expose via `list_examples` / `load_example` |
-| Add a new dictionary mapping | `references/dictionaries/<NAME>.py` (constants only, per project rules) |
-| Add a new pipeline stage | Add a `run_<stage>()` method and dispatch it from `Pipeline.run()` in `src/stats_transformer/pipeline.py:361`; mirror the stage in `dvc.yaml` with explicit `deps` / `params` / `outs` |
-
-## Pipeline stage contract
-
-`Pipeline.run(stage=None)` is the dispatcher; each stage is its own method (`run_data`, `run_features`, `run_model`, `run_reporting`, `run_eda`). Stage values: `data`, `features`, `model`, `reporting`, `eda`, or `None` for full run. Legacy `resample`, `regression`, `visualization` still work with a `DeprecationWarning`.
-
-- `data` — calls `FeatureEngineer.resample_dataset` per dataset in `data.datasets`, then `DataMerger.merge` to produce `data.merge.output_path` (default `data/pipeline/resampled_merged.parquet`).
-- `features` — runs `FeatureEngineer.fit_transform` on the merged output (or `raw_data_file` if merge hasn't run) and writes `data.featurization.output_path`.
-- `model` — fits the configured model and writes `reports/model_summary.json`.
-- `reporting` — reads the model summary and renders plots, tables, and metadata to `reporting.output_dir` (default `reports/visualizations`).
-- `eda` — runs `EDAVisualizer` on the same data path.
-
-The full run (no `stage` arg) calls `run_data` → `run_features` → `run_model` → `run_reporting`; see `src/stats_transformer/pipeline.py:361`.
-
-Data-path resolution: `effective_data_path = merged_output_path if exists else raw_data_file` (`Pipeline._resolve_paths`, `src/stats_transformer/pipeline.py:249`).
-
-## `params.yaml` shape
+1. Write a `params.yaml`. Only `model_type`, `target_variable`, and `independent_variables` are required:
 
 ```yaml
 data:
-  featurization:
-    entity_column: country
-    date_column: date
-    period: annual
-    transformations: [log, lag1, lag2, zscore]
-    output_path: data/final/features.csv
-  datasets:
-    - name: macro_data
-      path: data/raw/macro.csv
-      frequency: Q
-  merge:
-    on: [country, date]
-    how: outer
-    output_path: data/pipeline/resampled_merged.parquet
-  raw_data_file: data/raw/single_panel.csv
-
+  raw_data_file: data/examples/regression/mincer_wage.csv
+  featurization: {transformations: []}   # optional; see transformations.md
 model:
-  model_type: panel_ols          # ols | robust_ols | panel_ols | pca | kmeans | local_projections | var | vecm | svar | iv | logit
-  target_variable: gdp_growth
-  independent_variables: [interest_rate, inflation]
-  ols:
-    add_entity_fixed_effects: true
-  summary_output_path: reports/tables/model_summary.json
-
+  model_type: robust_ols
+  target_variable: lwage
+  independent_variables: [educ, exper, expersq, tenure]
+  robust_ols: {cov_type: HC3}            # model-specific options
 reporting:
   output_dir: reports/visualizations
-  file_format: png
-  dpi: 300
-  style: default
-  regression:
-    plots: [coefficient_plot, model_summary, residuals]
 ```
 
-## Model interface contract (`ModelBase`)
+2. Run it:
 
-Every model implements:
+```python
+from stats_transformer import Pipeline
+Pipeline(params_path="params.yaml").run(stage="model")  # or .run() for all stages
+```
 
-- `fit(data)` — loads data, calls `build_model`, returns metrics.
-- `predict(data)` — transform + score on new data.
-- `get_model_metadata(metrics=None)` — JSON-serializable dict with `coefficients`, `summary`, `metrics`.
-- `build_model`, `get_summary`, `get_model_metrics` — abstract on `ModelBase` (`src/stats_transformer/models/base.py:107`).
+Stages: `data`, `features`, `model`, `reporting`, `eda`; `None` runs the first four in order.
 
-YAML `model.independent_variables` and `model.target_variable` are required; the model raises `ValueError` if either is missing (`src/stats_transformer/models/base.py:31`).
+Common `model_type` values: `ols`, `robust_ols`, `panel_ols`, `iv`, `panel_iv`, `logit`, `probit`, `pca`, `kmeans`, `var`, `vecm`, `svar`, `blanchard_quah`, `local_projections`, `lp_iv`, `bvar`, `arima`. The full list is `MODEL_REGISTRY` in `src/stats_transformer/models/registry.py`; per-model details are in `models.md`.
 
-## Supporting files in this skill
+## Model-specific options
 
-- [`architecture.md`](architecture.md) — full component tree and stage flow.
-- [`pipeline-stages.md`](pipeline-stages.md) — per-stage contract, data flow, and how to add a new stage.
-- [`models.md`](models.md) — model-by-model reference (purpose, parameters, edge cases).
-- [`transformations.md`](transformations.md) — `FeatureEngineer` transformations, resampling, `DataMerger` join semantics.
+Each model reads a sub-key named after its `model_type` (e.g. `robust_ols.cov_type`, `ols.add_entity_fixed_effects`, `panel_ols.entity_column`). Read `models.md` for the full parameter list and edge cases.
 
-## Code knowledge graph (optional)
+## Where things live
 
-A local graph of functions, classes, calls and tests helps answer "what breaks if I change X" before editing shared code such as `ModelBase`, `Pipeline` or `FeatureEngineer`.
+- `src/stats_transformer/pipeline.py` — `Pipeline` orchestrator (stage dispatch, path resolution).
+- `src/stats_transformer/models/` — model implementations; `base.py` is the `ModelBase` contract, `registry.py` maps `model_type` to a class.
+- `src/stats_transformer/featurization/` — `FeatureEngineer` (transformations/resampling) and `DataMerger` (joins).
+- `src/stats_transformer/reporting/` — visualizers and table generator.
+- `references/configs/` — example `params.yaml` files.
 
-- Build once: `scripts/run-code-knowledge-graph.sh build`; refresh after pulls: `scripts/run-code-knowledge-graph.sh update`.
-- Check impact of your changes: `scripts/run-code-knowledge-graph.sh detect-changes`.
-- The graph is local and untracked (`.code-review-graph/`). `status` shows the branch and commit it was built on; run `update` first if they differ from yours.
-- The skill files in this folder stay the source of truth for intended design. If the graph is missing, read them and the source directly.
+## Supporting files (read before modifying the library)
 
-## Pointers
+- `architecture.md` — component tree, configuration center, data lifecycle.
+- `pipeline-stages.md` — per-stage contract and data flow.
+- `models.md` — model-by-model reference (parameters, edge cases).
+- `transformations.md` — `FeatureEngineer` transformations, resampling, `DataMerger` joins.
 
-- Canonical architecture doc: `docs/library/architecture.md`
-- Implemented models catalog: `docs/library/models.md`
-- Roadmap doc: `docs/roadmap.md`
-- Benchmarks doc: `docs/validation/benchmarks.md`
-- Library README: `README.md`
-- Commit message conventions: `.agents/git-management-pypi.md` (NOT duplicated here)
-- Test fixture config: `references/configs/test_pipeline.yaml`
-- Local code knowledge graph helper: `scripts/run-code-knowledge-graph.sh`
+## Modifying the library (summary; details in the files above)
 
-## What this skill does NOT cover
-
-- Commit message style → `.agents/git-management-pypi.md`.
-- Python style rules (no docstrings, no type checks, single-line signatures, `run()` entry point) → project rules in `python-coder.md`.
-- DVC pipeline YAML semantics beyond what's in `dvc.yaml` itself.
+- Add a transformation → `featurization/feature_engineering.py` (`valid_base_transformations` + `fit_transform` dispatch).
+- Add a model → new file under `models/<family>/` subclassing `ModelBase`; register in `registry.py:MODEL_REGISTRY`.
+- Add a chart → new class in `reporting/charts/`; export from `reporting/charts/__init__.py` and `reporting/__init__.py`.
+- Add a YAML config → `references/configs/<name>.yaml`.
+- Add a stage → add `run_<stage>()` and dispatch from `Pipeline.run()`; mirror in `dvc.yaml`.
