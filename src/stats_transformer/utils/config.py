@@ -1,9 +1,28 @@
 """Configuration handling for the stats-transformer library."""
 
 import yaml
+import re
 import warnings
 from typing import Dict, Any, Optional
 import logging
+
+
+class _ConfigLoader(yaml.SafeLoader):
+    pass
+
+
+# YAML 1.1 (PyYAML's default) treats the bare words on/off/yes/no as booleans,
+# which silently rewrites config keys such as `merge.on:` into `merge[True]:`.
+# Drop the bool resolver and re-add it for true/false only.
+for _ch, _resolvers in list(_ConfigLoader.yaml_implicit_resolvers.items()):
+    _ConfigLoader.yaml_implicit_resolvers[_ch] = [
+        (tag, regexp) for tag, regexp in _resolvers if tag != "tag:yaml.org,2002:bool"
+    ]
+_ConfigLoader.add_implicit_resolver(
+    "tag:yaml.org,2002:bool",
+    re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"),
+    list("tTfF"),
+)
 
 
 def resolve_reporting_config(params: Dict[str, Any]) -> Dict[str, Any]:
@@ -56,7 +75,7 @@ class Config:
         """
         try:
             with open(config_path, "r") as f:
-                file_config = yaml.safe_load(f)
+                file_config = yaml.load(f, Loader=_ConfigLoader)
             if file_config:
                 self.config.update(file_config)
             self.logger.info(f"Configuration loaded from {config_path}")
