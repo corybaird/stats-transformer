@@ -35,9 +35,25 @@ Stages: `data`, `features`, `model`, `reporting`, `eda`; `None` runs the first f
 
 Common `model_type` values: `ols`, `robust_ols`, `panel_ols`, `iv`, `panel_iv`, `logit`, `probit`, `pca`, `kmeans`, `var`, `vecm`, `svar`, `blanchard_quah`, `local_projections`, `lp_iv`, `bvar`, `arima`. The full list is `MODEL_REGISTRY` in `src/stats_transformer/models/registry.py`; per-model details are in `models.md`.
 
-## Model-specific options
+## Config cheat-sheet
 
-Each model reads a sub-key named after its `model_type` (e.g. `robust_ols.cov_type`, `ols.add_entity_fixed_effects`, `panel_ols.entity_column`). Read `models.md` for the full parameter list and edge cases.
+`model_type` (aliases in parentheses): `ols`, `robust_ols`, `panel_ols`, `iv` (`iv_2sls`, `2sls`), `panel_iv`, `gmm`, `did`, `logit`, `probit`, `pca`, `kmeans`, `var`, `vecm`, `svec`, `svar`, `blanchard_quah`, `proxy_svar`, `sign_restrictions` (`sign_zero`), `volatility_svar`, `independence_svar`, `cvm_svar` (`cvm`), `non_gaussian_svar` (`non_gaussian`), `dynamic_factor`, `bvar`, `tvar`, `tvecm`, `stvar`, `local_projections`, `lp_iv`, `bsvar_sign_zero` (`bayesian_sign_zero`), `pandemic_bvar`, `arima`.
+
+Required model keys by kind:
+- Single-equation / panel / iv / discrete (`ols`, `robust_ols`, `panel_ols`, `iv`, `logit`, `probit`, `gmm`, `did`, ...): `target_variable` + `independent_variables` (single column names).
+- `iv` / `panel_iv` additionally need `endogenous` + `instruments`.
+- VAR family (`var`, `vecm`, `svar`, ...): `target_variables` (plural, a list) + `maxlags`.
+- Unsupervised (`pca`, `kmeans`): no target/independent required.
+
+Model-specific options live in a sub-key named after the model type:
+- `robust_ols.cov_type` (HC1 / HC3 / HAC).
+- `ols.add_entity_fixed_effects` (bool), `panel_ols.entity_column`.
+- `iv.endogenous`, `iv.instruments`.
+
+Transformations append a suffix to every numeric column: `{col}_{transform}`.
+- `changepct` → `{col}_changepct`, `changeraw` → `{col}_changeraw`, `log` → `{col}_log`, `zscore` → `{col}_zscore`, `rollingmean` → `{col}_rollingmean`, `lag1` → `{col}_lag1`, `lead1` → `{col}_lead1`, `changepct_yoy` → `{col}_changepct_yoy`.
+
+Multi-source resampling appends `{col}_{period}{agg}` first (`period` ∈ D/M/Q/Y; `agg` ∈ mean/sum/first/last, only when actually resampled), then the transformation suffix. Example: monthly CPI downsampled to quarterly `last`, then `changepct`, is `CPIAUCSL_Mlast_changepct`. Reference the suffixed name in `target_variable` / `independent_variables` / `target_variables`.
 
 ## Where things live
 
