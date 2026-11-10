@@ -23,7 +23,7 @@ Actionable open items verified against `origin/main` (release 1.11.0). Completed
 | Nonlinear models overwrite config `self.params` with the regime-1 DataFrame | `st/models/timeseries/nonlinear/tvar.py:185` | P2 | S | open |
 | Upstream statsmodels SVAR type-A, $K=2$, 1-free-parameter crash | `tests/test_models/test_svar.py:42` | P2 | S | open (upstream xfail) |
 
-Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§2.2 LP multipliers and §2.6 Fry–Pagan are completed).
+Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§2.2 LP multipliers, §2.6 Fry–Pagan, §2.8 MIDAS / U-MIDAS, and the other sections marked `[Completed]` are done).
 
 ### Pipeline / data
 
@@ -133,10 +133,11 @@ Planned models are triaged across four implementation tiers based on mathematica
 
 ## 2. Tier 1: Low Complexity (Closed-Form / OLS / Basic Matrix Algebra)
 
-### 2.1 VARX & Exogenous Regressors
+### 2.1 VARX & Exogenous Regressors [Completed]
 - **Description**: Vector Autoregressions augmented with exogenous deterministic and stochastic drivers $X_t$:
   $$Y_t = \sum_{i=1}^p A_i Y_{t-i} + B X_t + u_t$$
 - **Implementation Strategy**: Extend regressor matrix assembly in `VARModel` to append exogenous columns and calculate dynamic multipliers.
+- **Status**: Implemented in `VARXModel` (`src/stats_transformer/models/timeseries/reduced_form/varx.py`) with `ConditionalForecaster` for restricted future paths.
 - **Target Benchmark**: `ambropo/VAR-Toolbox` (`VARmodel.m`), R (`vars::VAR(..., exogen=)`)
 
 ### 2.2 Local Projections Multipliers (`lp_multiplier`) [Completed]
@@ -181,12 +182,20 @@ Planned models are triaged across four implementation tiers based on mathematica
 
 ---
 
+### 2.8 MIDAS / U-MIDAS Regressions [Completed]
+- **Status**: Implemented via `UMIDASModel` and `MIDASModel` (`src/stats_transformer/models/timeseries/reduced_form/midas.py`).
+- **Description**: Mixed-data sampling regressions bridging mixed-frequency predictors: unconstrained (U-MIDAS) OLS on aligned lag blocks and algebraically constrained MIDAS weighting schemes.
+- **Target Benchmark**: `cacoleman16/tsecon` (`midas`)
+
+---
+
 ## 3. Tier 2: Medium Complexity (Standard Solvers / Iterative 2-Step)
 
-### 3.1 Max-Share / Max-FEV SVAR
+### 3.1 Max-Share / Max-FEV SVAR [Completed]
 - **Description**: Identification of news and technology shocks by finding an impact rotation column $q$ that maximizes forecast error variance contribution at horizon $H$:
   $$\max_{q} q' V(H) q \quad \text{s.t.} \quad q' q = 1$$
 - **Implementation Strategy**: Generalized eigenvalue decomposition of the target horizon FEVD matrix.
+- **Status**: Implemented as `MaxShareSVARModel` (`src/stats_transformer/models/timeseries/identification/max_share.py`).
 - **Target Benchmark**: Barsky & Sims (2011), Uhlig (2004), `cacoleman16/tsecon` (`max_share_svar`)
 
 ### 3.2 Proxy SVAR Combined with Sign Restrictions
@@ -194,16 +203,18 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Implementation Strategy**: Combine `ProxySVARModel` first-stage instrument regression with QR sign-rotation acceptance loop on the orthogonal subspace.
 - **Target Benchmark**: `ambropo/VAR-Toolbox` (`VARsign_proxy.m`)
 
-### 3.3 State-Dependent Local Projections (`lp_state`)
+### 3.3 State-Dependent Local Projections (`lp_state`) [Completed]
 - **Description**: Local projections with dynamics interacted with continuous or binary regime indicator $F(z_t)$:
   $$Y_{t+h} = F(z_t) (\alpha_h^{(1)} + \beta_h^{(1)} X_t) + (1 - F(z_t)) (\alpha_h^{(2)} + \beta_h^{(2)} X_t) + \Gamma_h W_t + \epsilon_{t+h}$$
 - **Implementation Strategy**: Extend `LocalProjectionsModel` with interaction terms and regime-specific HAC inference.
+- **Status**: Implemented as `StateDependentLPModel` (`src/stats_transformer/models/timeseries/reduced_form/lp_extensions.py`).
 - **Target Benchmark**: Ramey & Zubairy (2018), `cacoleman16/tsecon` (`lp_state`)
 
-### 3.4 Smooth Local Projections (`smooth_lp`)
+### 3.4 Smooth Local Projections (`smooth_lp`) [Completed]
 - **Description**: Regularized local projections estimating impulse responses across all horizons simultaneously via penalized B-spline basis expansion:
   $$\min_{\theta} \sum_{h=0}^H \| Y_{t+h} - B_h \theta X_t \|^2 + \lambda \theta' D' D \theta$$
 - **Implementation Strategy**: Ridge-regularized generalized least squares with cross-validated penalty $\lambda$.
+- **Status**: Implemented as `SmoothLPModel` (`src/stats_transformer/models/timeseries/reduced_form/lp_extensions.py`).
 - **Target Benchmark**: Barnichon & Brownlees (2019), `cacoleman16/tsecon` (`smooth_lp`)
 
 ### 3.5 Heterogeneous Autoregressive Realized Volatility (HAR-RV)
@@ -212,10 +223,11 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Implementation Strategy**: Rolling multi-frequency feature extraction followed by robust OLS.
 - **Target Benchmark**: Corsi (2009), `cacoleman16/tsecon` (`har_rv`)
 
-### 3.6 Quantile Local Projections (`quantile_lp`)
+### 3.6 Quantile Local Projections (`quantile_lp`) [Completed]
 - **Description**: Estimating horizon-dependent conditional quantile impulse responses:
   $$Q_{\tau}(Y_{t+h} | X_t, W_t) = \alpha_h(\tau) + \beta_h(\tau) X_t + \Gamma_h(\tau) W_t$$
 - **Implementation Strategy**: Iteratively reweighted least squares (IRLS) quantile solver across projection horizons.
+- **Status**: Implemented as `QuantileLPModel` (`src/stats_transformer/models/timeseries/reduced_form/lp_extensions.py`).
 - **Target Benchmark**: `cacoleman16/tsecon` (`quantile_lp`)
 
 ### 3.7 Linear Rational Expectations DSGE Solver (`dsge_solve`)
@@ -260,10 +272,11 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Implementation Strategy**: Hamilton filter recursion with numerical log-likelihood optimization and smoothed probabilities.
 - **Target Benchmark**: Hamilton (1989), `statsmodels.tsa.regime_switching`, `cacoleman16/tsecon` (`markov_switching_ar`)
 
-### 4.5 Counterfactual Conditional Forecasting & Scenario Projections
+### 4.5 Counterfactual Conditional Forecasting & Scenario Projections [Completed]
 - **Description**: Generating system forecasts conditional on specified future shock trajectories or fixed endogenous variable paths:
   $$\mathbb{E}[Y_{T+1:T+H} | Y_{1:T}, \mathcal{R} \epsilon_{T+1:T+H} = r]$$
 - **Implementation Strategy**: Waggoner & Zha (1999) restricted least squares shock inversion.
+- **Status**: Implemented via `ConditionalForecaster` (`src/stats_transformer/models/timeseries/reduced_form/varx.py`).
 - **Target Benchmark**: `ambropo/VAR-Toolbox` (`VARcondfore.m`), Bańbura et al. (2015)
 
 ### 4.6 Persistence-Robust IVX Testing
@@ -286,9 +299,10 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Implementation Strategy**: Two-stage quasi-maximum likelihood optimization with positive definiteness projection constraints.
 - **Target Benchmark**: Bollerslev (1990), Engle (2002), `cacoleman16/tsecon` (`dcc_garch`)
 
-### 5.2 Factor-Augmented VAR (FAVAR)
+### 5.2 Factor-Augmented VAR (FAVAR) [Completed]
 - **Description**: VAR augmenting observed macroeconomic variables $Y_t$ with unobserved latent factors $F_t$ extracted from large data panels $X_t$.
 - **Implementation Strategy**: Two-step principal components extraction with factor rotation and structural impulse response mapping.
+- **Status**: Implemented as `FAVARModel` (`src/stats_transformer/models/timeseries/reduced_form/favar.py`).
 - **Target Benchmark**: Bernanke, Boivin, & Eliasz (2005), `cacoleman16/tsecon` (`favar`)
 
 ### 5.3 Ragged-Edge DFM Nowcasting with News Decomposition
@@ -297,9 +311,10 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Implementation Strategy**: Expectation-Maximization (EM) algorithm with missing-data Kalman smoother and Bańbura-Modugno shock attribution.
 - **Target Benchmark**: Doz, Giannone, & Reichlin (2011), Bańbura & Modugno (2014), `cacoleman16/tsecon` (`dfm_nowcast`, `dfm_news`)
 
-### 5.4 Growth-at-Risk (GaR) Modeling
+### 5.4 Growth-at-Risk (GaR) Modeling [Completed]
 - **Description**: Macroeconomic downside risk evaluation estimating conditional quantiles, fitting skewed-$t$ parametric densities, and computing tail loss probabilities.
 - **Implementation Strategy**: Koenker-Bassett quantile regressions, Azzalini skew-$t$ density parameter inversion, and monotone quantile rearrangement.
+- **Status**: Implemented as `GaRModel` (`src/stats_transformer/models/timeseries/reduced_form/gar.py`).
 - **Target Benchmark**: Adrian, Boyarchenko, & Giannone (2019), `cacoleman16/tsecon` (`growth_at_risk`)
 
 ### 5.5 Giacomini-Kitagawa Prior-Robust SVAR Bounds

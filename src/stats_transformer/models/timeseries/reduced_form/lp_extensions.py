@@ -47,7 +47,7 @@ class StateDependentLPModel(_LPExtensionBase):
         if transition not in ("threshold", "logistic"):
             raise ValueError(f"transition must be 'threshold' or 'logistic', got {transition!r}")
         if transition_variable is None:
-            raise ValueError("transition_variable must be specified")
+            transition_variable = self.params.get("model", {}).get("transition_variable") or shock_var
         self.transition_variable = transition_variable
         self.transition = transition
         self.threshold = threshold
