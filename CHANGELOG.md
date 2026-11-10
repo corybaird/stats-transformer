@@ -7,9 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Config cheat-sheet in the agent skill** (#161): the skill now documents the `model_type` values and aliases, the required model keys by kind (`target_variable` + `independent_variables` vs the VAR family's `target_variables` + `maxlags`), model-specific sub-keys (`robust_ols.cov_type`, `iv.endogenous`/`instruments`), and the transformation/resample column-suffix conventions (`changepct` → `{col}_changepct`; monthly→quarterly `last` → `{col}_Mlast`).
+- **Reproducibility tests** (#162): `tests/test_pipeline/test_reproducibility.py` asserts that rerunning a config yields identical coefficients and that a stale merged artifact does not change a single-source config's result.
+
+### Changed
+
+- **Agent skill condensed to a usage quickstart** (#157): `SKILL.md` drops the development reference (repository layout, stage contract, model interface) in favour of a short run-a-model guide; that detail stays in `architecture.md`, `models.md`, `pipeline-stages.md`, and `transformations.md`.
+
 ### Removed
 
 - **`stats_transformer.validation`**: the undocumented, unused subpackage of R benchmark reference dataclasses (`VarsCanadaBenchmark`, `SvarsUsaBenchmark`) is removed; recorded parity references live in `tests/external_benchmarks/` and are checked by `tests/test_external_parity/`.
+
+### Fixed
+
+- **YAML `on`/`off`/`yes`/`no` keys** (#158, #160): the config loader no longer coerces these words to booleans, so `merge.on: [date]` is preserved as a string instead of becoming `{True: [date]}`; the bool resolver is scoped to the config loader so ordinary `yaml.safe_load` elsewhere still parses `true`/`false` as booleans.
+- **Stale merged artifact** (#159): a single-source config (`raw_data_file`, no `datasets`) no longer reads a leftover `data/pipeline/resampled_merged.parquet` from an unrelated multi-source run.
 
 ## [1.11.0] - 2026-10-16
 
