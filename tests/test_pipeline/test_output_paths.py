@@ -270,6 +270,29 @@ def test_full_run_features_parquet_keeps_date_dtype(tmp_path, monkeypatch):
 
 # --- save_results public method is unchanged ---
 
+def test_single_source_config_ignores_stale_merged_artifact(tmp_path, monkeypatch):
+    # A leftover shared merged parquet from an unrelated multi-source run must not
+    # override a single-source config's raw_data_file (regression for the stale-
+    # artifact bug where _resolve_paths preferred any existing merged file).
+    monkeypatch.chdir(tmp_path)
+    stale = tmp_path / "data" / "pipeline"
+    stale.mkdir(parents=True)
+    pd.DataFrame({"wrong_col": [1.0]}).to_parquet(stale / "resampled_merged.parquet")
+
+    raw = tmp_path / "raw.csv"
+    pd.DataFrame({"date": ["2020-01-01"], "x1": [1.0], "y": [2.0]}).to_csv(raw, index=False)
+    config = {
+        "data": {"raw_data_file": str(raw)},
+        "model": {"model_type": "ols", "target_variable": "y", "independent_variables": ["x1"]},
+        "output": {"root": str(tmp_path / "out")},
+    }
+    config_path = tmp_path / "params.yaml"
+    config_path.write_text(yaml.dump(config))
+
+    pipeline = Pipeline(params_path=str(config_path))
+    assert pipeline._resolve_paths()["effective_data_path"] == str(raw)
+
+
 def test_save_results_public_api_unchanged(tmp_path, test_df):
     pipeline = Pipeline(entity_column="country", target="y", features=["x1", "x2"], transformations=[], model_type="ols")
     pipeline.fit_transform(test_df)

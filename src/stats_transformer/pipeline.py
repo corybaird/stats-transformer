@@ -518,11 +518,17 @@ class Pipeline:
 
         data_config = params.get("data", {})
         raw_data_file = data_config.get("raw_data_file")
+        has_datasets = bool(data_config.get("datasets"))
         merge_config = data_config.get("merge", {})
         merged_output_path = merge_config.get("output_path", "data/pipeline/resampled_merged.parquet")
 
-        # Prefer merged output if it exists or if we are in a later stage
-        effective_data_path = merged_output_path if os.path.exists(merged_output_path) else raw_data_file
+        # A single-source config always reads its raw_data_file; never fall back to a
+        # leftover merged artifact from an unrelated run. Multi-source configs read
+        # the merged output once the data stage has produced it.
+        if has_datasets:
+            effective_data_path = merged_output_path if os.path.exists(merged_output_path) else raw_data_file
+        else:
+            effective_data_path = raw_data_file
 
         report_config = resolve_reporting_config(params)
         return {
