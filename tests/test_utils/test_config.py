@@ -86,6 +86,21 @@ def test_yaml_bool_words_stay_strings(tmp_path):
     assert config.get("data.merge.how") == "inner"
 
 
+def test_custom_loader_preserves_true_false_as_booleans(tmp_path):
+    p = tmp_path / "params.yaml"
+    p.write_text("model:\n  enabled: true\n  disabled: false\n")
+    config = Config(config_path=str(p))
+    assert config.get("model.enabled") is True
+    assert config.get("model.disabled") is False
+
+
+def test_global_yaml_bool_parsing_is_unaffected():
+    # The custom loader must not mutate yaml.SafeLoader globally (a prior bug did).
+    import yaml
+    assert yaml.safe_load("true") is True
+    assert yaml.safe_load("false") is False
+
+
 def test_validate_defaults_to_ols_when_model_type_absent():
     config = Config(model={"target_variable": "y", "independent_variables": ["x1"]})
     config.validate()  # should not raise; model_type defaults to "ols"

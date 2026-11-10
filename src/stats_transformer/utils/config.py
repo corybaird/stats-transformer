@@ -13,11 +13,12 @@ class _ConfigLoader(yaml.SafeLoader):
 
 # YAML 1.1 (PyYAML's default) treats the bare words on/off/yes/no as booleans,
 # which silently rewrites config keys such as `merge.on:` into `merge[True]:`.
-# Drop the bool resolver and re-add it for true/false only.
-for _ch, _resolvers in list(_ConfigLoader.yaml_implicit_resolvers.items()):
-    _ConfigLoader.yaml_implicit_resolvers[_ch] = [
-        (tag, regexp) for tag, regexp in _resolvers if tag != "tag:yaml.org,2002:bool"
-    ]
+# Build a fresh resolver map on the subclass (drop the bool resolver, then
+# re-add it for true/false only) so we never mutate SafeLoader itself.
+_ConfigLoader.yaml_implicit_resolvers = {
+    ch: [(tag, regexp) for tag, regexp in resolvers if tag != "tag:yaml.org,2002:bool"]
+    for ch, resolvers in yaml.SafeLoader.yaml_implicit_resolvers.items()
+}
 _ConfigLoader.add_implicit_resolver(
     "tag:yaml.org,2002:bool",
     re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"),
