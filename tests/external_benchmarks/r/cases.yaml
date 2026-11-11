@@ -57,3 +57,15 @@ cases:
     data: {path: data/examples/timeseries/ghysels_ch7/dataonly_uktermstructure.csv}
     call: "Ghysels and Marcellino (2018) Chap7.R specs: ca.jo(type = eigen, ecdet = const, spec = longrun); cajorls. simulated_cointegration rows 1:400 (x, y), K = 2, r = 1; dataonly_uktermstructure rows 1:216 (r1, r3, r6, r24), K = 3, r = 1 and r = 3; dataonly_uslei rows 313:540 (cci, cli), K = 2, r = 1. ecdet = const is the restricted constant (statsmodels deterministic = ci, Stata trend(rconstant))"
     layout: {sim_beta: "3 x 1 x, y, constant; unit on x", sim_alpha: "1 x 2 loadings on x.d, y.d", sim_lambda: "eigenvalues", sim_eigen_stats: "max-eigen statistics r<=1, r=0", sim_Sigma_ml: "2 x 2 divisor T", uk_r1_beta: "5 x 1 r1 r3 r6 r24 constant", uk_r1_alpha: "1 x 4", uk_r3_beta: "5 x 3", uk_r3_alpha: "3 x 4", uk_lambda: "eigenvalues", uk_eigen_stats: "max-eigen statistics", uk_r1_Sigma_ml: "4 x 4", lei_beta: "3 x 1 cci cli constant", lei_alpha: "1 x 2", lei_lambda: "eigenvalues", lei_eigen_stats: "max-eigen statistics", lei_Sigma_ml: "2 x 2"}
+  - case: independence_svar
+    data: {path: data/examples/timeseries/macrodata.csv}
+    call: "vars::VAR(realgdp, realcons, realinv; p = 2, type = const); svars::id.dc (distance covariance, Matteson & Tsay 2017)"
+    layout: {B: "3 x 3 structural impact matrix; column order and signs arbitrary"}
+  - case: cvm_svar
+    data: {path: data/examples/timeseries/macrodata.csv}
+    call: "vars::VAR(realgdp, realcons, realinv; p = 2, type = const); svars::id.cvm (Cramer-von Mises, Huo & Szekely 2016)"
+    layout: {B: "3 x 3 structural impact matrix; column order and signs arbitrary"}
+  - case: non_gaussian_svar
+    data: {path: data/examples/timeseries/macrodata.csv}
+    call: "vars::VAR(realgdp, realcons, realinv; p = 2, type = const); svars::id.ngml (non-Gaussian ML, Lanne Meitz Saikkonen 2010)"
+    layout: {B: "3 x 3 structural impact matrix; column order and signs arbitrary"}
