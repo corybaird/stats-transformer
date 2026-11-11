@@ -24,6 +24,16 @@ from .nonlinear.stvar import STVARModel
 from .nonlinear.girf import GIRFEngine
 from .identification.bayesian_sign_zero import BayesianSignZeroSVARModel
 from .reduced_form.pandemic_bvar import PandemicBVARModel
+from .reduced_form.lp_extensions import (
+    StateDependentLPModel,
+    SmoothLPModel,
+    QuantileLPModel,
+)
+from .reduced_form.midas import UMIDASModel, MIDASModel
+from .reduced_form.gar import GaRModel
+from .reduced_form.favar import FAVARModel
+from .identification.max_share import MaxShareSVARModel
+from .reduced_form.varx import VARXModel, ConditionalForecaster
 
 __all__ = [
     "BayesianSignZeroSVARModel",
@@ -54,4 +64,14 @@ __all__ = [
     "TVECMModel",
     "STVARModel",
     "GIRFEngine",
+    "StateDependentLPModel",
+    "SmoothLPModel",
+    "QuantileLPModel",
+    "UMIDASModel",
+    "MIDASModel",
+    "GaRModel",
+    "FAVARModel",
+    "MaxShareSVARModel",
+    "VARXModel",
+    "ConditionalForecaster",
 ]

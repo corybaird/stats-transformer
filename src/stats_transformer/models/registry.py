@@ -32,6 +32,15 @@ from stats_transformer.models.timeseries import (
     ARIMAModel,
     BayesianSignZeroSVARModel,
     PandemicBVARModel,
+    StateDependentLPModel,
+    SmoothLPModel,
+    QuantileLPModel,
+    UMIDASModel,
+    MIDASModel,
+    GaRModel,
+    FAVARModel,
+    MaxShareSVARModel,
+    VARXModel,
 )
 
 MODEL_REGISTRY: dict[str, dict[str, Any]] = {
@@ -71,6 +80,15 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     "lp_iv": {"cls": LocalProjectionsIVModel, "kind": "lp_iv"},
     "bsvar_sign_zero": {"cls": BayesianSignZeroSVARModel, "kind": "svar_family"},
     "pandemic_bvar": {"cls": PandemicBVARModel, "kind": "svar_family"},
+    "lp_state": {"cls": StateDependentLPModel, "kind": "lp"},
+    "smooth_lp": {"cls": SmoothLPModel, "kind": "lp"},
+    "quantile_lp": {"cls": QuantileLPModel, "kind": "lp"},
+    "umidas": {"cls": UMIDASModel, "kind": "single_equation"},
+    "midas": {"cls": MIDASModel, "kind": "single_equation"},
+    "gar": {"cls": GaRModel, "kind": "single_equation"},
+    "favar": {"cls": FAVARModel, "kind": "svar_family"},
+    "max_share_svar": {"cls": MaxShareSVARModel, "kind": "svar_family"},
+    "varx": {"cls": VARXModel, "kind": "svar_family"},
 }
 
 MODEL_TYPE_ALIASES: dict[str, str] = {
@@ -80,6 +98,8 @@ MODEL_TYPE_ALIASES: dict[str, str] = {
     "cvm": "cvm_svar",
     "non_gaussian": "non_gaussian_svar",
     "bayesian_sign_zero": "bsvar_sign_zero",
+    "growth_at_risk": "gar",
+    "max_share": "max_share_svar",
 }
 
 # ModelBase subclasses that are intentionally not reachable via Pipeline's
@@ -88,4 +108,5 @@ MODEL_TYPE_ALIASES: dict[str, str] = {
 # test so a newly added model is never silently unreachable by omission.
 NOT_PIPELINE_EXPOSED: set[str] = {
     "UnsupervisedModel",  # abstract base for PCAModel/KMeansModel; not directly instantiable
+    "_LPExtensionBase",  # internal shared base for StateDependentLPModel/SmoothLPModel/QuantileLPModel
 }
