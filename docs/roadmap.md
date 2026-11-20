@@ -114,7 +114,6 @@ From §7 below; MaRCo@BIS dictionary entries not yet covered as model classes (B
 | Kamber–Morley–Wong (2018) Beveridge–Nelson filter | absent (§7) | P2 | M | open |
 | GLP (2015) BVAR marginal-likelihood hyperparameter selection | `st/models/timeseries/reduced_form/bvar.py` | P2 | M | open |
 | MF-VAR (Schorfheide & Song, 2015) beyond the existing MIDAS | `st/models/timeseries/reduced_form/midas.py` | P2 | L | open |
-| FAVARModel exists but is not in `MODEL_REGISTRY`, so not YAML-dispatchable | `st/models/timeseries/reduced_form/favar.py` | P2 | S | open |
 | Panel VAR with exchangeable prior (Canova & Ciccarelli, 2013) | absent (§7) | P2 | L | open |
 | TVP-VAR with stochastic volatility (Primiceri, 2005); intersects the MCMC deferral in §6.1 | absent (§7) | P2 | L | open |
 | Higher-moment sharpening of Bayesian sign restrictions (Andrade, Ferroni & Melosi, 2023); requires paper read first | `st/models/timeseries/identification/bayesian_sign_zero.py` | P2 | M | open |
@@ -359,7 +358,7 @@ Mapping between the MaRCo@BIS model dictionary — 30 entries in [`skills/model-
 | `cee_1999_monetary_svar` | `svar` (Cholesky A/B) | `st/models/timeseries/identification/svar.py` (`SVARModel`) |
 | `kilian_2009_oil_svar` | `svar` (Cholesky A/B) | `st/models/timeseries/identification/svar.py` (`SVARModel`) |
 | `bgr_2010_large_bvar` | `bvar` | `st/models/timeseries/reduced_form/bvar.py` (`BVARModel`) |
-| `bbe_2005_favar` | `favar`* | `st/models/timeseries/reduced_form/favar.py` (`FAVARModel`) |
+| `bbe_2005_favar` | `favar` | `st/models/timeseries/reduced_form/favar.py` (`FAVARModel`) |
 | `banbura_giannone_lenza_2015_conditional_forecasts` | `varx` (`ConditionalForecaster`, constrained-path conditional forecasts with minimum-norm structural shocks) | `st/models/timeseries/reduced_form/varx.py` |
 | `uhlig_2005_sign_restrictions` | `sign_restrictions` | `st/models/timeseries/identification/sign_zero.py` (`SignZeroSVARModel`, plus Fry–Pagan median-target selection, §2.6) |
 | `antolin_diaz_rubio_ramirez_2018` | `bsvar_sign_zero` (sign, zero and narrative restrictions; ARW 2018 zero-restriction algorithm) | `st/models/timeseries/identification/bayesian_sign_zero.py` (`BayesianSignZeroSVARModel`) |
@@ -375,7 +374,7 @@ Mapping between the MaRCo@BIS model dictionary — 30 entries in [`skills/model-
 | `blanchard_quah_1989` | `blanchard_quah` (long-run restrictions) | `st/models/timeseries/identification/blanchard_quah.py` (`BlanchardQuahModel`) |
 | `gali_1999_technology_var` | `blanchard_quah` (long-run restrictions) | `st/models/timeseries/identification/blanchard_quah.py` (`BlanchardQuahModel`) |
 
-\* `FAVARModel` implements the BBE two-step estimator but is not in `MODEL_REGISTRY`, so it cannot be dispatched from `params.yaml` yet (row in §0).
+Registry entries for the v1.12.0 models (FAVAR, VARX, MIDAS, Growth-at-Risk, Max-Share) land with PR #170.
 
 ### Partial (3)
 
