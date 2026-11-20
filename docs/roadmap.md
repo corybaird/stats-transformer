@@ -103,6 +103,21 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | Public API exports & deprecation policy | `src/stats_transformer/__init__.py` (no `Logit`/`Probit`/`ARIMA`/`SVEC`) | P2 | S | open |
 | MkDocs Material docs site built in CI | absent (no `mkdocs.yml`) | P2 | M | open |
 
+### New models (MaRCo@BIS gaps)
+
+From §7 below; MaRCo@BIS dictionary entries not yet covered as model classes (Bańbura–Modugno ragged-edge DFM nowcasting is already tracked in §5.3, so no row here).
+
+| Item | Location | Pri | Size | Status |
+| --- | --- | --- | --- | --- |
+| Hamilton (2018) regression trend-cycle filter | absent (§7) | P2 | S | open |
+| Diebold–Yilmaz (2012) connectedness index (GFEVD post-processing of `var`) | planned in §2.4 `connectedness` | P2 | S | open |
+| Kamber–Morley–Wong (2018) Beveridge–Nelson filter | absent (§7) | P2 | M | open |
+| GLP (2015) BVAR marginal-likelihood hyperparameter selection | `st/models/timeseries/reduced_form/bvar.py` | P2 | M | open |
+| MF-VAR (Schorfheide & Song, 2015) beyond the existing MIDAS | `st/models/timeseries/reduced_form/midas.py` | P2 | L | open |
+| Panel VAR with exchangeable prior (Canova & Ciccarelli, 2013) | absent (§7) | P2 | L | open |
+| TVP-VAR with stochastic volatility (Primiceri, 2005); intersects the MCMC deferral in §6.1 | absent (§7) | P2 | L | open |
+| Higher-moment sharpening of Bayesian sign restrictions (Andrade, Ferroni & Melosi, 2023); requires paper read first | `st/models/timeseries/identification/bayesian_sign_zero.py` | P2 | M | open |
+
 ---
 
 ## 1. Roadmap Architecture & Complexity Tiers
@@ -326,4 +341,57 @@ Planned models are triaged across four implementation tiers based on mathematica
 - **Restricted VAR Pipeline Integration**: Expose `RestrictedVAR` through `params.yaml` either via a dedicated `restricted_var` model key or through `model.var.restrictions` configuration in `VARModel`.
 - **Multi-Specification Runner Relocation**: Relocate `SpecificationRunner` from `src/stats_transformer/models/regression/` to `src/stats_transformer/pipeline/` or `src/stats_transformer/reporting/` to maintain `models/` exclusively for single-model estimators.
 - **Simulation Engine Relocation**: Relocate `GIRFEngine` to a dedicated time series diagnostics or IRF calculation module.
+
+---
+
+## 7. MaRCo@BIS coverage
+
+Mapping between the MaRCo@BIS model dictionary — 30 entries in [`skills/model-dictionary/index.yaml`](https://github.com/bis-med-it/marco-BIS/blob/main/skills/model-dictionary/index.yaml) of [Lombardi, Park & Perez-Cruz (2026), *MaRCo@BIS: AI-agentic econometric analysis for central bankers*, BIS Working Paper No 1395](https://www.bis.org/publ/work1395.htm) — and the models implemented in `stats-transformer` on this branch. "Covered" means the model class exists; parity against each MaRCo replication script (data, spec, published output) is a separate follow-up item, distinct from the software parity benchmarks in [Software Parity Benchmarks](validation/benchmarks.md#2-software-parity-benchmarks-stata-matlab-r).
+
+### Covered (21)
+
+| MaRCo id | stats-transformer key | Module |
+| --- | --- | --- |
+| `sims_1980_var` | `var` | `st/models/timeseries/reduced_form/var.py` (`VARModel`) |
+| `litterman_1986_bvar` | `bvar` (Minnesota prior) | `st/models/timeseries/reduced_form/bvar.py` (`BVARModel`) |
+| `cee_1996_flow_of_funds` | `svar` (Cholesky A/B) | `st/models/timeseries/identification/svar.py` (`SVARModel`) |
+| `cee_1999_monetary_svar` | `svar` (Cholesky A/B) | `st/models/timeseries/identification/svar.py` (`SVARModel`) |
+| `kilian_2009_oil_svar` | `svar` (Cholesky A/B) | `st/models/timeseries/identification/svar.py` (`SVARModel`) |
+| `bgr_2010_large_bvar` | `bvar` | `st/models/timeseries/reduced_form/bvar.py` (`BVARModel`) |
+| `bbe_2005_favar` | `favar` | `st/models/timeseries/reduced_form/favar.py` (`FAVARModel`) |
+| `banbura_giannone_lenza_2015_conditional_forecasts` | `varx` (`ConditionalForecaster`, constrained-path conditional forecasts with minimum-norm structural shocks) | `st/models/timeseries/reduced_form/varx.py` |
+| `uhlig_2005_sign_restrictions` | `sign_restrictions` | `st/models/timeseries/identification/sign_zero.py` (`SignZeroSVARModel`, plus Fry–Pagan median-target selection, §2.6) |
+| `antolin_diaz_rubio_ramirez_2018` | `bsvar_sign_zero` (sign, zero and narrative restrictions; ARW 2018 zero-restriction algorithm) | `st/models/timeseries/identification/bayesian_sign_zero.py` (`BayesianSignZeroSVARModel`) |
+| `gertler_karadi_2015_proxy_svar` | `proxy_svar` | `st/models/timeseries/identification/proxy_svar.py` (`ProxySVARModel`) |
+| `mertens_ravn_2013_tax_proxy_svar` | `proxy_svar` | `st/models/timeseries/identification/proxy_svar.py` (`ProxySVARModel`) |
+| `romer_romer_2004_narrative_mp` | `proxy_svar` (shock series as external instrument; downstream `local_projections`/`lp_iv`) | `st/models/timeseries/identification/proxy_svar.py`, `st/models/timeseries/reduced_form/local_projections*.py` |
+| `rigobon_2003_heteroskedasticity_id` | `volatility_svar` (regime variance shifts) | `st/models/timeseries/identification/volatility.py` (`VolatilitySVARModel`) |
+| `lenza_primiceri_2022_covid_var` | `pandemic_bvar` (variance-scaled outlier treatment) | `st/models/timeseries/reduced_form/pandemic_bvar.py` (`PandemicBVARModel`) |
+| `lanne_meitz_saikkonen_2017_nongaussian_svar` | `non_gaussian_svar` | `st/models/timeseries/identification/non_gaussian.py` (`NonGaussianSVARModel`) |
+| `jorda_2005_lp` | `local_projections` | `st/models/timeseries/reduced_form/local_projections.py` (`LocalProjectionsModel`) |
+| `stock_watson_2018_lpiv` | `lp_iv` | `st/models/timeseries/reduced_form/local_projections_iv.py` (`LocalProjectionsIVModel`) |
+| `auerbach_gorodnichenko_2012` | `stvar` (smooth-transition VAR) | `st/models/timeseries/nonlinear/stvar.py` (`STVARModel`) |
+| `blanchard_quah_1989` | `blanchard_quah` (long-run restrictions) | `st/models/timeseries/identification/blanchard_quah.py` (`BlanchardQuahModel`) |
+| `gali_1999_technology_var` | `blanchard_quah` (long-run restrictions) | `st/models/timeseries/identification/blanchard_quah.py` (`BlanchardQuahModel`) |
+
+Registry entries for the v1.12.0 models (FAVAR, VARX, MIDAS, Growth-at-Risk, Max-Share) land with PR #170.
+
+### Partial (3)
+
+| MaRCo id | What exists | What is missing |
+| --- | --- | --- |
+| `glp_2015_prior_selection` | `BVARModel` with Minnesota prior (`lambda1`–`lambda4`, conjugate posterior draws) | Marginal-likelihood-based hyperparameter selection (grid/optimization over shrinkage as in Giannone, Lenza & Primiceri, 2015); hyperparameters are fixed config today | 
+| `banbura_modugno_2014_bdfm` | `DynamicFactorModel` (EM + Kalman smoother on a balanced panel, missing values tolerated in the likelihood) | Ragged-edge mixed-frequency nowcasting with publication lags and news decomposition — tracked as the Tier 4 plan in §5.3 (Bańbura & Modugno 2014 is its target benchmark) |
+| `schorfheide_song_2015_mfvar` | Mixed-frequency regressions: `UMIDASModel`/`MIDASModel` | Bayesian state-space MF-VAR (stacked mixed-frequency BVAR, Minnesota prior); MIDAS covers univariate mixed-frequency forecasting only |
+
+### Missing (6)
+
+| MaRCo id | Size | One-line plan |
+| --- | --- | --- |
+| `hamilton_2018_filter` | S | Regression-based trend/cycle split (`y_{t+h}` on lagged levels), a closed-form OLS filter; add as a utility next to `TimeSeriesDecompositions` |
+| `diebold_yilmaz_2012_connectedness` | S | GFEVD post-processing of `VARModel` (total/directional/net spillover indices) — already planned as §2.4 `connectedness` |
+| `kamber_morley_wong_2018_bnf` | M | Beveridge–Nelson decomposition with signal-to-noise bias correction from an auxiliary AR(p) fit |
+| `canova_ciccarelli_2013_panel_var` | L | Panel VAR with exchangeable (Bayesian hierarchical) pooling of cross-unit dynamics; builds on `PanelRegressionModel` data handling but needs factor-style shrinkage structure |
+| `primiceri_2005_tvpvar` | L | TVP-VAR with stochastic volatility via Gibbs sampling — MCMC-heavy, intersects the general-MCMC deferral in §6.1, so reconsider the boundary before committing |
+| `andrade_ferroni_melosi_2023_higher_moments` | M | Sharpening of sign-restriction posteriors with higher-moment (non-Gaussian) restrictions; extends `BayesianSignZeroSVARModel`, requires a paper read first |
 
