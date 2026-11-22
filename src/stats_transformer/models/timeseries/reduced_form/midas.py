@@ -201,41 +201,59 @@ class MIDASModel(UMIDASModel):
             bse=np.concatenate([[float(np.sqrt(cov.loc["const", "const"]))], weight_se]),
         )
 
+    _NLS_STARTS = {
+        "exp_almon": [(0.0, 0.0), (-1.0, 0.0), (1.0, -0.1), (-2.0, -0.1), (2.0, -0.5)],
+        "beta": [(2.0, 2.0), (1.0, 5.0), (5.0, 1.0), (0.0, 0.0), (-2.0, -2.0)],
+    }
+
     def _estimate_nls(self) -> None:
+        # y = const + slope * (X @ w(theta)): const and slope concentrated out by OLS for each theta
         weight_fn = self._WEIGHT_FUNCTIONS[self.weight_function]
         K = self.X.shape[1]
         X = self.X.to_numpy(dtype=float)
         y = self.y.to_numpy(dtype=float)
         n = len(y)
-        x0 = np.zeros(2) if self.weight_function == "exp_almon" else np.full(2, 2.0)
 
         def _residuals(theta: np.ndarray) -> np.ndarray:
-            r = y - X @ weight_fn(theta, K)
-            return r - r.mean()
+            A = np.column_stack([np.ones(n), X @ weight_fn(theta, K)])
+            return y - A @ np.linalg.lstsq(A, y, rcond=None)[0]
 
-        result = least_squares(_residuals, x0)
-        weights = weight_fn(result.x, K)
-        jacobian = np.column_stack([np.full(n, -1.0), result.jac])
-        dof = max(n - jacobian.shape[1], 1)
-        cov = float(result.fun @ result.fun) / dof * np.linalg.pinv(jacobian.T @ jacobian)
+        results = [least_squares(_residuals, np.array(start)) for start in self._NLS_STARTS[self.weight_function]]
+        result = min(results, key=lambda r: float(r.cost))
+        theta = result.x
+        weights = weight_fn(theta, K)
+        self.normalized_weights = weights
+        A = np.column_stack([np.ones(n), X @ weights])
+        beta = np.linalg.lstsq(A, y, rcond=None)[0]
+        const, slope = float(beta[0]), float(beta[1])
+        residuals = y - A @ beta
         eps = 1e-6
         weight_jac = np.zeros((K, 2))
         for j in range(2):
-            up, down = result.x.copy(), result.x.copy()
+            up, down = theta.copy(), theta.copy()
             up[j] += eps
             down[j] -= eps
             weight_jac[:, j] = (weight_fn(up, K) - weight_fn(down, K)) / (2 * eps)
-        weight_se = np.sqrt(np.diag(weight_jac @ cov[1:, 1:] @ weight_jac.T))
-        const = float(np.mean(y - X @ weights))
+        # residuals = y - const - slope * s(theta), so de/dconst = -1, de/dslope = -s, de/dtheta = -slope * X @ dw
+        jacobian = np.column_stack([np.full(n, -1.0), -A[:, 1], -slope * (X @ weight_jac)])
+        dof = max(n - jacobian.shape[1], 1)
+        cov = float(residuals @ residuals) / dof * np.linalg.pinv(jacobian.T @ jacobian)
+        # delta method on the full (const, slope, theta) vector for the reported lag coefficients slope * w
+        grad = np.zeros((K, jacobian.shape[1]))
+        grad[:, 1] = weights
+        grad[:, 2:] = slope * weight_jac
+        weight_se = np.sqrt(np.maximum(np.einsum("ij,jk,ik->i", grad, cov, grad), 0.0))
         self.weights = weights
         self.weight_se = weight_se
-        self.theta = result.x
+        self.slope = slope
+        self.slope_se = float(np.sqrt(max(cov[1, 1], 0.0)))
+        self.theta = theta
         self.ols_result = None
         self.model = _LinearShim(
-            np.concatenate([[const], weights]),
+            np.concatenate([[const], slope * weights]),
             ["const"] + self.feature_names,
             nobs=n,
-            bse=np.concatenate([[float(np.sqrt(cov[0, 0]))], weight_se]),
+            bse=np.concatenate([[float(np.sqrt(max(cov[0, 0], 0.0)))], weight_se]),
         )
 
     def build_model(self) -> Any:
@@ -261,6 +279,7 @@ class MIDASModel(UMIDASModel):
         lines = [f"Restricted MIDAS with '{self.weight_function}' lag weights"]
         if self.theta is not None:
             lines.append(f"theta: {np.round(self.theta, 6).tolist()}")
+            lines.append(f"slope: {self.slope:.6f} (std_err: {self.slope_se:.6f})")
         metrics = self.get_model_metrics()
         lines.append(f"r_squared: {metrics['r_squared']:.4f}  nobs: {metrics['nobs']}")
         table = pd.DataFrame({"coefficient": self.model.params, "std_err": self.model.bse})
@@ -271,4 +290,15 @@ class MIDASModel(UMIDASModel):
         metrics["weight_function"] = self.weight_function
         if getattr(self, "theta", None) is not None:
             metrics["theta"] = [float(t) for t in self.theta]
+            metrics["slope"] = float(self.slope)
+            metrics["slope_se"] = float(self.slope_se)
+            # the free parameters are const, slope and the two thetas, not the K displayed lag coefficients
+            k = 2 + len(self.theta)
+            n = metrics["nobs"]
+            residuals = self.y.to_numpy(dtype=float) - self._fitted_values()
+            ssr = float(residuals @ residuals)
+            metrics["num_params"] = k
+            metrics["adj_r_squared"] = float(1.0 - (1.0 - metrics["r_squared"]) * (n - 1) / (n - k))
+            metrics["aic"] = float(n * np.log(ssr / n) + 2 * k)
+            metrics["bic"] = float(n * np.log(ssr / n) + k * np.log(n))
         return metrics
