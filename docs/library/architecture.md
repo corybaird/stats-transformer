@@ -151,7 +151,7 @@ flowchart TD
 
 - **Unified Base Contract (`ModelBase`)**: Every model implements the `ModelBase` abstract contract (`build_model`, `get_summary`, `get_model_metrics`); `fit` and the JSON metadata method `get_model_metadata` are provided by the base class.
 - **Normalized Outputs**: All estimators return normalized DataFrames and structured JSON metadata containing coefficients, standard errors, $t$-statistics, $p$-values, covariance matrices, and model diagnostic metrics.
-- **Complete Reference**: For full mathematical specifications, access aliases, and benchmark comparisons for all 42 implemented model classes and utilities, see the [Implemented Models Catalog](models.md).
+- **Complete Reference**: For full mathematical specifications, access aliases, and benchmark comparisons for all 41 registered model classes and the diagnostic/utility classes, see the [Implemented Models Catalog](models.md).
 
 ---
 
