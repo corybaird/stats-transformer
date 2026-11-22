@@ -22,7 +22,6 @@ Open items last verified against `origin/main` (release 1.11.0); for 1.12.0 only
 | Nonlinear models compute AIC/BIC from summed SSR instead of $\log\det\hat\Sigma_u$ | `st/models/timeseries/nonlinear/tvar.py:172-173` (+`tvecm.py`, `stvar.py`) | P2 | S | open |
 | Nonlinear models overwrite config `self.params` with the regime-1 DataFrame | `st/models/timeseries/nonlinear/tvar.py:185` | P2 | S | open |
 | Upstream statsmodels SVAR type-A, $K=2$, 1-free-parameter crash | `tests/test_models/test_svar.py:42` | P2 | S | open (upstream xfail) |
-| `MIDASModel` `exp_almon`/`beta` weights are normalized and there is no slope coefficient, so the total effect of the regressor is fixed at one | `st/models/timeseries/reduced_form/midas.py` (`_estimate_nls`) | P0 | S | open |
 | LP-extension options (`transition`, `threshold`, `gamma`, `center`, `penalty_lambda`, `n_basis`, `quantiles`, `lags`, `cumulative`, `cov_type`) are not reachable from YAML: the kind-`lp` builder branch passes only target, shock, controls, horizon and date column | `st/models/builder.py` (kind `lp`) | P1 | S | open |
 | `GaRModel` does not receive `date_column` from YAML, so rows must already be in time order in pipeline runs | `st/models/builder.py` | P1 | S | open |
 | `StateDependentLPModel`/`SmoothLPModel` `lags` omit target lags, unlike `LocalProjectionsModel`'s base design (which `QuantileLPModel` inherits) | `st/models/timeseries/reduced_form/lp_extensions.py` | P1 | S | open |
