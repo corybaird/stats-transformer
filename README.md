@@ -30,7 +30,7 @@ It offers:
 - **Frequency-aware data preparation:** aligns, merges, and transforms data (lags, differences, growth rates) within each entity, without hand-written reshaping.
 - **Verification:** estimators are tested against recorded Stata, R, and MATLAB output, and data transformations against series published by the original authors.
 
-Models cover cross-sectional (OLS, robust OLS), panel (fixed effects), time-series (VAR, VECM, SVAR including Blanchard-Quah, proxy, and sign restrictions, local projections), IV (2SLS), discrete choice (Logit, Probit), and unsupervised methods (PCA, KMeans).
+Models cover cross-sectional (OLS, robust OLS), panel (fixed effects), time-series (VAR, VECM, VARX, SVAR including Blanchard-Quah, proxy, and sign restrictions, max-share identification, FAVAR), local projections (plain, IV, state-dependent, smooth, and quantile), conditional forecasting, mixed-frequency regressions (U-MIDAS, MIDAS), Growth-at-Risk, IV (2SLS), discrete choice (Logit, Probit), and unsupervised methods (PCA, KMeans).
 
 ---
 
@@ -39,7 +39,7 @@ Models cover cross-sectional (OLS, robust OLS), panel (fixed effects), time-seri
 - **Core Guides (`docs/`)**
   - **[Overview](docs/overview.md):** Documentation map, model domain summary, and quickstart links.
   - **[Architecture & Design](docs/library/architecture.md):** Pipeline stages, object hierarchy, and repository file structure.
-  - **[Implemented Models](docs/library/models.md):** Complete catalog of all 32 implemented model classes and utilities.
+  - **[Implemented Models](docs/library/models.md):** Complete catalog of all 42 implemented model classes and utilities.
   - **[Data Guide](docs/library/data.md):** Data directory organization and packaged example datasets.
   - **[Software Benchmarks](docs/validation/benchmarks.md):** Cross-language R, Stata, and MATLAB verification matrix.
   - **[Testing Suite](docs/validation/testing_suite.md):** Automated unit, integration, and verification test guide.
@@ -161,7 +161,7 @@ viz = RegressionVisualizer(output_dir="reports/visualizations")
 paths = viz.visualize_from_json(model_summary=model.get_model_metadata())
 ```
 
-All 32 model classes accept direct instantiation like this; see [Implemented Models](docs/library/models.md) for each class's arguments. End-to-end examples live in the [notebooks](#2-documentation).
+All 42 public model classes accept direct instantiation like this; see [Implemented Models](docs/library/models.md) for each class's arguments. End-to-end examples live in the [notebooks](#2-documentation).
 
 ### 3.3. Testing
 
