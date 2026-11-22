@@ -33,22 +33,25 @@ Pipeline(params_path="params.yaml").run(stage="model")  # or .run() for all stag
 
 Stages: `data`, `features`, `model`, `reporting`, `eda`; `None` runs the first four in order.
 
-Common `model_type` values: `ols`, `robust_ols`, `panel_ols`, `iv`, `panel_iv`, `logit`, `probit`, `pca`, `kmeans`, `var`, `vecm`, `svar`, `blanchard_quah`, `local_projections`, `lp_iv`, `bvar`, `arima`. The full list is `MODEL_REGISTRY` in `src/stats_transformer/models/registry.py`; per-model details are in `models.md`.
+Common `model_type` values: `ols`, `robust_ols`, `panel_ols`, `iv`, `panel_iv`, `logit`, `probit`, `pca`, `kmeans`, `var`, `vecm`, `svar`, `blanchard_quah`, `local_projections`, `lp_iv`, `lp_state`, `smooth_lp`, `quantile_lp`, `umidas`, `midas`, `gar`, `favar`, `max_share_svar`, `varx`, `bvar`, `arima`. The full list is `MODEL_REGISTRY` in `src/stats_transformer/models/registry.py`; per-model details are in `models.md`.
 
 ## Config cheat-sheet
 
-`model_type` (aliases in parentheses): `ols`, `robust_ols`, `panel_ols`, `iv` (`iv_2sls`, `2sls`), `panel_iv`, `gmm`, `did`, `logit`, `probit`, `pca`, `kmeans`, `var`, `vecm`, `svec`, `svar`, `blanchard_quah`, `proxy_svar`, `sign_restrictions` (`sign_zero`), `volatility_svar`, `independence_svar`, `cvm_svar` (`cvm`), `non_gaussian_svar` (`non_gaussian`), `dynamic_factor`, `bvar`, `tvar`, `tvecm`, `stvar`, `local_projections`, `lp_iv`, `bsvar_sign_zero` (`bayesian_sign_zero`), `pandemic_bvar`, `arima`.
+`model_type` (aliases in parentheses): `ols`, `robust_ols`, `panel_ols`, `iv` (`iv_2sls`, `2sls`), `panel_iv`, `gmm`, `did`, `logit`, `probit`, `pca`, `kmeans`, `var`, `vecm`, `svec`, `svar`, `blanchard_quah`, `proxy_svar`, `sign_restrictions` (`sign_zero`), `volatility_svar`, `independence_svar`, `cvm_svar` (`cvm`), `non_gaussian_svar` (`non_gaussian`), `dynamic_factor`, `bvar`, `tvar`, `tvecm`, `stvar`, `local_projections`, `lp_iv`, `lp_state`, `smooth_lp`, `quantile_lp`, `umidas`, `midas`, `gar` (`growth_at_risk`), `favar`, `max_share_svar` (`max_share`), `varx`, `bsvar_sign_zero` (`bayesian_sign_zero`), `pandemic_bvar`, `arima`.
 
 Required model keys by kind:
-- Single-equation / panel / iv / discrete (`ols`, `robust_ols`, `panel_ols`, `iv`, `logit`, `probit`, `gmm`, `did`, ...): `target_variable` + `independent_variables` (single column names).
+- Single-equation / panel / iv / discrete (`ols`, `robust_ols`, `panel_ols`, `iv`, `logit`, `probit`, `gmm`, `did`, `umidas`, `midas`, `gar`, ...): `target_variable` + `independent_variables` (single column names).
 - `iv` / `panel_iv` additionally need `endogenous` + `instruments`.
-- VAR family (`var`, `vecm`, `svar`, ...): `target_variables` (plural, a list) + `maxlags`.
+- VAR family (`var`, `vecm`, `svar`, ..., `favar`, `max_share_svar`, `varx`): `target_variables` (plural, a list) + `maxlags`. `varx` additionally needs `exog_variables`; `favar` needs `observed_variables` + `panel_variables` (optionally `slow_variables`); `max_share_svar` needs `target_variable` or `target_index`.
+- LP family (`local_projections`, `lp_iv`, `lp_state`, `smooth_lp`, `quantile_lp`): `target_variable` + `model.shock_variable`; `independent_variables` become the controls.
 - Unsupervised (`pca`, `kmeans`): no target/independent required.
 
 Model-specific options live in a sub-key named after the model type:
 - `robust_ols.cov_type` (HC1 / HC3 / HAC).
 - `ols.add_entity_fixed_effects` (bool), `panel_ols.entity_column`.
 - `iv.endogenous`, `iv.instruments`.
+- `gar.horizon`, `gar.quantiles`; `midas.weight_function` (`almon`/`exp_almon`/`beta`), `midas.poly_degree`, `midas.hf_lags`, `midas.freq_ratio`; `max_share_svar.max_horizon`, `max_share_svar.zero_impact`; `varx.exog_lags`; `lp_state.transition_variable`.
+- Options not exposed as `_param`/config keys (`lp_state.threshold`, `lp_state.gamma`, `smooth_lp.penalty_lambda`) are set through direct instantiation.
 
 Transformations append a suffix to every numeric column: `{col}_{transform}`.
 - `changepct` → `{col}_changepct`, `changeraw` → `{col}_changeraw`, `log` → `{col}_log`, `zscore` → `{col}_zscore`, `rollingmean` → `{col}_rollingmean`, `lag1` → `{col}_lag1`, `lead1` → `{col}_lead1`, `changepct_yoy` → `{col}_changepct_yoy`.
