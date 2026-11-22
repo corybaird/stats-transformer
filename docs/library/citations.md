@@ -81,6 +81,16 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- Plagborg‐Møller, M., & Wolf, C. K. (2021). Local projections and VARs estimate the same impulse responses. _Econometrica_, _89_(2), 955-980.
 	  - *Usage*: Equivalence mapping between Local Projections and VAR impulse response dynamics.
 
+- **Ramey, V. A., & Zubairy, S. (2018)**.
+	- Ramey, V. A., & Zubairy, S. (2018). Government spending multipliers in good times and in bad: evidence from US historical data. _Journal of Political Economy_, _126_(2), 850-901. doi:10.1086/696277
+	- *Usage*: Implemented in `StateDependentLPModel` (state-dependent local projections with threshold or logistic transition weights) and the integral multiplier option of `LocalProjectionsIVModel`
+		- `src/stats_transformer/models/timeseries/reduced_form/lp_extensions.py`
+		- `src/stats_transformer/models/timeseries/reduced_form/local_projections_iv.py`
+- **Barnichon, R., & Brownlees, C. (2019)**.
+	- Barnichon, R., & Brownlees, C. (2019). Impulse response estimation by smooth local projections. _The Review of Economics and Statistics_, _101_(3), 522-530. doi:10.1162/rest_a_00778
+	- *Usage*: Implemented in `SmoothLPModel` (second-difference penalty across horizons, GCV-selected penalty)
+		- `src/stats_transformer/models/timeseries/reduced_form/lp_extensions.py`
+
 ### 1.4a Dynamic Factor Models
 
 - **Miranda-Agrippino, S., & Rey, H. (2020)**.
@@ -127,6 +137,28 @@ This document catalogs the academic literature, econometric papers, benchmark da
 	- Jarociński, M., & Karadi, P. (2020). Deconstructing monetary policy surprises: The role of information shocks. _American Economic Journal: Macroeconomics_, _12_(2), 1-43.
 	- *Usage*: Poor man's sign-restriction classification of monetary policy vs. information shocks on top of a fitted `BVARModel`, benchmarked in
 		- `src/examples/academic/jarocinski_karadi_2020.py`
+
+### 1.4e Factor-Augmented VAR, Max-Share Identification, and Conditional Forecasting
+
+- **Bernanke, B. S., Boivin, J., & Eliasz, P. (2005)**.
+	- Bernanke, B. S., Boivin, J., & Eliasz, P. (2005). Measuring the effects of monetary policy: a factor-augmented vector autoregressive (FAVAR) approach. _The Quarterly Journal of Economics_, _120_(1), 387-422. doi:10.1162/0033553053327452
+	- *Usage*: Implemented in `FAVARModel` (BBE two-step factor rotation purging the factors of the observed variables)
+		- `src/stats_transformer/models/timeseries/reduced_form/favar.py`
+- **Barsky, R. B., & Sims, E. R. (2011)**.
+	- Barsky, R. B., & Sims, E. R. (2011). News shocks and business cycles. _Journal of Monetary Economics_, _58_(3), 273-289. doi:10.1016/j.jmoneco.2011.03.001
+	- *Usage*: News-shock variant (`zero_impact=True`) implemented in `MaxShareSVARModel` (max-share identification; also targets Uhlig (2004), see [Roadmap](../roadmap.md))
+		- `src/stats_transformer/models/timeseries/identification/max_share.py`
+- **Waggoner, D. F., & Zha, T. (1999)**.
+	- Waggoner, D. F., & Zha, T. (1999). Conditional forecasts in dynamic multivariate models. _The Review of Economics and Statistics_, _81_(4), 639-651. doi:10.1162/003465399558508
+	- *Usage*: Implemented in `ConditionalForecaster` (conditional forecasts under path constraints)
+		- `src/stats_transformer/models/timeseries/reduced_form/varx.py`
+
+### 1.4f Growth-at-Risk
+
+- **Adrian, T., Boyarchenko, N., & Giannone, D. (2019)**.
+	- Adrian, T., Boyarchenko, N., & Giannone, D. (2019). Vulnerable growth. _American Economic Review_, _109_(4), 1263-1289. doi:10.1257/aer.20161923
+	- *Usage*: Implemented in `GaRModel` (conditional quantiles, monotone rearrangement, skewed-$t$ density fit, GaR and expected shortfall)
+		- `src/stats_transformer/models/timeseries/reduced_form/gar.py`
 
 ### 1.5 Data-Driven SVAR Identification
 

@@ -93,6 +93,12 @@ Legend: **Code** new driver or test, **Data** dataset to add or move, **Lib** wr
 | `GMMModel` | Stata `gmm`, R `gmm` drivers | Mroz or Coibion-Gorodnichenko | clarify weight matrix | R `gmm` |
 | `DiDModel` | R `did`, Stata `csdid` drivers | staggered-adoption dataset | controls fix | `did`, `ssc install csdid` |
 | `DynamicFactorModel` | MATLAB `ssm` or R `dfms` driver | real panel (current input is synthetic) | tolerance and start control | `dfms` |
+| `StateDependentLPModel`, `SmoothLPModel`, `QuantileLPModel` | driver from `cacoleman16/tsecon` (`lp_state`, `smooth_lp`, `quantile_lp`) | synthetic or Ramey & Zubairy (2018) data | none | none |
+| `UMIDASModel`, `MIDASModel` | driver from `cacoleman16/tsecon` (`midas`) | mixed-frequency dataset | none | none |
+| `GaRModel` | R or Python driver for Adrian, Boyarchenko & Giannone (2019) | historical GDP/predictors dataset | none | none |
+| `FAVARModel` | driver from `cacoleman16/tsecon` (`favar`) or Bernanke, Boivin & Eliasz (2005) code | large macro panel | none | none |
+| `MaxShareSVARModel` | driver from `cacoleman16/tsecon` (`max_share_svar`) | US macro | none | none |
+| `VARXModel`, `ConditionalForecaster` | driver from `ambropo/VAR-Toolbox` (`VARmodel.m`, `VARcondfore.m`) | US macro | none | none |
 
 #### 2.2.5 Housekeeping
 

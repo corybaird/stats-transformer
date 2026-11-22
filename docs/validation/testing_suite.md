@@ -34,6 +34,13 @@ The `pyproject.toml` test configuration adds `src/` to the Python path. The test
 | `tests/test_models/test_discrete_models.py` | logit and probit | binary-model fitting and metrics |
 | `tests/test_models/test_timeseries_models.py` | VAR, VECM, and core time-series methods | estimator and utility behavior |
 | `tests/test_models/test_timeseries_extensions.py` | structural VAR extensions and VAR-Toolbox translations | synthetic-data execution and bundled-example execution |
+| `tests/test_models/test_lp_extensions.py` | `StateDependentLPModel`, `SmoothLPModel`, `QuantileLPModel` | regime-weighted threshold/logistic fits, GCV-selected penalty, quantile IRFs (simulated DGP) |
+| `tests/test_models/test_midas.py` | `UMIDASModel`, `MIDASModel` | recovery of simulated weighting schemes, hold-out prediction, aligned/pre-aligned parity |
+| `tests/test_models/test_gar.py` | `GaRModel` | quantile column order, monotone rearrangement, skewed-$t$ fit, expected shortfall below GaR (simulated) |
+| `tests/test_models/test_favar.py` | `FAVARModel` | BBE factor rotation, IRF/loading mapping, FEVD rows summing to one (simulated panel) |
+| `tests/test_models/test_max_share.py` | `MaxShareSVARModel` | dominant-shock identification, $QQ' = I$ and $BB' = \Sigma_u$, zero-impact variant (simulated VAR) |
+| `tests/test_models/test_varx_cond.py` | `VARXModel`, `ConditionalForecaster` | VARX DGP recovery, dynamic multipliers, forecast recursion, conditional-forecast solutions (simulated) |
+| `tests/test_replications/` | published-data and pipeline-consistency replications | `test_acosta_matches_published.py` (library data vs published dataverse series, pipeline featurization vs pandas, pipeline `var` vs statsmodels); `test_brennan2024_shocks_pipeline.py` (pipeline featurization vs pandas and pipeline `var` vs statsmodels on the Brennan et al. (2024) shock series; no published-output comparison) |
 | `tests/test_models/test_unsupervised_models.py` | PCA and K-means | component and cluster outputs |
 | `tests/test_reporting/` | charts, EDA, model visualizers, event studies, exporters | plot and visualizer construction, report serialization |
 | `tests/test_utils/` | configuration, country conversion, time-series utilities | helper behavior and error conditions |
