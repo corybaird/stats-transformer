@@ -10,7 +10,7 @@ For correctness fixes to existing models and the plan for external verification 
 
 ## 0. Open Work after 1.12.0
 
-Actionable open items verified against this branch (release 1.12.0, unreleased; models added via #164–#170). Completed items are removed from these tables and recorded in [CHANGELOG.md](../CHANGELOG.md). Open items with a GitHub issue link to it in the status column. Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
+Open items last verified against `origin/main` (release 1.11.0); for 1.12.0 only the model-completed sections (§2.1, §2.2, §2.6, §2.8, §3.1, §3.3, §3.4, §3.6, §4.5, §5.2, §5.4) were updated to reflect the models added via #164–#170. Completed items are removed from these tables and recorded in [CHANGELOG.md](../CHANGELOG.md). Open items with a GitHub issue link to it in the status column. Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
 
 ### Library correctness
 

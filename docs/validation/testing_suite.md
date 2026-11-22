@@ -40,7 +40,7 @@ The `pyproject.toml` test configuration adds `src/` to the Python path. The test
 | `tests/test_models/test_favar.py` | `FAVARModel` | BBE factor rotation, IRF/loading mapping, FEVD rows summing to one (simulated panel) |
 | `tests/test_models/test_max_share.py` | `MaxShareSVARModel` | dominant-shock identification, $QQ' = I$ and $BB' = \Sigma_u$, zero-impact variant (simulated VAR) |
 | `tests/test_models/test_varx_cond.py` | `VARXModel`, `ConditionalForecaster` | VARX DGP recovery, dynamic multipliers, forecast recursion, conditional-forecast solutions (simulated) |
-| `tests/test_replications/` | `tests/test_replications/test_acosta_matches_published.py`, `tests/test_replications/test_brennan2024_shocks_pipeline.py` | library data vs published dataverse surprise/shock series, pipeline featurization vs pandas, pipeline `var` vs statsmodels |
+| `tests/test_replications/` | published-data and pipeline-consistency replications | `test_acosta_matches_published.py` (library data vs published dataverse series, pipeline featurization vs pandas, pipeline `var` vs statsmodels); `test_brennan2024_shocks_pipeline.py` (pipeline featurization vs pandas and pipeline `var` vs statsmodels on the Brennan et al. (2024) shock series; no published-output comparison) |
 | `tests/test_models/test_unsupervised_models.py` | PCA and K-means | component and cluster outputs |
 | `tests/test_reporting/` | charts, EDA, model visualizers, event studies, exporters | plot and visualizer construction, report serialization |
 | `tests/test_utils/` | configuration, country conversion, time-series utilities | helper behavior and error conditions |

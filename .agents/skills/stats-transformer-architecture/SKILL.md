@@ -42,7 +42,7 @@ Common `model_type` values: `ols`, `robust_ols`, `panel_ols`, `iv`, `panel_iv`, 
 Required model keys by kind:
 - Single-equation / panel / iv / discrete (`ols`, `robust_ols`, `panel_ols`, `iv`, `logit`, `probit`, `gmm`, `did`, `umidas`, `midas`, `gar`, ...): `target_variable` + `independent_variables` (single column names).
 - `iv` / `panel_iv` additionally need `endogenous` + `instruments`.
-- VAR family (`var`, `vecm`, `svar`, ..., `favar`, `max_share_svar`, `varx`): `target_variables` (plural, a list) + `maxlags`. `varx` additionally needs `exog_variables`; `favar` needs `observed_variables` + `panel_variables` (optionally `slow_variables`); `max_share_svar` needs `target_variable` or `target_index`.
+- VAR family (`var`, `vecm`, `svar`, ..., `favar`, `max_share_svar`, `varx`): `target_variables` (plural, a list) + `maxlags`. `varx` additionally needs `exog_variables`; `favar` needs `observed_variables` + `panel_variables` (optionally `slow_variables`); `max_share_svar` needs `target_variable` or `target_index`, or defaults to the first variable in `target_variables` (`target_index=0`).
 - LP family (`local_projections`, `lp_iv`, `lp_state`, `smooth_lp`, `quantile_lp`): `target_variable` + `model.shock_variable`; `independent_variables` become the controls.
 - Unsupervised (`pca`, `kmeans`): no target/independent required.
 
@@ -51,7 +51,7 @@ Model-specific options live in a sub-key named after the model type:
 - `ols.add_entity_fixed_effects` (bool), `panel_ols.entity_column`.
 - `iv.endogenous`, `iv.instruments`.
 - `gar.horizon`, `gar.quantiles`; `midas.weight_function` (`almon`/`exp_almon`/`beta`), `midas.poly_degree`, `midas.hf_lags`, `midas.freq_ratio`; `max_share_svar.max_horizon`, `max_share_svar.zero_impact`; `varx.exog_lags`; `lp_state.transition_variable`.
-- Options not exposed as `_param`/config keys (`lp_state.threshold`, `lp_state.gamma`, `smooth_lp.penalty_lambda`) are set through direct instantiation.
+- From YAML, the LP extensions (`lp_state`, `smooth_lp`, `quantile_lp`) reach only `target_variable`, `model.shock_variable`, controls (`independent_variables`), `model.horizon` and `model.date_column` (plus `lp_state.transition_variable`); `transition`, `threshold`, `gamma`, `center`, `penalty_lambda`, `n_basis`, `quantiles`, `lags`, `cumulative` and `cov_type` are direct-instantiation only. `gar` reads `quantiles` and `horizon` from config but not `date_column`, so rows must already be in time order.
 
 Transformations append a suffix to every numeric column: `{col}_{transform}`.
 - `changepct` → `{col}_changepct`, `changeraw` → `{col}_changeraw`, `log` → `{col}_log`, `zscore` → `{col}_zscore`, `rollingmean` → `{col}_rollingmean`, `lag1` → `{col}_lag1`, `lead1` → `{col}_lead1`, `changepct_yoy` → `{col}_changepct_yoy`.

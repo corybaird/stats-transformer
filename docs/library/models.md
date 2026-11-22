@@ -268,11 +268,11 @@ These models are fully implemented and covered by automated Python unit and inte
 
 ### 5.10 Factor-Augmented VAR (`FAVARModel`)
 - **Description**: VAR in the observed macroeconomic variables augmented with latent factors extracted by PCA from a large panel, following Bernanke, Boivin & Eliasz (2005).
-- **Specification**: $X_t = \Lambda F_t + e_t$ (PCA on standardized data); the BBE two-step rotation regresses the panel common component on the slow variables and the observed variables $Y_t$ and removes the $Y_t$ component, so the rotated factors are purged of the observables' direct influence; $Z_t = [Y_t', F_t']$ enters a reduced-form VAR.
+- **Specification**: $X_t = \Lambda F_t + e_t$ (PCA on standardized data); when `slow_variables` is given, the BBE two-step rotation regresses the panel common component on slow-variable factors and the observed variables $Y_t$ and removes the $Y_t$ component, so the rotated factors are purged of the observables' direct influence (without `slow_variables` the principal components are used unpurged); the state vector $Z_t = [F_t', Y_t']'$ places the observed variables last, so the recursive (Cholesky) orthogonalized IRFs leave the latent factors unresponsive to observable-variable shocks on impact.
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/favar.py`
 - **Pipeline Access**: `favar` (direct instantiation: `FAVARModel`); parameters `observed_variables`, `panel_variables`, `slow_variables`, `n_factors` (default 3), `maxlags` (default 2)
 - **Benchmark Target**: Bernanke, Boivin & Eliasz (2005), `cacoleman16/tsecon` (`favar`)
-- **Behaviour**: `irf(steps=12)` and `fevd(steps=12)` on the state VAR; the slow variables must be part of the panel, more factors than panel variables raise `ValueError`, and IRFs follow the factor-loading mapping verified in `tests/test_models/test_favar.py` (simulated panel; FEVD rows sum to one).
+- **Behaviour**: `irf(steps=12)` and `fevd(steps=12)` map the state-VAR Cholesky IRFs back to **panel variable** responses through the factor-loading matrix (responses in the original panel scale); the slow variables must be part of the panel, more factors than panel variables raise `ValueError`, and the IRF/loading mapping is verified in `tests/test_models/test_favar.py` (simulated panel; FEVD rows sum to one).
 
 ### 5.11 VARX and Conditional Forecasting (`VARXModel`, `ConditionalForecaster`)
 - **Description**: `VARXModel` is a VAR in `target_variables` augmented with exogenous variables; `ConditionalForecaster` (same module, not a `ModelBase` subclass) generates conditional forecasts under path constraints.
@@ -284,7 +284,7 @@ These models are fully implemented and covered by automated Python unit and inte
 
 ### 5.12 Mixed-Frequency Regressions (`UMIDASModel`, `MIDASModel`)
 - **Description**: `UMIDASModel` is unconstrained MIDAS: OLS on an automatically aligned high-frequency lag matrix; `MIDASModel` extends it with algebraically constrained weight functions over the high-frequency lags.
-- **Specification**: $y_t = \alpha + \beta(L) x_t^{HF} + \sum_{j=1}^{r} \phi_j y_{t-j} + u_t$; the MIDAS lag polynomial $\beta(L)$ is parameterized by `"almon"` (Almon polynomial, `poly_degree`, estimated by OLS on the basis), `"exp_almon"` (two-parameter exponential Almon) or `"beta"` (three-parameter Beta), fitted by nonlinear least squares.
+- **Specification**: $y_t = \alpha + \beta(L) x_t^{HF} + \sum_{j=1}^{r} \phi_j y_{t-j} + u_t$; the MIDAS lag polynomial $\beta(L)$ is parameterized by `"almon"` (Almon polynomial, `poly_degree`, estimated by OLS on the basis), `"exp_almon"` (two-parameter exponential Almon) or `"beta"` (two-parameter Beta weights with shape log-odds on $u = k/(K+1)$), fitted by nonlinear least squares. `y_lags` is U-MIDAS only: `MIDASModel` raises `ValueError` when autoregressive lags are requested.
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/midas.py`
 - **Pipeline Access**: `umidas`, `midas` (direct instantiation: `UMIDASModel`, `MIDASModel`); parameters `hf_lags`, `freq_ratio`, `y_lags`, ridge `alpha` (U-MIDAS), `weight_function`, `poly_degree` (MIDAS)
 - **Benchmark Target**: `cacoleman16/tsecon` (`midas`)
@@ -368,15 +368,17 @@ These models are fully implemented and covered by automated Python unit and inte
 
 ### 6.11 Max-Share SVAR (`MaxShareSVARModel`)
 - **Description**: Structural identification choosing the impact rotation column $q$ that maximizes the target variable's forecast-error variance share over a horizon window (Uhlig 2004; Barsky & Sims 2011 news-shock identification).
-- **Specification**: $V = \sum_{h=\min_h}^{\max_h} e_i' \Phi_h P P' \Phi_h' e_i$, $\max_q q' V q$ subject to $q' q = 1$; `zero_impact=True` instead maximizes $q' V q$ on the orthogonal complement of the contemporaneous response $P' e_i$, so the shock has no impact on the target variable at horizon 0.
+- **Specification**: $V = \sum_{h=\min_h}^{\max_h} v_h v_h'$ with $v_h = P' \Phi_h' e_i$ the Cholesky-shock response of the target variable at horizon $h$ (`min_horizon`–`max_horizon` window), $\max_q q' V q$ subject to $q' q = 1$; `zero_impact=True` instead maximizes $q' V q$ on the orthogonal complement of the contemporaneous response $P' e_i$, so the shock has no impact on the target variable at horizon 0.
 - **Module Location**: `src/stats_transformer/models/timeseries/identification/max_share.py`
 - **Pipeline Access**: `max_share_svar` (alias: `max_share`; direct instantiation: `MaxShareSVARModel`); parameters `target_variables`, `target_variable`/`target_index`, `maxlags` (default 1), `min_horizon` (0), `max_horizon` (40), `zero_impact`
 - **Benchmark Target**: Barsky & Sims (2011), Uhlig (2004), `cacoleman16/tsecon` (`max_share_svar`)
-- **Behaviour**: `max_share` in [0, 1], `impact_matrix` and `Q` exposed; the sign convention is that the shock raises the target variable at `max_horizon`; `irf(steps=20)` and `fevd(steps=20)`; tests assert $Q Q' = I$ and $B B' = \hat\Sigma_u$ and the zero-impact property (`tests/test_models/test_max_share.py`, simulated VAR).
+- **Behaviour**: `max_share` in [0, 1], `impact_matrix` and `Q` exposed; the sign convention is that the shock raises the target variable at `max_horizon`; `irf(steps=20)` and `fevd(steps=20)`; the tests assert $Q Q' = I$ and $B B' = \hat\Sigma_u$ and the zero-impact property (`tests/test_models/test_max_share.py`, simulated VAR).
 
 ---
 
-## 7. Non-Linear & Regime-Switching Models
+## 7. Non-Linear Models
+
+The three local-projection extensions in §7.5–§7.7 are per-horizon regression extensions (`LocalProjectionsModel` subclasses through `_LPExtensionBase`) rather than state-space regime-switching models; `GaRModel` is a conditional quantile/density model.
 
 ### 7.1 Threshold Vector Autoregression (`TVARModel`)
 - **Description**: Two-regime threshold VAR where dynamic coefficients switch based on whether a transition variable $y_{t-d}$ exceeds threshold $\gamma$.
@@ -411,33 +413,33 @@ These models are fully implemented and covered by automated Python unit and inte
 - **Description**: Local projections with every regressor interacted with regime weights from a transition variable: regimes are estimated jointly and regime IRFs reported separately (Ramey & Zubairy 2018).
 - **Specification**: $Y_{t+h} = F(z_t) X_t' \beta_h^{(1)} + (1 - F(z_t)) X_t' \beta_h^{(2)} + \epsilon_{t+h}$; `transition="threshold"` (default, step weight $\mathbb{I}(z_t > \text{threshold})$) or `transition="logistic"` ($1/(1+e^{-\gamma(z_t - c)})$ with `gamma`, `center`).
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/lp_extensions.py`
-- **Pipeline Access**: `lp_state` (direct instantiation: `StateDependentLPModel`); parameters `transition_variable` (defaults to the shock variable), `transition`, `threshold`, `gamma`, `center`
+- **Pipeline Access**: `lp_state` (direct instantiation: `StateDependentLPModel`); parameters `transition_variable` (defaults to the shock variable), `transition`, `threshold`, `gamma`, `center`. From YAML the builder passes only `target`, `shock_variable`, controls (`independent_variables`), `horizon` and `date_column`, plus `transition_variable` from the model config; every other option above is direct-instantiation only.
 - **Benchmark Target**: Ramey & Zubairy (2018), `cacoleman16/tsecon` (`lp_state`)
-- **Behaviour**: regime-1/regime-2 rows in `irf_regime1_df`/`irf_regime2_df` and a stacked `irf_df` with a `regime` column; a transition variable leaving a regime empty raises `ValueError`; supports `cumulative`, `lags` and the shared cov-type handling. Tests recover a threshold DGP's two known regime coefficients and check the logistic/HAC path (`tests/test_models/test_lp_extensions.py`, simulated data).
+- **Behaviour**: regime-1/regime-2 rows in `irf_regime1_df`/`irf_regime2_df` and a stacked `irf_df` with a `regime` column; a transition variable leaving a regime empty raises `ValueError`; supports `cumulative` and `lags` (lags of the shock and controls, not the target), with the per-horizon OLS cov-type handling including HAC bandwidth $h+1$. Tests recover a threshold DGP's two known regime coefficients and check the logistic/HAC path (`tests/test_models/test_lp_extensions.py`, simulated data).
 
 ### 7.6 Smooth Local Projections (`SmoothLPModel`)
 - **Description**: Penalized local projections estimating the impulse-response path across all horizons simultaneously with a second-difference roughness penalty (Barnichon & Brownlees 2019).
 - **Specification**: $\min_\theta \| y - Z \theta \|^2 + \lambda \theta' (I \otimes B' D' D B) \theta$, horizon-specific intercepts unpenalized; `penalty_lambda=None` (default) selects $\lambda$ by generalized cross-validation over `np.logspace(-3, 5, 33)` (`selected_lambda`).
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/lp_extensions.py`
-- **Pipeline Access**: `smooth_lp` (direct instantiation: `SmoothLPModel`); parameters `n_basis` (default 4, capped at `horizon + 1`), `penalty_lambda`
+- **Pipeline Access**: `smooth_lp` (direct instantiation: `SmoothLPModel`); parameters `n_basis` (default 4, capped at `horizon + 1`), `penalty_lambda`. From YAML the builder passes only `target`, `shock_variable`, controls (`independent_variables`), `horizon` and `date_column`; `n_basis` and `penalty_lambda` are direct-instantiation only.
 - **Benchmark Target**: Barnichon & Brownlees (2019), `cacoleman16/tsecon` (`smooth_lp`)
-- **Behaviour**: `irf_df` (shock coefficient, standard error, 95% CI as $\pm 1.96$ standard errors) and `irf_paths` (all smooth regressors); supports `cumulative` and `lags`. Tests check an explicit-penalty fit and GCV selection (`tests/test_models/test_lp_extensions.py`, simulated data).
+- **Behaviour**: `irf_df` (shock coefficient, standard error, 95% CI as $\pm 1.96$ standard errors) and `irf_paths` (all smooth regressors); standard errors are homoskedastic (penalized least squares with a common variance); supports `cumulative` and `lags` (lags of the shock and controls, not the target). Tests check an explicit-penalty fit and GCV selection (`tests/test_models/test_lp_extensions.py`, simulated data).
 
 ### 7.7 Quantile Local Projections (`QuantileLPModel`)
 - **Description**: Horizon-dependent conditional quantile impulse responses estimated by quantile regression at each horizon and quantile.
 - **Specification**: $Q_\tau(Y_{t+h} | X_t, W_t) = \alpha_h(\tau) + \beta_h(\tau) X_t + \Gamma_h(\tau) W_t$, via statsmodels `QuantReg` (`max_iter=5000`).
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/lp_extensions.py`
-- **Pipeline Access**: `quantile_lp` (direct instantiation: `QuantileLPModel`); parameters `quantiles` (default `(0.1, 0.5, 0.9)`)
+- **Pipeline Access**: `quantile_lp` (direct instantiation: `QuantileLPModel`); parameters `quantiles` (default `(0.1, 0.5, 0.9)`). From YAML the builder passes only `target`, `shock_variable`, controls (`independent_variables`), `horizon` and `date_column`; `quantiles` is direct-instantiation only.
 - **Benchmark Target**: `cacoleman16/tsecon` (`quantile_lp`)
 - **Behaviour**: per-quantile tables in `irf_by_quantile` and a stacked `irf_df`; quantiles outside (0, 1) raise `ValueError`; the median quantile regression tracks the OLS estimate in the test DGP (`tests/test_models/test_lp_extensions.py`, simulated data).
 
 ### 7.8 Growth-at-Risk (`GaRModel`)
 - **Description**: Conditional quantile and downside-risk model: quantile regressions of $y_{t+h}$ on the predictors, monotone rearrangement of crossed quantile predictions, a skewed-$t$ density fit over the quantile predictions, and tail-risk quantities (Adrian, Boyarchenko & Giannone 2019).
-- **Specification**: $Q_\tau(y_{t+h}) = \alpha(\tau) + X_t' \beta(\tau)$ for `quantiles` (default `(0.05, 0.25, 0.50, 0.75, 0.95)`), `horizon` (default 1); the cross-sectional skewed-$t$ is fitted per period by moment matching against the rearranged quantiles (`_skewed_t_*` metrics expose location, scale, skewness parameter and degrees of freedom).
+- **Specification**: $Q_\tau(y_{t+h}) = \alpha(\tau) + X_t' \beta(\tau)$ for `quantiles` (default `(0.05, 0.25, 0.50, 0.75, 0.95)`), `horizon` (default 1); a skewed-$t$ distribution is fitted **per observation** by nonlinear least squares (`scipy.optimize.least_squares` on the skewed-$t$ quantile function against the rearranged fitted quantile predictions), exposing `skewed_t_location`, `skewed_t_scale`, `skewed_t_skewness` and `skewed_t_df` in the model metrics.
 - **Module Location**: `src/stats_transformer/models/timeseries/reduced_form/gar.py`
-- **Pipeline Access**: `gar` (alias: `growth_at_risk`; direct instantiation: `GaRModel`)
+- **Pipeline Access**: `gar` (alias: `growth_at_risk`; direct instantiation: `GaRModel`). From YAML, `target_variable`/`independent_variables`, `quantiles` and `horizon` are read from the model config, but `date_column` is not configurable and defaults to `None`, so rows must already be in time order when run through the pipeline.
 - **Benchmark Target**: Adrian, Boyarchenko & Giannone (2019), `cacoleman16/tsecon` (`growth_at_risk`)
-- **Behaviour**: `predict_quantiles(new_data=None)` returns ordered `q05`–`q95` columns; `compute_gar(alpha=0.05)` and `compute_expected_shortfall(alpha=0.05)` evaluate the fitted density's tail quantile and mean below it; fewer than `max(10, 2 * columns)` observations raises `ValueError`. Tests check quantile column order, rearrangement, new-data prediction and that ES lies below GaR (`tests/test_models/test_gar.py`, simulated data).
+- **Behaviour**: `predict_quantiles(new_data=None)` returns ordered `q05`–`q95` columns; `compute_gar(alpha=0.05)` and `compute_expected_shortfall(alpha=0.05)` evaluate the fitted rows' skewed-$t$ tail quantile and the mean below it (in-sample: they operate on the fitted-data rows, not new data); fewer than `max(10, 2 * columns)` observations raises `ValueError`. Tests check quantile column order, rearrangement, new-data prediction and that ES lies below GaR (`tests/test_models/test_gar.py`, simulated data).
 
 ---
 
