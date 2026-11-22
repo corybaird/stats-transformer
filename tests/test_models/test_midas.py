@@ -138,3 +138,73 @@ def test_predict_before_fit_raises():
 def test_invalid_weight_function_raises():
     with pytest.raises(ValueError):
         MIDASModel(target="y", independent_variables=["x"], weight_function="bogus")
+
+
+_NLS_WEIGHT_FNS = {"exp_almon": _exp_almon_weights, "beta": _beta_weights}
+
+
+@pytest.mark.parametrize("weight_function", ["exp_almon", "beta"])
+@pytest.mark.parametrize("true_slope", [3.0, -2.0, 0.5, 1.0])
+def test_midas_nls_recovers_slope_coefficient(weight_function, true_slope):
+    K, m = 8, 3
+    theta = np.array([-0.2, -0.05]) if weight_function == "exp_almon" else np.array([2.0, 3.0])
+    weights = _NLS_WEIGHT_FNS[weight_function](theta, K)
+    df = _simulate(true_slope * weights, n_blocks=500, freq_ratio=m, noise=0.05, seed=11)
+    model = MIDASModel(target="y", independent_variables=["x"], freq_ratio=m, hf_lags=K, weight_function=weight_function)
+    metrics = model.fit(df)
+    assert abs(model.slope - true_slope) < 0.1
+    assert abs(model.slope_se) > 0 and np.isfinite(model.slope_se)
+    assert np.allclose(model.weights, weights, atol=0.02)
+    assert np.allclose(model.model.params.iloc[1:].to_numpy(dtype=float), true_slope * weights, atol=0.1)
+    assert abs(model.model.params["const"]) < 0.1
+    umidas = UMIDASModel(target="y", independent_variables=["x"], freq_ratio=m, hf_lags=K)
+    assert metrics["r_squared"] > umidas.fit(df)["r_squared"] - 0.02
+    assert metrics["num_params"] == 4
+
+
+def test_midas_nls_predicts_holdout_with_slope_three():
+    K, m = 8, 3
+    weights = _exp_almon_weights(np.array([-0.2, -0.05]), K)
+    df = _simulate(3.0 * weights, n_blocks=600, freq_ratio=m, noise=0.05, seed=17)
+    split = 500 * m
+    model = MIDASModel(target="y", independent_variables=["x"], freq_ratio=m, hf_lags=K, weight_function="exp_almon")
+    model.fit(df.iloc[:split])
+    test = df.iloc[split - int(np.ceil(K / m)) * m:]
+    preds = model.predict(test)
+    actual = test["y"].dropna()
+    common = preds.index.intersection(actual.index)
+    mse = float(np.mean((preds.loc[common] - actual.loc[common]) ** 2))
+    assert mse < 0.03
+
+
+def test_midas_nls_standard_errors_monte_carlo():
+    K, m = 6, 3
+    true_slope, reps = 2.0, 40
+    weights = _exp_almon_weights(np.array([-0.2, -0.01]), K)
+    slopes, slope_ses, coef_ests, coef_ses = [], [], [], []
+    for seed in range(reps):
+        df = _simulate(true_slope * weights, n_blocks=300, freq_ratio=m, noise=0.1, seed=seed)
+        model = MIDASModel(target="y", independent_variables=["x"], freq_ratio=m, hf_lags=K, weight_function="exp_almon")
+        model.fit(df)
+        slopes.append(model.slope)
+        slope_ses.append(model.slope_se)
+        coef_ests.append(model.model.params.iloc[1:].to_numpy(dtype=float))
+        coef_ses.append(model.weight_se)
+    slope_sd = float(np.std(slopes, ddof=1))
+    slope_ratio = float(np.mean(slope_ses)) / slope_sd
+    assert 0.5 < slope_ratio < 2.5
+    coef_sd = np.std(np.array(coef_ests), axis=0, ddof=1)
+    big = weights > 0.01
+    ratios = np.mean(np.array(coef_ses), axis=0)[big] / coef_sd[big]
+    assert np.all((ratios > 0.5) & (ratios < 2.5))
+
+
+@pytest.mark.parametrize("weight_function", ["exp_almon", "beta"])
+def test_midas_nls_slope_near_zero_does_not_crash(weight_function):
+    K, m = 8, 3
+    df = _simulate(np.zeros(K), n_blocks=300, freq_ratio=m, noise=0.1, seed=19)
+    model = MIDASModel(target="y", independent_variables=["x"], freq_ratio=m, hf_lags=K, weight_function=weight_function)
+    metrics = model.fit(df)
+    assert abs(model.slope) < 0.2
+    assert np.isfinite(model.weight_se).all() and np.isfinite(model.slope_se)
+    assert metrics["slope_se"] > 0
