@@ -8,9 +8,9 @@ For correctness fixes to existing models and the plan for external verification 
 
 ---
 
-## 0. Open Work after 1.11.0
+## 0. Open Work after 1.12.0
 
-Actionable open items verified against `origin/main` (release 1.11.0). Completed items are removed from these tables and recorded in [CHANGELOG.md](../CHANGELOG.md). Open items with a GitHub issue link to it in the status column. Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
+Actionable open items verified against this branch (release 1.12.0, unreleased; models added via #164–#170). Completed items are removed from these tables and recorded in [CHANGELOG.md](../CHANGELOG.md). Open items with a GitHub issue link to it in the status column. Columns: priority (P0 = correctness/data loss, P1 = fix next release, P2 = cleanup), size (S/M/L), status (`open` or `in progress (#PR)`). Parity numbers and verification tiers live in [Software Parity Benchmarks](validation/benchmarks.md); they are not duplicated here. Paths: `st/` = `src/stats_transformer/`, `fe/` = `src/stats_transformer/featurization/`.
 
 ### Library correctness
 
@@ -23,7 +23,7 @@ Actionable open items verified against `origin/main` (release 1.11.0). Completed
 | Nonlinear models overwrite config `self.params` with the regime-1 DataFrame | `st/models/timeseries/nonlinear/tvar.py:185` | P2 | S | open |
 | Upstream statsmodels SVAR type-A, $K=2$, 1-free-parameter crash | `tests/test_models/test_svar.py:42` | P2 | S | open (upstream xfail) |
 
-Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§2.2 LP multipliers, §2.6 Fry–Pagan, §2.8 MIDAS / U-MIDAS, and the other sections marked `[Completed]` are done).
+Planned Tier 1–4 model features remain open as detailed in §2–§5 below; the sections marked `[Completed]` (§2.1 VARX, §2.2 LP multipliers, §2.6 Fry–Pagan, §2.8 MIDAS / U-MIDAS, §3.1 max-share, §3.3 `lp_state`, §3.4 `smooth_lp`, §3.6 `quantile_lp`, §4.5 conditional forecasting, §5.2 FAVAR, §5.4 GaR) are done, most of them in 1.12.0.
 
 ### Pipeline / data
 
@@ -67,7 +67,6 @@ Planned Tier 1–4 model features remain open as detailed in §2–§5 below (§
 | Item | Location | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
 | One-line docstrings are in place; add a generated API reference (MkDocs + mkdocstrings) and generate the model list from `MODEL_REGISTRY` and the example catalog from `src/examples/` so they cannot drift | `docs/` | P2 | M | open ([#144](https://github.com/corybaird/stats-transformer/issues/144)) |
-| Agent skill model docs: obsolete class names, dispatcher claims | `.agents/skills/stats-transformer-architecture/models.md` | P2 | S | open |
 | `macrodata.csv` = 100 × log-diff growth of statsmodels macrodata; say so, recommend Ghysels Ch 7 for cointegration | `docs/library/data.md` | P2 | S | open |
 
 ### Packaging / CI
@@ -389,7 +388,7 @@ Mapping between the MaRCo@BIS model dictionary — 30 entries in [`skills/model-
 | `blanchard_quah_1989` | `blanchard_quah` (long-run restrictions) | `st/models/timeseries/identification/blanchard_quah.py` (`BlanchardQuahModel`) |
 | `gali_1999_technology_var` | `blanchard_quah` (long-run restrictions) | `st/models/timeseries/identification/blanchard_quah.py` (`BlanchardQuahModel`) |
 
-Registry entries for the v1.12.0 models (FAVAR, VARX, MIDAS, Growth-at-Risk, Max-Share) land with PR #170.
+Registry entries for the v1.12.0 models (FAVAR, VARX, U-MIDAS, MIDAS, Growth-at-Risk, Max-Share) are in `MODEL_REGISTRY` (`model_type`: `favar`, `varx`, `umidas`, `midas`, `gar`, `max_share_svar`; see [`src/stats_transformer/models/registry.py`](../src/stats_transformer/models/registry.py)).
 
 ### Partial (3)
 
