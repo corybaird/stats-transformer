@@ -15,6 +15,9 @@ from stats_transformer.models.regression.regression import RegressionModel
 from stats_transformer.models.regression.robust_ols import RobustOLSModel
 from stats_transformer.models.timeseries.arima import ARIMAModel
 from stats_transformer.models.timeseries.identification.blanchard_quah import BlanchardQuahModel
+from stats_transformer.models.timeseries.identification.cvm import CVMSVARModel
+from stats_transformer.models.timeseries.identification.independence import IndependenceSVARModel
+from stats_transformer.models.timeseries.identification.non_gaussian import NonGaussianSVARModel
 from stats_transformer.models.timeseries.identification.proxy_svar import ProxySVARModel
 from stats_transformer.models.timeseries.identification.svar import SVARModel
 from stats_transformer.models.timeseries.reduced_form.local_projections import LocalProjectionsModel
@@ -312,3 +315,34 @@ def test_svec_canada_matches_r():
     np.testing.assert_allclose(got_sr, ref_sr, atol=1e-6)
     np.testing.assert_allclose(got_lr, np.asarray(ref["LR"], dtype=float), atol=1e-6)
     assert m.svec_fit.max_restriction_violation <= m.svec_fit.restr_tol
+
+
+def _fit_identification(cls, seed=42):
+    m = cls(target_variables=MACRO, maxlags=2, seed=seed)
+    m.fit(_csv("data/examples/timeseries/macrodata.csv"))
+    return m
+
+
+def _id_ref(case):
+    ref = REFS / "r" / (case + ".json")
+    if not ref.exists():
+        pytest.skip(f"reference not recorded yet: {ref}")
+    return json.loads(ref.read_text())["outputs"]
+
+
+def test_independence_svar_matches_r_id_dc():
+    m = _fit_identification(IndependenceSVARModel)
+    B = np.asarray(_id_ref("independence_svar")["B"], dtype=float)
+    np.testing.assert_allclose(_col_sign_normalise(m.structural_impact), _col_sign_normalise(B), atol=1e-4)
+
+
+def test_cvm_svar_matches_r_id_cvm():
+    m = _fit_identification(CVMSVARModel)
+    B = np.asarray(_id_ref("cvm_svar")["B"], dtype=float)
+    np.testing.assert_allclose(_col_sign_normalise(m.structural_impact), _col_sign_normalise(B), atol=1e-4)
+
+
+def test_non_gaussian_svar_matches_r_id_ngml():
+    m = _fit_identification(NonGaussianSVARModel)
+    B = np.asarray(_id_ref("non_gaussian_svar")["B"], dtype=float)
+    np.testing.assert_allclose(_col_sign_normalise(m.structural_impact), _col_sign_normalise(B), atol=1e-4)
